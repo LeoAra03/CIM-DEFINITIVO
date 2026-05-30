@@ -1,42 +1,38 @@
 # 🏭 Sistema CIM v6.0 - Control Industrial Distribuido
 
-Bienvenido a la versión definitiva del sistema **Computer Integrated Manufacturing (CIM)**. Este ecosistema está diseñado para coordinar una planta de manufactura flexible mediante una red híbrida de aplicaciones Android y nodos ESP32.
+Bienvenido a la versión definitiva del sistema **Computer Integrated Manufacturing (CIM)**. Este ecosistema coordina una planta de manufactura flexible mediante una red híbrida de aplicaciones Android y nodos ESP32.
 
 ---
 
-## 🛠️ Estructura del Proyecto
+## 🛠️ Estructura del Repositorio
 
-El repositorio está organizado bajo principios de **Clean Architecture** y modularización industrial:
+El proyecto está organizado bajo principios de **Clean Architecture**:
 
-- **`app-coordinador`**: El nodo maestro (Hub). Orquestra la red y la seguridad.
-- **`app-plc`**: Control de la cinta transportadora y logística de transporte.
-- **`app-almacen`**: Gestión inteligente de inventario y racks.
-- **`app-manufactura`**: Control de brazo robótico Scorbot y grabado láser CNC.
-- **`app-calidad`**: Visión artificial con OpenCV para inspección técnica.
-- **`core-network`**: Librería compartida que gestiona TCP, Bluetooth Híbrido y Visión.
-
----
-
-## 🚀 Guía de Inicio Rápido
-
-### 1. Preparación del Hardware
-- Asegúrese de tener un celular con **Android 10+**.
-- Conecte sus nodos **ESP32** (Soporta BLE y Bluetooth Clásico).
-
-### 2. Despliegue
-- Las APKs finales están en `output-apks/`.
-- Instale las aplicaciones usando ADB o el paquete ZIP de entrega.
-
-### 3. Sincronización
-1. Inicie **CIM Hub**, presione **START** en la pestaña 'NODOS'.
-2. Inicie una estación (ej: **PLC Master**), ingrese la IP del Hub y presione **VINCULAR**.
-3. Use el **botón azul flotante** para conectar el hardware físico.
+- **`app-coordinador`**: Nodo maestro (Hub). Orquestra la red y la seguridad.
+- **`app-plc`**: Control de la cinta transportadora y logística.
+- **`app-almacen`**: Gestión inteligente de inventario.
+- **`app-manufactura`**: Control de robot Scorbot y láser CNC.
+- **`app-calidad`**: Visión artificial con OpenCV para inspección.
+- **`core-network`**: Librería compartida (TCP, Bluetooth Híbrido, Visión).
+- **`firmware`**: Código C++ para los nodos ESP32.
 
 ---
 
-## 📚 Documentación Técnica (Manuales)
+## 📦 Binarios y APKs
 
-He preparado una suite de documentación completa para su presentación:
+Debido a que las APKs incluyen **OpenCV nativo** y superan el límite de 100MB de GitHub, se han subido en partes dentro de la carpeta `/binarios_particionados`.
+
+### Cómo reconstruir el paquete completo:
+Si deseas obtener el ZIP original con todas las APKs y manuales, ejecuta este comando en PowerShell dentro de la carpeta del proyecto:
+```powershell
+Get-Content ./binarios_particionados/CIM_V6_PART_* -Raw | Set-Content CIM_V6_ENTREGA_FINAL.zip
+```
+
+---
+
+## 📚 Documentación Técnica (Manuales Pro)
+
+La documentación completa se encuentra en la carpeta `docs/logs/` (o `docs/manuals/` si prefieres navegar por los fuentes):
 
 1.  [**Arquitectura y Topología**](docs/manuals/01_ARQUITECTURA_SISTEMA.md)
 2.  [**Protocolo de Mensajería CIM**](docs/manuals/02_PROTOCOLO_COMUNICACION_CIM.md)
@@ -47,10 +43,11 @@ He preparado una suite de documentación completa para su presentación:
 
 ---
 
-## ✅ Certificación de Calidad
-- **Conectividad:** Handshake de seguridad de 3 vías verificado.
-- **Estabilidad:** Gestión asíncrona de hilos para evitar bloqueos en UI.
-- **Visión:** Detección real optimizada a 5-10 FPS para hardware móvil.
+## 🚀 Guía de Inicio Rápido
+
+1. **Compilar**: Usa `./gradlew buildAllApks` para generar nuevas versiones.
+2. **Instalar**: Usa el script en `docs/logs/Install-CIM.ps1` para desplegar automáticamente en tu celular.
+3. **Sincronizar**: Inicia el Hub, activa 'NODOS' y vincula tus estaciones mediante la IP local.
 
 ---
 *Desarrollado con Gemini Pro en Android Studio para el Proyecto de Práctica Profesional.*

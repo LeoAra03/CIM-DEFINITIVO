@@ -1,0 +1,39 @@
+============================================================
+INSTRUCCIONES PARA VINCULACIÓN DE OTRAS APKS (ESTÁNDAR CIM)
+============================================================
+
+Para que cualquier otra APK (Almacén, Manufactura, Calidad, PLC)
+pueda conectarse a este Hub de Coordinación, debe seguir este
+protocolo de Handshake exacto.
+
+1. REQUISITOS DE CONEXIÓN:
+   - IP: La IP que muestra el Hub en la pestaña 'RED'.
+   - Puerto: 8888 (TCP).
+
+2. TRAMA DE HANDSHAKE (Obligatoria):
+   Al conectar el Socket, la APK cliente debe enviar inmediatamente:
+   "CIM_MASTER_HUB_V1;[Nombre_App];[Password];[MAC_Dispositivo];[UUID_Oficial]"
+
+3. UUIDS OFICIALES:
+   - ALMACEN: CIM-ST-ALM-X1
+   - MANUFACTURA: CIM-ST-MAN-X2
+   - CALIDAD: CIM-ST-CAL-X3
+   - PLC: CIM-ST-PLC-X4
+
+4. PROTOCOLO DE ESTADO:
+   Cada APK debe enviar periódicamente (o al cambiar):
+   "STATUS;[UUID];[ESTADO]"
+   Estados válidos: IDLE, BUSY, ERROR.
+
+5. PETICIÓN DE PERMISO:
+   Para operar, la APK envía: "REQ_PERM"
+   Debe esperar recibir: "GRANTED" para iniciar su ciclo.
+
+6. COMANDOS DEL HUB:
+   - "ABORT": La APK debe detener todos sus procesos inmediatamente.
+   - "GRANTED": Permiso concedido para trabajar.
+
+============================================================
+Copia este texto y dáselo a la IA para que implemente el
+cliente en cualquier otra aplicación.
+============================================

@@ -1,0 +1,45 @@
+# Android Studio / IntelliJ
+.idea/
+.gradle/
+build/
+*.iml
+local.properties
+.idea_modules/
+.idea/caches
+.idea/libraries
+.idea/modules.xml
+.idea/workspace.xml
+.idea/navEditor.xml
+.idea/assetWizardSettings.xml
+captures/
+.externalNativeBuild
+.cxx
+memory_roller.log
+
+# Kotlin
+.kotlin/
+kotlin-daemon-embeddable-*.jar
+
+# VS Code
+.vscode/
+
+# Build Outputs
+*.apk
+*.ap_
+*.aab
+*.dex
+output-apks/
+
+# Temporary / OS
+Thumbs.db
+.DS_Store
+*.tmp
+*.log
+*.zip
+*.rar
+
+# Project Specific
+DOCUMENTACION_FINAL/
+ENTREGA_FINAL_CIM_V6/
+CIM_V6_ENTREGA_PRO.zip
+CIM_V6_FINAL_AUDITED.zip

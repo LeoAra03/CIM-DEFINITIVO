@@ -1,0 +1,6 @@
+<!-- Lint baseline inicial - generado manualmente para su gestión.
+     Mantener este archivo en control de versiones. Añada aquí los issues conocidos
+     cuando se genere un baseline real con `./gradlew lint`.
+-->
+<issues format="6">
+</issues>

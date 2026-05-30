@@ -1,0 +1,7 @@
+﻿? Exportado: app-coordinador.apk
+? Exportado: app-plc.apk
+? Exportado: app-calidad.apk
+? Exportado: app-manufactura.apk
+? Exportado: app-almacen.apk
+=== COMPILACIËN INDUSTRIAL COMPLETADA ===
+APKs disponibles en: C:\Users\Leo\Desktop\Test Practica2\Practica_2\output-apks

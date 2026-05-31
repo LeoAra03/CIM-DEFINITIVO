@@ -1,0 +1,12 @@
+{
+  "name": "cim-docs-pdf",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "pdf": "node generate_pdf.mjs"
+  },
+  "dependencies": {
+    "marked": "^15.0.0",
+    "puppeteer-core": "^24.0.0"
+  }
+}

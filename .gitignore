@@ -1,45 +1,54 @@
-# Android Studio / IntelliJ
-.idea/
+# =============================================================================
+# Practica_2 — CIM v6.0 | Solo lo que NO debe subirse a GitHub
+# =============================================================================
+
+# --- Android / Gradle (regenerable) ---
 .gradle/
 build/
-*.iml
 local.properties
-.idea_modules/
-.idea/caches
-.idea/libraries
-.idea/modules.xml
-.idea/workspace.xml
-.idea/navEditor.xml
-.idea/assetWizardSettings.xml
-captures/
 .externalNativeBuild
 .cxx
-memory_roller.log
-
-# Kotlin
 .kotlin/
-kotlin-daemon-embeddable-*.jar
+*.iml
+captures/
 
-# VS Code
-.vscode/
+# --- IDE local ---
+.idea/
+.fastRequest/
 
-# Build Outputs
+# --- Cursor / VS Code (rutas personales; sí se publica extensions.json) ---
+.vscode/*
+!.vscode/extensions.json
+
+# --- APKs y binarios compilados (generar con ./gradlew buildAllApks) ---
 *.apk
-*.ap_
 *.aab
 *.dex
 output-apks/
 
-# Temporary / OS
-Thumbs.db
-.DS_Store
-*.tmp
-*.log
-*.zip
-*.rar
+# --- PlatformIO (regenerable con pio run) ---
+.pio/
 
-# Project Specific
-DOCUMENTACION_FINAL/
+# --- Secretos de firma ---
+release.keystore
+*.keystore
+
+# --- Dependencias npm del generador PDF (docs/npm install) ---
+docs/node_modules/
+docs/_preview_entrega.html
+docs/_pdf_build_temp.*
+
+# --- Clones vendor muy pesados (opcional en local) ---
+espessif/
+
+# --- Carpetas de entrega antiguas / artefactos sueltos ---
 ENTREGA_FINAL_CIM_V6/
-CIM_V6_ENTREGA_PRO.zip
-CIM_V6_FINAL_AUDITED.zip
+DOCUMENTACION_FINAL/
+CIM_V6_*.zip
+
+# --- Sistema operativo ---
+.DS_Store
+Thumbs.db
+
+# --- Logs temporales ---
+*.log

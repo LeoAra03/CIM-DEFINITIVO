@@ -9,7 +9,7 @@ plugins {
 tasks.register<Exec>("buildFirmware") {
     group = "Firmware"
     description = "Genera el artefacto de firmware (usa platformio o arduino-cli si están instalados)"
-    val script = file("Firmware_Support/build_firmware.ps1")
+    val script = file("firmware/Firmware_Support/build_firmware.ps1")
     commandLine = listOf("powershell", "-ExecutionPolicy", "Bypass", "-File", script.absolutePath)
 }
 
@@ -72,19 +72,40 @@ tasks.register("testAllModules") {
         println("╚════════════════════════════════════════╝")
     }
 
-    dependsOn(":core-network:testDebugUnitTest")
+    dependsOn(
+        ":core-network:testDebugUnitTest",
+        ":app-coordinador:app-coordinador:testDebugUnitTest",
+        ":app-plc:app-plc:testDebugUnitTest"
+    )
 
     doLast {
-        println("✓ Tests completados")
+        println("✓ Tests completados (core-network + coordinador + plc)")
     }
+}
+
+// Tarea: Limpiar todos los módulos Android
+tasks.register("cleanAllModules") {
+    group = "Industrial Build"
+    description = "Limpia artefactos de build de todos los módulos"
+    dependsOn(
+        ":core-network:clean",
+        ":app-coordinador:app-coordinador:clean",
+        ":app-plc:app-plc:clean",
+        ":app-calidad:app-calidad:clean",
+        ":app-manufactura:app-manufactura:clean",
+        ":app-almacen:app-almacen:clean"
+    )
 }
 
 // Tarea: Limpiar y construir todo
 tasks.register("cleanBuildAll") {
     group = "Industrial Build"
     description = "Limpia y construye todos los módulos"
+    dependsOn("cleanAllModules", "buildAllApks")
+}
 
-    dependsOn("clean", "buildAllApks")
+tasks.named("buildAllApks") {
+    mustRunAfter("cleanAllModules")
 }
 
 // Configuración general

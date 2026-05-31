@@ -1,5 +1,7 @@
 # Arquitectura del Sistema CIM v6.0
 
+> **Documento consolidado:** Ver secciones 3–4 en [`../ENTREGA_FINAL_LEONARDO_ARAYA.md`](../ENTREGA_FINAL_LEONARDO_ARAYA.md).
+
 Este documento detalla la estructura de alto nivel del sistema **CIM (Computer Integrated Manufacturing)**, diseñado para la coordinación distribuida de estaciones industriales mediante tecnologías Android y microcontroladores ESP32.
 
 ---

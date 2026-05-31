@@ -1,0 +1,15 @@
+# Wokwi simulation — CIM v6.0 ESP32 DHT22 + LCD I2C
+# Compilar firmware: cd ../firmware/Firmware_Support && pio run
+# O compilar este main.cpp con PlatformIO en simulacion_esp32/
+
+[wokwi]
+version = 1
+firmware = '../firmware/Firmware_Support/.pio/build/esp32dev/firmware.bin'
+elf = '../firmware/Firmware_Support/.pio/build/esp32dev/firmware.elf'
+
+# Fallback si el binario principal no existe: compilar simulacion_esp32/main.cpp
+# pio run -d simulacion_esp32 (requiere platformio.ini local)
+
+[env]
+# Red WiFi virtual Wokwi (gateway 192.168.4.1 en simulador)
+WOKWI_GATEWAY = "192.168.4.1"

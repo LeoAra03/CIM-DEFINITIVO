@@ -1,5 +1,7 @@
 # Protocolo de Comunicación CIM (CimProtocol)
 
+> **Documento consolidado:** Ver sección 6 en [`../ENTREGA_FINAL_LEONARDO_ARAYA.md`](../ENTREGA_FINAL_LEONARDO_ARAYA.md).
+
 El protocolo CIM v6.0 es un estándar de mensajería ligero y robusto diseñado para entornos industriales con alta latencia o pérdida de paquetes ocasional.
 
 ---

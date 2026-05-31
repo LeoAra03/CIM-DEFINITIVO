@@ -1,0 +1,45 @@
+# CIM Practica_2 v6.0 — Reglas de documentación industrial
+
+## Idioma y tono
+- Documentación técnica en **español** con terminología industrial (CIM, PLC, estación, actuador, hub TCP).
+- Tono formal, preciso, orientado a auditoría (ISO 27001, OWASP) y trazabilidad.
+
+## Markdown extendido
+- Usar **Markdown Preview Enhanced (MPE)** y **Markdown All in One** para TOC, numeración y exportación.
+- Front matter YAML obligatorio en manuales largos: `title`, `author`, `date`, `version`, `css`, `print_background`, `toc`.
+- Encabezados jerárquicos: un solo `#` por documento; subsecciones `##`–`####` sin saltos de nivel.
+- Tablas con alineación explícita; listas numeradas para procedimientos; viñetas para hallazgos.
+
+## Matemática LaTeX
+- Inline: `$...$` (ej. `$T(c) = t_0 \cdot 2^c$`).
+- Bloque: `$$...$$` para ecuaciones centradas (Bcrypt, RS256, complejidad O(1)).
+- No escapar `$` dentro de bloques de código; usar `\(...\)` solo si el renderer lo exige.
+
+## Diagramas Mermaid
+- Bloques semánticos con tipo explícito cuando aplique: `sequenceDiagram`, `flowchart TB`, `stateDiagram-v2`, `graph LR`.
+- Etiquetas en español; actores alineados con el código CIM (`AuthorizationManager`, `TcpServer`, `BluetoothHardwareManager`).
+- Evitar nodos genéricos; nombrar puertos (8888), protocolos (IDENTIFY, RS256) y MAC.
+
+## Calidad documental industrial
+- Cada sección crítica: contexto → implementación CIM → riesgo → mitigación.
+- Matrices de troubleshooting con síntoma | causa | verificación | acción.
+- Referencias cruzadas a `core-network/`, `firmware/Firmware_Support/`, `docs/TEST_MATRIX.md`.
+- Imágenes en `docs/assets/imagenes/` con texto alternativo descriptivo.
+
+## Exportación PDF
+- Hoja de estilo: `docs/styles/industrial_pdf.css` (A4, márgenes 2.5cm/2cm, numeración de página).
+- Marp para slides; Markdown PDF / Puppeteer con `print_background: true`.
+
+## Código en documentos
+- Citas de código Kotlin/C++/PowerShell con fence y ruta relativa al repo.
+- No placeholders: todo contenido debe ser ejecutable o verificable en el proyecto.
+
+## Extensiones del entorno
+- Formateo: Biome (JS/TS/JSON) y Prettier donde no haya conflicto con Gradle/Kotlin.
+- Draw.io embebido para diagramas editables en `docs/assets/diagramas/`.
+- Wokwi + PlatformIO CLI para simulación ESP32 en `simulacion_esp32/`.
+- LTeX o revisión manual para ortografía técnica en español.
+
+## Prohibido
+- Texto tipo "TODO", "añadir aquí", "TBD" en manuales de entrega.
+- Commits automáticos desde el agente salvo solicitud explícita del usuario.

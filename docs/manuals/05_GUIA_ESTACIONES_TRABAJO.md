@@ -1,5 +1,7 @@
 # Guía de Estaciones de Trabajo
 
+> **Documento consolidado:** Ver sección 4 en [`../ENTREGA_FINAL_LEONARDO_ARAYA.md`](../ENTREGA_FINAL_LEONARDO_ARAYA.md).
+
 Cada aplicación del sistema CIM está especializada en un subsistema físico. Esta guía explica el panel de control de cada una.
 
 ---

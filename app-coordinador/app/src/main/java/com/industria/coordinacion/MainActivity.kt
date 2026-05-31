@@ -35,6 +35,7 @@ import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     private var bluetoothManager: BluetoothHardwareManager? = null
+    private var sppManager: BluetoothSppManager? = null
     private var tcpServer: TcpServer? = null
     private lateinit var permissionLauncher: ActivityResultLauncher<Array<String>>
 
@@ -46,6 +47,9 @@ class MainActivity : ComponentActivity() {
         permissionLauncher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { results ->
             if (results[Manifest.permission.CAMERA] != true) {
                 // El tab de ArUco mostrará el mensaje de permiso si la cámara no está autorizada.
+            }
+            if (results[Manifest.permission.BLUETOOTH_CONNECT] == true) {
+                sppManager?.startServer()
             }
         }
         
@@ -64,7 +68,7 @@ class MainActivity : ComponentActivity() {
             } catch (_: Exception) {}
         })
         bluetoothManager = GlobalBluetoothManager.getInstance()
-        val sppManager = BluetoothSppManager(this, { _ -> }, { _, data ->
+        sppManager = BluetoothSppManager(this, { msg -> Log.d("BT_SPP", msg) }, { _, data ->
             try {
                 val cim = com.sistema.distribuido.network.protocol.CimMessage.fromTransportString(data)
                 if (cim != null) {
@@ -102,7 +106,7 @@ class MainActivity : ComponentActivity() {
         tcpServer?.onError = { errorMsg ->
             Log.e("TcpServer", errorMsg)
         }
-        val commandBroker = CommandBroker(bluetoothManager, sppManager, tcpServer, null)
+        val commandBroker = CommandBroker(bluetoothManager, sppManager!!, tcpServer, null)
         GlobalCommandBroker.init(commandBroker)
 
         requestBluetoothPermissions()
@@ -133,10 +137,12 @@ class MainActivity : ComponentActivity() {
             Surface(Modifier.fillMaxSize()) {
                 val startServerAction: () -> Unit = {
                     tcpServer?.start()
+                    sppManager?.startServer()
                     lifecycleScope.launch { vm.startTcpServer() }
                 }
                 val stopServerAction: () -> Unit = {
                     tcpServer?.stop()
+                    sppManager?.stopServer()
                     lifecycleScope.launch { vm.stopTcpServer() }
                 }
                 val refreshBluetoothAction: () -> Unit = {
@@ -166,11 +172,13 @@ class MainActivity : ComponentActivity() {
                     vm = vm,
                     onStartServer = {
                         tcpServer?.start()
+                        sppManager?.startServer()
                         lifecycleScope.launch { vm.startTcpServer() }
                         Unit
                     },
                     onStopServer = {
                         tcpServer?.stop()
+                        sppManager?.stopServer()
                         lifecycleScope.launch { vm.stopTcpServer() }
                         Unit
                     },
@@ -221,7 +229,10 @@ class MainActivity : ComponentActivity() {
     override fun onDestroy() {
         super.onDestroy()
         tcpServer?.stop()
+        sppManager?.stopServer()
+        sppManager?.disconnectAll()
         bluetoothManager?.disconnectAll()
+        bluetoothManager?.release()
     }
 
     private fun resolveStationAppType(stationName: String, stationUuid: String): AppType {

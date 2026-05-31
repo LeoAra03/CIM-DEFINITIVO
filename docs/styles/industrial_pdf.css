@@ -1,0 +1,235 @@
+/* industrial_pdf.css — CIM v6.0 Paged Media para Markdown PDF / Puppeteer / MPE */
+
+:root {
+  --cim-steel-blue: #2c5282;
+  --cim-steel-blue-light: #4a7ab8;
+  --cim-gray-900: #1a202c;
+  --cim-gray-700: #4a5568;
+  --cim-gray-500: #718096;
+  --cim-gray-200: #e2e8f0;
+  --cim-gray-100: #f7fafc;
+  --cim-crimson: #c53030;
+  --cim-crimson-bg: #fff5f5;
+  --cim-success: #276749;
+  --cim-font-body: Arial, "Helvetica Neue", "Segoe UI", sans-serif;
+  --cim-font-mono: "Fira Code", "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+  --cim-font-heading: "Segoe UI Semibold", var(--cim-font-body);
+}
+
+@page {
+  size: A4;
+  margin: 2.5cm 2cm 2.8cm 2cm;
+
+  @bottom-center {
+    content: counter(page) " / " counter(pages);
+    font-family: var(--cim-font-body);
+    font-size: 9pt;
+    color: var(--cim-gray-500);
+  }
+
+  @top-right {
+    content: "CIM v6.0 — Documento industrial";
+    font-size: 8pt;
+    color: var(--cim-gray-500);
+  }
+}
+
+@page :first {
+  @top-right {
+    content: none;
+  }
+}
+
+html {
+  font-size: 12pt;
+  line-height: 1.55;
+  color: var(--cim-gray-900);
+}
+
+body {
+  font-family: var(--cim-font-body);
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  background: white;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--cim-font-heading);
+  color: var(--cim-steel-blue);
+  page-break-after: avoid;
+  break-after: avoid;
+}
+
+h1 {
+  font-size: 22pt;
+  border-bottom: 3px solid var(--cim-steel-blue);
+  padding-bottom: 0.4em;
+  margin-top: 0;
+}
+
+h2 {
+  font-size: 16pt;
+  border-left: 4px solid var(--cim-steel-blue-light);
+  padding-left: 0.6em;
+  margin-top: 1.6em;
+}
+
+h3 {
+  font-size: 13pt;
+  color: var(--cim-gray-700);
+}
+
+p {
+  orphans: 3;
+  widows: 3;
+  text-align: justify;
+  hyphens: auto;
+}
+
+a {
+  color: var(--cim-steel-blue-light);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+code, pre, kbd, samp {
+  font-family: var(--cim-font-mono);
+  font-size: 0.88em;
+}
+
+pre {
+  background: var(--cim-gray-100);
+  border: 1px solid var(--cim-gray-200);
+  border-left: 4px solid var(--cim-steel-blue);
+  padding: 0.8em 1em;
+  overflow-x: auto;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+code:not(pre code) {
+  background: var(--cim-gray-100);
+  padding: 0.15em 0.35em;
+  border-radius: 3px;
+  color: var(--cim-crimson);
+}
+
+blockquote {
+  border-left: 4px solid var(--cim-steel-blue-light);
+  margin: 1em 0;
+  padding: 0.5em 1em;
+  background: var(--cim-gray-100);
+  color: var(--cim-gray-700);
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.2em 0;
+  font-size: 0.95em;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+thead {
+  background: var(--cim-steel-blue);
+  color: white;
+}
+
+th, td {
+  border: 1px solid var(--cim-gray-200);
+  padding: 0.45em 0.65em;
+  text-align: left;
+}
+
+tbody tr:nth-child(even) {
+  background: var(--cim-gray-100);
+}
+
+.alert, .warning, blockquote.warning {
+  background: var(--cim-crimson-bg);
+  border-left: 4px solid var(--cim-crimson);
+  padding: 0.8em 1em;
+  color: var(--cim-gray-900);
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+img, figure, svg, .mermaid {
+  max-width: 100%;
+  height: auto;
+  page-break-inside: avoid;
+  break-inside: avoid;
+  margin: 1em auto;
+  display: block;
+}
+
+figure figcaption {
+  font-size: 0.9em;
+  color: var(--cim-gray-500);
+  text-align: center;
+  margin-top: 0.4em;
+}
+
+ul, ol {
+  page-break-inside: auto;
+  break-inside: auto;
+}
+
+li {
+  margin-bottom: 0.25em;
+}
+
+/* KaTeX / MathJax display blocks */
+.katex-display, .math.display {
+  page-break-inside: avoid;
+  break-inside: avoid;
+  margin: 1em 0;
+  overflow-x: auto;
+}
+
+/* Table of contents */
+nav#TOC, .toc {
+  background: var(--cim-gray-100);
+  border: 1px solid var(--cim-gray-200);
+  padding: 1em 1.5em;
+  page-break-after: always;
+  break-after: page;
+}
+
+nav#TOC ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+nav#TOC li {
+  margin: 0.3em 0;
+}
+
+nav#TOC a {
+  color: var(--cim-steel-blue);
+}
+
+.page-break {
+  page-break-before: always;
+  break-before: page;
+  height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  line-height: 0;
+  overflow: hidden;
+}
+
+@media print {
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

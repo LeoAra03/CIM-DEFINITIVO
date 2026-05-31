@@ -13,11 +13,19 @@ Write-Host "╚═════════════════════�
 Write-Host ""
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
-$srcIno = Join-Path $scriptDir "cim_esp32_firmware_v6_clean.ino"
+$srcIno = Join-Path $scriptDir "src\main.ino"
+$srcAlt = Join-Path $scriptDir "src\main\cim_esp32_firmware_v6.ino"
+$srcLegacy = Join-Path $scriptDir "cim_esp32_firmware_v6_clean.ino"
 $srcC = Join-Path $scriptDir "cim_esp32_firmware_v6.c"
-$sourceFile = if (Test-Path $srcIno) { $srcIno } else { $srcC }
+$sourceFile = when {
+    (Test-Path $srcIno) { $srcIno }
+    (Test-Path $srcAlt) { $srcAlt }
+    (Test-Path $srcLegacy) { $srcLegacy }
+    (Test-Path $srcC) { $srcC }
+    default { $null }
+}
 
-if (!(Test-Path $sourceFile)) {
+if ($null -eq $sourceFile -or !(Test-Path $sourceFile)) {
     Write-Error "❌ No se encontraron archivos fuente" -ErrorAction Stop
     exit 1
 }

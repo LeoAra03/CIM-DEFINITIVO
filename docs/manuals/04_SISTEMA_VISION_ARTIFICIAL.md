@@ -1,5 +1,7 @@
 # Sistema de Visión Artificial Industrial
 
+> **Documento consolidado:** Ver sección 7 en [`../ENTREGA_FINAL_LEONARDO_ARAYA.md`](../ENTREGA_FINAL_LEONARDO_ARAYA.md).
+
 El módulo de visión utiliza procesamiento de imágenes en el dispositivo para la localización de pallets y la identificación automática de piezas.
 
 ---

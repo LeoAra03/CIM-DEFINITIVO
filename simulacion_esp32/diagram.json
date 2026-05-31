@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "author": "Practica_2 CIM v6.0",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "wokwi-esp32-devkit-v1", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    {
+      "type": "wokwi-dht22",
+      "id": "dht1",
+      "top": -144.2,
+      "left": 211.8,
+      "attrs": { "temperature": "24.5", "humidity": "55" }
+    },
+    {
+      "type": "wokwi-lcd1602",
+      "id": "lcd1",
+      "top": 144,
+      "left": 96,
+      "attrs": { "pins": "i2c" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r1",
+      "top": -96,
+      "left": 144,
+      "attrs": { "value": "10k" }
+    },
+    {
+      "type": "wokwi-vcc",
+      "id": "vcc1",
+      "top": -192,
+      "left": 96,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-gnd",
+      "id": "gnd1",
+      "top": 96,
+      "left": 48,
+      "attrs": {}
+    }
+  ],
+  "connections": [
+    [ "esp:TX0", "$serialMonitor:RX", "", [] ],
+    [ "esp:RX0", "$serialMonitor:TX", "", [] ],
+    [ "dht1:VCC", "vcc1:VCC", "red", [ "h0" ] ],
+    [ "dht1:GND", "gnd1:GND", "black", [ "h0" ] ],
+    [ "dht1:SDA", "esp:GPIO4", "green", [ "h0" ] ],
+    [ "dht1:SDA", "r1:1", "green", [ "h0" ] ],
+    [ "r1:2", "vcc1:VCC", "red", [ "h0" ] ],
+    [ "lcd1:VCC", "vcc1:VCC", "red", [ "h0" ] ],
+    [ "lcd1:GND", "gnd1:GND", "black", [ "h0" ] ],
+    [ "lcd1:SDA", "esp:GPIO21", "blue", [ "h0" ] ],
+    [ "lcd1:SCL", "esp:GPIO22", "yellow", [ "h0" ] ]
+  ],
+  "dependencies": {}
+}

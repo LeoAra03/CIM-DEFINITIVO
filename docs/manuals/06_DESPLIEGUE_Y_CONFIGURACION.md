@@ -1,5 +1,7 @@
 # Despliegue y Configuración
 
+> **Documento consolidado:** Ver sección 10 en [`../ENTREGA_FINAL_LEONARDO_ARAYA.md`](../ENTREGA_FINAL_LEONARDO_ARAYA.md). Laboratorio: [`../GUIA_LABORATORIO_MANANA.md`](../GUIA_LABORATORIO_MANANA.md).
+
 Siga estos pasos para poner en marcha el sistema CIM v6.0 en un entorno real.
 
 ---

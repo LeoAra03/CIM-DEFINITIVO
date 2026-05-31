@@ -1,5 +1,7 @@
 # Motor Bluetooth Híbrido v6.0
 
+> **Documento consolidado:** Ver sección 6 en [`../ENTREGA_FINAL_LEONARDO_ARAYA.md`](../ENTREGA_FINAL_LEONARDO_ARAYA.md).
+
 Este módulo es el núcleo de la conectividad física con las estaciones. Resuelve el problema de fragmentación de hardware permitiendo que una misma interfaz controle dispositivos BLE y Clásicos simultáneamente.
 
 ---

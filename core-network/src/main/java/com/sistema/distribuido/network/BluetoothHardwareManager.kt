@@ -10,37 +10,23 @@ import android.content.IntentFilter
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import com.sistema.distribuido.network.protocol.CimMessageBuilder
 import com.sistema.distribuido.network.protocol.CimMessage
 import com.sistema.distribuido.network.protocol.CommandType
-import com.sistema.distribuido.network.protocol.CimProtocol
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import java.io.IOException
-import java.io.InputStream
-import java.io.OutputStream
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
-
-enum class BluetoothType {
-    BLE, CLASSIC, UNKNOWN
-}
-
-data class DiscoveredDevice(
-    val name: String,
-    val address: String,
-    val type: BluetoothType,
-    val rssi: Int = 0,
-    val device: BluetoothDevice
-)
+import kotlin.math.min
 
 /**
- * BLUETOOTH HARDWARE MANAGER v6.0 (HÍBRIDO)
+ * BLUETOOTH HARDWARE MANAGER v6.0
+ *
+ * Escaneo híbrido BLE + Classic, multiconexión GATT y fragmentación MTU.
  */
 class BluetoothHardwareManager(
     private val context: Context,
@@ -50,62 +36,30 @@ class BluetoothHardwareManager(
     private val bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
     private val adapter = bluetoothManager.adapter
     private val scanner = adapter?.bluetoothLeScanner
-    
-    private val connectedGatts = ConcurrentHashMap<String, BluetoothGatt>()
-    private val connectedSockets = ConcurrentHashMap<String, ClassicConnectedThread>()
+    private val mainHandler = Handler(Looper.getMainLooper())
+
+    private val connectedDevices = ConcurrentHashMap<String, BluetoothGatt>()
+    private val gattCallbacks = ConcurrentHashMap<String, BluetoothGattCallback>()
+    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private val reconnectAttempts = ConcurrentHashMap<String, Int>()
+    private val reconnectJobs = ConcurrentHashMap<String, Job>()
 
     private val _connectionStates = MutableStateFlow<Map<String, Boolean>>(emptyMap())
     val connectionStates: StateFlow<Map<String, Boolean>> = _connectionStates.asStateFlow()
 
-    val discoveredDevicesMap: SnapshotStateMap<String, DiscoveredDevice> = mutableStateMapOf()
-    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-    
+    val discoveredDevicesMap: SnapshotStateMap<String, DiscoveredBluetoothDevice> = mutableStateMapOf()
+    val discoveredHardware: SnapshotStateMap<String, String> = mutableStateMapOf()
+
     private val SERVICE_UUID = UUID.fromString("6E400001-B5A3-F393-E0A9-E50E24DCCA9E")
     private val CHAR_UUID_RX = UUID.fromString("6E400002-B5A3-F393-E0A9-E50E24DCCA9E")
     private val CHAR_UUID_TX = UUID.fromString("6E400003-B5A3-F393-E0A9-E50E24DCCA9E")
     private val CCCD_UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
-    private val SPP_UUID = CimProtocol.SPP_UUID
 
     private val MAX_BLE_PACKET = 20
     private val receivingBuffers = ConcurrentHashMap<String, StringBuilder>()
-
-    // 📡 Receiver para Bluetooth Clásico
-    private val classicReceiver = object : BroadcastReceiver() {
-        @SuppressLint("MissingPermission")
-        override fun onReceive(context: Context?, intent: Intent?) {
-            if (BluetoothDevice.ACTION_FOUND == intent?.action) {
-                val device: BluetoothDevice? = if (Build.VERSION.SDK_INT >= 33) {
-                    intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE, BluetoothDevice::class.java)
-                } else {
-                    @Suppress("DEPRECATION")
-                    intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
-                }
-                
-                device?.let {
-                    val name = it.name ?: "Nodo_${it.address.takeLast(5)}"
-                    // Filtrar por dispositivos industriales
-                    if (name.contains("ESP32", ignoreCase = true) || name.contains("CIM", ignoreCase = true)) {
-                        if (!discoveredDevicesMap.containsKey(it.address)) {
-                            discoveredDevicesMap[it.address] = DiscoveredDevice(
-                                name = name,
-                                address = it.address,
-                                type = BluetoothType.CLASSIC,
-                                rssi = intent.getShortExtra(BluetoothDevice.EXTRA_RSSI, 0).toInt(),
-                                device = it
-                            )
-                            onLog("✓ ENCONTRADO (Clásico): $name [${it.address}]")
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    init {
-        // Registrar el receptor para búsqueda de dispositivos clásicos
-        val filter = IntentFilter(BluetoothDevice.ACTION_FOUND)
-        context.registerReceiver(classicReceiver, filter)
-    }
+    private var activeBleScanCallback: ScanCallback? = null
+    private var discoveryReceiver: BroadcastReceiver? = null
+    private var isReceiverRegistered = false
 
     @SuppressLint("MissingPermission")
     fun startScan(durationMs: Long = 10000) {
@@ -113,214 +67,426 @@ class BluetoothHardwareManager(
             onLog("ERROR: Bluetooth OFF")
             return
         }
-        discoveredDevicesMap.clear()
-        onLog("ESCANEANDO DISPOSITIVOS...")
 
-        val bleCb = object : ScanCallback() {
+        discoveredDevicesMap.clear()
+        discoveredHardware.clear()
+        onLog("ESCANEANDO MALLA BLE + CLASSIC...")
+
+        startClassicDiscovery()
+
+        val cb = object : ScanCallback() {
+            @SuppressLint("MissingPermission")
             override fun onScanResult(ct: Int, res: ScanResult) {
-                val device = res.device
-                val name = device.name ?: "BLE_${device.address.takeLast(5)}"
-                if (!discoveredDevicesMap.containsKey(device.address)) {
-                    discoveredDevicesMap[device.address] = DiscoveredDevice(name, device.address, BluetoothType.BLE, res.rssi, device)
-                }
+                registerDiscoveredDevice(res.device.address, res.device.name, res.isConnectable)
             }
         }
-        scanner?.startScan(bleCb)
-        adapter.startDiscovery()
+        activeBleScanCallback = cb
+        scanner?.startScan(cb)
 
-        Handler(Looper.getMainLooper()).postDelayed({
-            try {
-                scanner?.stopScan(bleCb)
-                adapter.cancelDiscovery()
-                onLog("✓ ESCANEO COMPLETADO")
-            } catch (_: Exception) {}
+        mainHandler.postDelayed({
+            stopScanInternal()
+            onLog("✓ ESCANEO COMPLETADO (${discoveredDevicesMap.size} dispositivos)")
         }, durationMs)
     }
 
     @SuppressLint("MissingPermission")
+    private fun startClassicDiscovery() {
+        if (adapter == null) return
+        try {
+            if (discoveryReceiver == null) {
+                discoveryReceiver = object : BroadcastReceiver() {
+                    @SuppressLint("MissingPermission")
+                    override fun onReceive(ctx: Context, intent: Intent) {
+                        if (BluetoothDevice.ACTION_FOUND == intent.action) {
+                            val device = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE, BluetoothDevice::class.java)
+                            } else {
+                                @Suppress("DEPRECATION")
+                                intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
+                            }
+                            device?.let { registerDiscoveredDevice(it.address, it.name, true) }
+                        }
+                    }
+                }
+            }
+            if (!isReceiverRegistered) {
+                context.registerReceiver(
+                    discoveryReceiver,
+                    IntentFilter(BluetoothDevice.ACTION_FOUND)
+                )
+                isReceiverRegistered = true
+            }
+            adapter.cancelDiscovery()
+            adapter.startDiscovery()
+        } catch (e: Exception) {
+            onLog("⚠ Classic discovery: ${e.message}")
+        }
+    }
+
+    private fun registerDiscoveredDevice(address: String, rawName: String?, connectable: Boolean) {
+        val name = rawName?.takeIf { it.isNotBlank() } ?: "Nodo_${address.takeLast(5)}"
+        val isCimDevice = name.contains("ESP32", ignoreCase = true) ||
+            name.contains("CIM", ignoreCase = true) ||
+            name.contains("NODO", ignoreCase = true) ||
+            connectable
+
+        if (!isCimDevice) return
+        if (discoveredDevicesMap.containsKey(address)) return
+
+        val device = DiscoveredBluetoothDevice(address, name)
+        discoveredDevicesMap[address] = device
+        discoveredHardware[address] = name
+        onLog("✓ ENCONTRADO: $name [$address]")
+    }
+
+    @SuppressLint("MissingPermission")
     fun connect(address: String, onConnectionChange: (Boolean) -> Unit = {}) {
-        val device = try { adapter.getRemoteDevice(address) } catch (e: Exception) { null }
-        if (device == null) {
-            onLog("✗ ERROR: MAC Inválida: $address")
-            onConnectionChange(false)
+        if (adapter == null) return
+
+        if (connectedDevices.containsKey(address)) {
+            onConnectionChange(true)
             return
         }
-        val type = if (device.type == BluetoothDevice.DEVICE_TYPE_LE) BluetoothType.BLE else BluetoothType.CLASSIC
-        connectInternal(device, type, onConnectionChange)
+
+        cancelReconnect(address)
+        onLog("→ CONECTANDO A $address...")
+        val device = adapter.getRemoteDevice(address)
+        val callback = createGattCallback(address, onConnectionChange)
+        gattCallbacks[address] = callback
+
+        val gatt = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            device.connectGatt(context, false, callback, BluetoothDevice.TRANSPORT_LE)
+        } else {
+            device.connectGatt(context, false, callback)
+        }
+        connectedDevices[address] = gatt
     }
 
-    private fun connectInternal(device: BluetoothDevice, type: BluetoothType, callback: (Boolean) -> Unit) {
-        when (type) {
-            BluetoothType.BLE -> connectBle(device, callback)
-            BluetoothType.CLASSIC -> connectClassic(device, callback)
-            else -> onLog("✗ ERROR: Tipo Desconocido")
+    @SuppressLint("MissingPermission")
+    fun reconnect(address: String, onConnectionChange: (Boolean) -> Unit = {}) {
+        disconnect(address)
+        val attempt = reconnectAttempts.getOrDefault(address, 0) + 1
+        reconnectAttempts[address] = attempt
+        val delayMs = min(1000L * (1 shl (attempt - 1)), 30_000L)
+        onLog("↻ Reconexión $address en ${delayMs}ms (intento $attempt)")
+
+        reconnectJobs[address]?.cancel()
+        reconnectJobs[address] = scope.launch {
+            delay(delayMs)
+            connect(address, onConnectionChange)
         }
     }
 
     @SuppressLint("MissingPermission")
-    private fun connectBle(device: BluetoothDevice, callback: (Boolean) -> Unit) {
-        val address = device.address
-        val gattCallback = object : BluetoothGattCallback() {
-            override fun onConnectionStateChange(g: BluetoothGatt, status: Int, newState: Int) {
-                if (newState == BluetoothProfile.STATE_CONNECTED) {
-                    onLog("✓ BLE CONECTADO: $address")
-                    connectedGatts[address] = g
-                    updateConnectionState(address, true)
-                    g.discoverServices()
-                    callback(true)
-                } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                    onLog("✗ BLE DESCONECTADO: $address")
-                    connectedGatts.remove(address)
-                    updateConnectionState(address, false)
-                    g.close()
-                    callback(false)
-                }
-            }
-            override fun onServicesDiscovered(g: BluetoothGatt, status: Int) {
-                if (status == BluetoothGatt.GATT_SUCCESS) {
-                    setupBleNotifications(g)
-                    scope.launch { delay(500); sendIdentification(address) }
-                }
-            }
-            override fun onCharacteristicChanged(g: BluetoothGatt, characteristic: BluetoothGattCharacteristic, value: ByteArray) {
-                processIncomingData(g.device.address, String(value, Charsets.UTF_8))
-            }
+    fun disconnect(address: String? = null) {
+        if (address == null) {
+            reconnectJobs.values.forEach { it.cancel() }
+            reconnectJobs.clear()
+            reconnectAttempts.clear()
+            connectedDevices.keys.toList().forEach { disconnect(it) }
+            updateConnectionStates()
+            return
         }
-        device.connectGatt(context, false, gattCallback, BluetoothDevice.TRANSPORT_LE)
-    }
 
-    @SuppressLint("MissingPermission")
-    private fun setupBleNotifications(gatt: BluetoothGatt) {
-        val txChar = gatt.getService(SERVICE_UUID)?.getCharacteristic(CHAR_UUID_TX) ?: return
-        gatt.setCharacteristicNotification(txChar, true)
-        txChar.getDescriptor(CCCD_UUID)?.let {
-            it.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
-            gatt.writeDescriptor(it)
-        }
-    }
+        cancelReconnect(address)
+        reconnectAttempts.remove(address)
+        gattCallbacks.remove(address)
 
-    @SuppressLint("MissingPermission")
-    private fun connectClassic(device: BluetoothDevice, callback: (Boolean) -> Unit) {
-        val address = device.address
-        scope.launch {
+        connectedDevices.remove(address)?.let { gatt ->
             try {
-                val socket = device.createRfcommSocketToServiceRecord(SPP_UUID)
-                socket.connect()
-                val thread = ClassicConnectedThread(socket)
-                connectedSockets[address] = thread
-                thread.start()
-                onLog("✓ SPP CONECTADO: $address")
-                updateConnectionState(address, true)
-                callback(true)
-                delay(500); sendIdentification(address)
-            } catch (e: Exception) {
-                onLog("✗ ERROR SPP: ${e.message}"); callback(false)
+                gatt.disconnect()
+                gatt.close()
+            } catch (_: Exception) {
+            }
+        }
+        receivingBuffers.remove(address)
+        setConnectionState(address, false)
+        onLog("✗ DESCONECTADO: $address")
+    }
+
+    private fun cancelReconnect(address: String) {
+        reconnectJobs.remove(address)?.cancel()
+    }
+
+    private fun setConnectionState(address: String, connected: Boolean) {
+        val updated = _connectionStates.value.toMutableMap()
+        if (connected) {
+            updated[address] = true
+            reconnectAttempts.remove(address)
+        } else {
+            updated.remove(address)
+        }
+        _connectionStates.value = updated
+    }
+
+    private fun updateConnectionStates() {
+        _connectionStates.value = connectedDevices.keys.associateWith { true }
+    }
+
+    private fun createGattCallback(address: String, onConnectionChange: (Boolean) -> Unit): BluetoothGattCallback {
+        return object : BluetoothGattCallback() {
+            override fun onConnectionStateChange(g: BluetoothGatt, status: Int, newState: Int) {
+                when (newState) {
+                    BluetoothProfile.STATE_CONNECTED -> {
+                        onLog("✓ CONECTADO: $address")
+                        connectedDevices[address] = g
+                        setConnectionState(address, true)
+                        g.discoverServices()
+                        mainHandler.post { onConnectionChange(true) }
+                    }
+                    BluetoothProfile.STATE_DISCONNECTED -> {
+                        connectedDevices.remove(address)
+                        setConnectionState(address, false)
+                        try {
+                            g.close()
+                        } catch (_: Exception) {
+                        }
+                        mainHandler.post { onConnectionChange(false) }
+                        scheduleAutoReconnect(address)
+                    }
+                }
+            }
+
+            @SuppressLint("MissingPermission")
+            override fun onServicesDiscovered(g: BluetoothGatt, status: Int) {
+                if (status != BluetoothGatt.GATT_SUCCESS) return
+                onLog("✓ SERVICIOS DESCUBIERTOS [$address]")
+                try {
+                    val txChar = g.getService(SERVICE_UUID)?.getCharacteristic(CHAR_UUID_TX) ?: return
+                    g.setCharacteristicNotification(txChar, true)
+                    val desc = txChar.getDescriptor(CCCD_UUID) ?: return
+                    desc.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+                    if (Build.VERSION.SDK_INT >= 33) {
+                        g.writeDescriptor(desc)
+                    } else {
+                        @Suppress("DEPRECATION")
+                        g.writeDescriptor(desc)
+                    }
+                    scope.launch {
+                        delay(500)
+                        sendIdentification(address)
+                    }
+                } catch (e: Exception) {
+                    onLog("⚠ Error setup GATT [$address]: ${e.message}")
+                }
+            }
+
+            @SuppressLint("MissingPermission")
+            override fun onCharacteristicChanged(
+                gatt: BluetoothGatt,
+                characteristic: BluetoothGattCharacteristic,
+                value: ByteArray
+            ) {
+                handleIncomingData(gatt, String(value, Charsets.UTF_8).trim())
+            }
+
+            @Deprecated("Deprecated in API 33")
+            @SuppressLint("MissingPermission")
+            override fun onCharacteristicChanged(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
+                @Suppress("DEPRECATION")
+                val value = characteristic.value ?: return
+                handleIncomingData(gatt, String(value, Charsets.UTF_8).trim())
             }
         }
     }
 
-    private fun updateConnectionState(address: String, connected: Boolean) {
-        val current = _connectionStates.value.toMutableMap()
-        current[address] = connected
-        _connectionStates.value = current
+    private fun scheduleAutoReconnect(address: String) {
+        if (reconnectJobs.containsKey(address)) return
+        reconnectJobs[address] = scope.launch {
+            reconnect(address)
+        }
     }
 
-    private fun processIncomingData(mac: String, data: String) {
+    private fun handleIncomingData(gatt: BluetoothGatt, data: String) {
+        val mac = gatt.device.address
+        val deviceName = gatt.device.name ?: "UNNAMED"
+        onLog("← RX [$mac] from [$deviceName]: ${data.take(60)}")
+
         val buffer = receivingBuffers.getOrPut(mac) { StringBuilder() }
         buffer.append(data)
-        if (data.contains("\n") || data.contains("*")) {
-            val fullMsg = buffer.toString().trim()
+
+        if (data.endsWith("*") || data.endsWith("\n")) {
+            val fullMessage = buffer.toString().trim()
             buffer.clear()
-            onDataReceived?.invoke(mac, fullMsg)
-            handleIdentifyResponse(mac, fullMsg)
+            onDataReceived?.invoke(mac, fullMessage)
+            handleIdentifyHandshake(gatt, mac, fullMessage)
         }
     }
 
-    private fun handleIdentifyResponse(mac: String, msg: String) {
-        val cim = try { CimMessage.fromTransportString(msg) } catch (e: Exception) { null }
-        if (cim != null && cim.commandType == CommandType.IDENTIFY) {
+    private fun handleIdentifyHandshake(gatt: BluetoothGatt, mac: String, fullMessage: String) {
+        try {
+            val cim = CimMessage.fromTransportString(fullMessage) ?: return
+            if (cim.commandType != CommandType.IDENTIFY) return
+
             scope.launch {
-                val deviceInfo = DeviceInfo(ip = "", mac = mac, nombre = discoveredDevicesMap[mac]?.name ?: "Nodo_$mac", tipo = DeviceType.UNKNOWN, appType = cim.sourceApp, isConnected = true)
-                GlobalDeviceRegistry.registry.register(mac, deviceInfo)
-                val decision = GlobalPermissionManager.getInstance().requestPermission(mac, cim.sourceApp, deviceInfo.nombre)
-                val responsePayload = if (decision == PermissionDecision.APPROVED) "AUTHORIZED" else "REJECTED"
-                val response = CimMessageBuilder.createIdentifiedResponse(AppIdentifier.getInstance().deviceMac, mac, cim.sourceApp, responsePayload).toTransportString()
-                sendToDevice(mac, response)
-            }
-        }
-    }
+                try {
+                    val deviceInfo = DeviceInfo(
+                        ip = "",
+                        nombre = gatt.device.name ?: "Device_${mac.takeLast(5)}",
+                        tipo = DeviceType.UNKNOWN,
+                        mac = mac,
+                        appType = cim.sourceApp,
+                        rssi = 0,
+                        lastSeen = System.currentTimeMillis(),
+                        authorized = false,
+                        isConnected = true
+                    )
+                    GlobalDeviceRegistry.registry.register(mac, deviceInfo)
 
-    private suspend fun sendIdentification(mac: String) {
-        val appId = AppIdentifier.getInstance()
-        val identify = CimMessageBuilder.createIdentifyMessage(appId.deviceMac, appId.appType, appId.appVersion).toTransportString()
-        sendToDevice(mac, identify)
-    }
+                    val decision = GlobalPermissionManager.getInstance()
+                        .requestPermission(mac, cim.sourceApp, deviceInfo.nombre)
 
-    fun sendToDevice(address: String, cmd: String) {
-        connectedGatts[address]?.let { sendBle(it, cmd); return }
-        connectedSockets[address]?.let { it.write((cmd + "\n").toByteArray()); return }
-        onLog("✗ ERROR: No conexión para $address")
-    }
+                    val responsePayload = when (decision) {
+                        PermissionDecision.APPROVED -> "AUTHORIZED"
+                        PermissionDecision.REJECTED -> "REJECTED"
+                        PermissionDecision.TIMEOUT -> "TIMEOUT"
+                        else -> "REJECTED"
+                    }
 
-    fun send(cmd: String, targetAddress: String? = null) {
-        if (targetAddress != null) sendToDevice(targetAddress, cmd)
-        else {
-            connectedGatts.keys.forEach { sendToDevice(it, cmd) }
-            connectedSockets.keys.forEach { sendToDevice(it, cmd) }
-        }
-    }
+                    val appIdentifier = AppIdentifier.getInstance()
+                    val response = CimMessage(
+                        sourceMac = appIdentifier.deviceMac,
+                        sourceApp = getCurrentAppType(context),
+                        destMac = mac,
+                        destApp = cim.sourceApp,
+                        commandType = CommandType.IDENTIFIED,
+                        payload = responsePayload
+                    )
 
-    @SuppressLint("MissingPermission")
-    private fun sendBle(gatt: BluetoothGatt, cmd: String) {
-        val rxChar = gatt.getService(SERVICE_UUID)?.getCharacteristic(CHAR_UUID_RX) ?: return
-        val bytes = (cmd + "\n").toByteArray()
-        if (bytes.size <= MAX_BLE_PACKET) {
-            if (Build.VERSION.SDK_INT >= 33) gatt.writeCharacteristic(rxChar, bytes, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT)
-            else { rxChar.value = bytes; gatt.writeCharacteristic(rxChar) }
-        } else {
-            scope.launch {
-                bytes.asIterable().chunked(MAX_BLE_PACKET).forEach { chunk ->
-                    val arr = chunk.toByteArray()
-                    if (Build.VERSION.SDK_INT >= 33) gatt.writeCharacteristic(rxChar, arr, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT)
-                    else { rxChar.value = arr; gatt.writeCharacteristic(rxChar) }
-                    delay(25)
+                    val rxChar = gatt.getService(SERVICE_UUID)?.getCharacteristic(CHAR_UUID_RX)
+                    if (rxChar != null) {
+                        sendLargeCommand(gatt, rxChar, response.toTransportString())
+                        onLog("→ SENT IDENTIFIED to $mac: $responsePayload")
+                    }
+                } catch (e: Exception) {
+                    onLog("⚠ Error IDENTIFY [$mac]: ${e.message}")
                 }
             }
+        } catch (_: Exception) {
         }
     }
 
     @SuppressLint("MissingPermission")
-    fun disconnect(address: String) {
-        connectedGatts[address]?.let { it.disconnect(); it.close() }
-        connectedGatts.remove(address)
-        connectedSockets[address]?.cancel()
-        connectedSockets.remove(address)
-        updateConnectionState(address, false)
+    fun send(cmd: String, requireAuthorization: Boolean = false, authorized: Boolean = true) {
+        if (requireAuthorization && !authorized) {
+            onLog("✗ No autorizado para enviar: $cmd")
+            return
+        }
+        val target = connectedDevices.keys.firstOrNull()
+        if (target == null) {
+            onLog("✗ ERROR: NO CONEXIÓN BLE")
+            return
+        }
+        sendToDevice(target, cmd)
     }
 
-    fun disconnectAll() {
-        connectedGatts.keys.forEach { disconnect(it) }
-        connectedSockets.keys.forEach { disconnect(it) }
+    @SuppressLint("MissingPermission")
+    fun sendToDevice(address: String, cmd: String) {
+        val targetGatt = connectedDevices[address] ?: run {
+            onLog("✗ ERROR: No GATT para $address")
+            return
+        }
+        try {
+            val rxChar = targetGatt.getService(SERVICE_UUID)?.getCharacteristic(CHAR_UUID_RX)
+            if (rxChar == null) {
+                onLog("✗ ERROR: CARACTERÍSTICA NO ENCONTRADA en $address")
+                return
+            }
+            sendLargeCommand(targetGatt, rxChar, cmd)
+        } catch (e: Exception) {
+            onLog("✗ ERROR TX a $address: ${e.message}")
+        }
     }
 
-    fun isConnected(address: String): Boolean = _connectionStates.value[address] == true
-    fun getConnectedDeviceAddresses(): Set<String> = connectedGatts.keys + connectedSockets.keys
-    fun reconnect(mac: String, cb: (Boolean) -> Unit) { disconnect(mac); connect(mac, cb) }
+    @SuppressLint("MissingPermission")
+    private fun sendLargeCommand(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, cmd: String) {
+        val bytes = (cmd + "\n").toByteArray(Charsets.UTF_8)
+        if (bytes.size <= MAX_BLE_PACKET) {
+            writeChunk(gatt, characteristic, bytes)
+            onLog("→ TX: $cmd")
+            return
+        }
 
-    private inner class ClassicConnectedThread(private val socket: BluetoothSocket) : Thread() {
-        private val mmInStream: InputStream = socket.inputStream
-        private val mmOutStream: OutputStream = socket.outputStream
-        private val address = socket.remoteDevice.address
-        override fun run() {
-            val buffer = ByteArray(1024)
-            while (true) {
-                try {
-                    val bytes = mmInStream.read(buffer)
-                    processIncomingData(address, String(buffer, 0, bytes))
-                } catch (e: IOException) { disconnect(address); break }
+        var offset = 0
+        var fragmentNumber = 0
+        while (offset < bytes.size) {
+            val chunkSize = min(MAX_BLE_PACKET, bytes.size - offset)
+            val chunk = bytes.sliceArray(offset until offset + chunkSize)
+            offset += chunkSize
+            writeChunk(gatt, characteristic, chunk)
+            onLog("→ TX FRAG[$fragmentNumber]: ${String(chunk, Charsets.UTF_8)}")
+            fragmentNumber++
+            Thread.sleep(20)
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun writeChunk(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, chunk: ByteArray) {
+        if (Build.VERSION.SDK_INT >= 33) {
+            gatt.writeCharacteristic(characteristic, chunk, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT)
+        } else {
+            @Suppress("DEPRECATION")
+            characteristic.value = chunk
+            @Suppress("DEPRECATION")
+            gatt.writeCharacteristic(characteristic)
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private suspend fun sendIdentification(mac: String) {
+        try {
+            val appIdentifier = AppIdentifier.getInstance()
+            val identifyMsg = CimMessageBuilder.createIdentifyMessage(
+                mac = appIdentifier.deviceMac,
+                appType = getCurrentAppType(context),
+                version = appIdentifier.appVersion
+            ).toTransportString()
+            sendToDevice(mac, identifyMsg)
+            onLog("→ SENT IDENTIFY to $mac")
+        } catch (e: Exception) {
+            onLog("⚠ Cannot send IDENTIFY to $mac: ${e.message}")
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun stopScanInternal() {
+        activeBleScanCallback?.let { cb ->
+            try {
+                scanner?.stopScan(cb)
+            } catch (e: Exception) {
+                onLog("⚠ Error deteniendo escaneo BLE: ${e.message}")
             }
         }
-        fun write(bytes: ByteArray) { try { mmOutStream.write(bytes) } catch (_: IOException) {} }
-        fun cancel() { try { socket.close() } catch (_: IOException) {} }
+        activeBleScanCallback = null
+        try {
+            adapter?.cancelDiscovery()
+        } catch (_: Exception) {
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    fun stopScan() = stopScanInternal()
+
+    fun isBluetoothEnabled(): Boolean = adapter?.isEnabled == true
+
+    fun isConnected(address: String? = null): Boolean {
+        return if (address != null) connectedDevices.containsKey(address) else connectedDevices.isNotEmpty()
+    }
+
+    fun getConnectedAddresses(): Set<String> = connectedDevices.keys.toSet()
+
+    fun disconnectAll() = disconnect(null)
+
+    fun release() {
+        stopScan()
+        disconnect()
+        if (isReceiverRegistered) {
+            try {
+                context.unregisterReceiver(discoveryReceiver)
+            } catch (_: Exception) {
+            }
+            isReceiverRegistered = false
+        }
+        scope.cancel()
     }
 }

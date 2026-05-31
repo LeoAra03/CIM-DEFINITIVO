@@ -74,11 +74,26 @@ class CommandBroker(
             var sent = false
             var lastError: Exception? = null
 
-            // Intentar BLE/Híbrido
+            // Intentar BLE
             if (bluetoothManager != null) {
                 try {
                     sendViaBle(message, transaction)
                     sent = true
+                } catch (e: Exception) { lastError = e }
+            }
+
+            // Intentar SPP (Bluetooth Classic)
+            if (!sent && sppManager != null) {
+                try {
+                    val payload = message.toTransportString()
+                    if (message.destMac.isNotEmpty()) {
+                        sppManager.sendToDevice(message.destMac, payload)
+                    } else {
+                        sppManager.sendToAll(payload)
+                    }
+                    transaction.status = TransactionStatus.SENT
+                    sent = true
+                    if (message.requiresAck()) waitForAckOrTimeout(transaction)
                 } catch (e: Exception) { lastError = e }
             }
 
@@ -117,6 +132,11 @@ class CommandBroker(
             transaction.status = TransactionStatus.ERROR
             notifyError("✗ BROKER ERROR: ${e.message}")
         }
+    }
+
+    /** Wrapper síncrono para tests y modo offline (`allowOfflineSend = true`). */
+    fun send(message: CimMessage) {
+        runBlocking { sendCommand(message) }
     }
 
     suspend fun handleResponse(response: CimMessage) {

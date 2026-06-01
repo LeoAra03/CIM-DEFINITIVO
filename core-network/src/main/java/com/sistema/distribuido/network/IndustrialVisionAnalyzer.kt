@@ -120,4 +120,42 @@ class IndustrialVisionAnalyzer(
         }
         imageProxy.close()
     }
+
+    companion object {
+        /**
+         * Genera una imagen ArUco real usando OpenCV
+         * @param markerId ID del marcador (0-99 para DICT_4X4_50)
+         * @param sizePixels Tamaño de la imagen en píxeles (recomendado 250-500)
+         * @return Bitmap con el marcador ArUco generado
+         */
+        fun generateArucoMarker(markerId: Int, sizePixels: Int = 250): Bitmap? {
+            return try {
+                if (!OpenCVLoader.initDebug()) {
+                    Log.e("ArucoGenerator", "OpenCV no inicializado")
+                    return null
+                }
+
+                // Crear diccionario y generar marcador
+                val dictionary = Objdetect.getPredefinedDictionary(Objdetect.DICT_4X4_50)
+                val markerImage = Mat()
+                
+                // Validar que el ID esté dentro del rango válido para DICT_4X4_50 (0-49)
+                val validId = if (markerId > 49) 49 else markerId
+                
+                Objdetect.generateImageMarker(dictionary, validId, sizePixels, markerImage, 1)
+
+                // Convertir Mat a Bitmap
+                val bitmap = Bitmap.createBitmap(sizePixels, sizePixels, Bitmap.Config.ARGB_8888)
+                Utils.matToBitmap(markerImage, bitmap)
+                
+                markerImage.release()
+                Log.d("ArucoGenerator", "✓ Marcador $validId generado ($sizePixels x $sizePixels)")
+                
+                bitmap
+            } catch (e: Exception) {
+                Log.e("ArucoGenerator", "Error generando ArUco: ${e.message}")
+                null
+            }
+        }
+    }
 }

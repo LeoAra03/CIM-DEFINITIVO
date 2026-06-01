@@ -30,6 +30,7 @@ fun BluetoothSearchDialog(
     val connectionStates by bluetoothManager.connectionStates.collectAsState()
     val scope = rememberCoroutineScope()
     var isScanning by remember { mutableStateOf(false) }
+    var connectingDevice by remember { mutableStateOf<String?>(null) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -67,12 +68,27 @@ fun BluetoothSearchDialog(
                     LazyColumn(Modifier.fillMaxWidth()) {
                         items(discoveredDevices.values.toList()) { device ->
                             val isConnected = connectionStates[device.address] == true
+                            val isConnecting = connectingDevice == device.address
+                            
                             Row(
                                 Modifier
                                     .fillMaxWidth()
-                                    .clickable { 
-                                        if (!isConnected) onConnect(device.address)
-                                        else bluetoothManager.disconnect(device.address)
+                                    .clickable(enabled = !isConnecting) { 
+                                        if (!isConnected && !isConnecting) {
+                                            connectingDevice = device.address
+                                            scope.launch {
+                                                onConnect(device.address)
+                                                bluetoothManager.connect(device.address)
+                                                delay(2000) // Esperar a que se establezca la conexión
+                                                connectingDevice = null
+                                                if (connectionStates[device.address] == true) {
+                                                    delay(500)
+                                                    onDismiss() // ✓ Cerrar diálogo tras conectar exitosamente
+                                                }
+                                            }
+                                        } else if (isConnected) {
+                                            bluetoothManager.disconnect(device.address)
+                                        }
                                     }
                                     .padding(vertical = 12.dp, horizontal = 8.dp)
                                     .border(1.dp, if(isConnected) IndustrialTheme.Exito else IndustrialTheme.Borde, RoundedCornerShape(8.dp))
@@ -84,11 +100,27 @@ fun BluetoothSearchDialog(
                                     Text(device.name, color = Color.White, fontSize = 14.sp)
                                     Text(device.address, color = Color.Gray, fontSize = 10.sp)
                                 }
-                                Icon(
-                                    if(isConnected) Icons.Default.LinkOff else Icons.Default.Link, 
-                                    null, 
-                                    tint = if(isConnected) IndustrialTheme.Error else IndustrialTheme.Exito
-                                )
+                                Box(Modifier.width(40.dp), contentAlignment = Alignment.Center) {
+                                    when {
+                                        isConnecting -> CircularProgressIndicator(
+                                            modifier = Modifier.size(24.dp),
+                                            strokeWidth = 2.dp,
+                                            color = IndustrialTheme.Advertencia
+                                        )
+                                        isConnected -> Icon(
+                                            Icons.Default.LinkOff, 
+                                            null, 
+                                            tint = IndustrialTheme.Exito,
+                                            modifier = Modifier.size(24.dp)
+                                        )
+                                        else -> Icon(
+                                            Icons.Default.Link, 
+                                            null, 
+                                            tint = IndustrialTheme.Primario,
+                                            modifier = Modifier.size(24.dp)
+                                        )
+                                    }
+                                }
                             }
                             Spacer(Modifier.height(8.dp))
                         }

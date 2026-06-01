@@ -120,6 +120,7 @@ class StationClient(
 
     private var lastSentMsg: String = ""
     private var lastSentTime: Long = 0
+    private var handshakeAttempts = 0
 
     fun connect() {
         onLog?.invoke("→ Iniciando conexión a $host:$port...")
@@ -212,24 +213,33 @@ class StationClient(
      * Realiza handshake de forma segura
      */
     private suspend fun performHandshakeSafe() {
-        try {
-            val handshake = CimMessageBuilder.createPermissionHandshake(
-                sourceMac = macAddress,
-                sourceApp = AppType.values().firstOrNull { it.name.equals(stationName, ignoreCase = true) } ?: AppType.UNKNOWN,
-                stationName = stationName,
-                password = password,
-                stationUuid = stationUuid
-            ).toTransportString()
-            val success = sendSafe(handshake)
-            if (success) {
-                onLog?.invoke(CimProtocol.formatLog("StationClient", "Handshake completado", true))
-            } else {
-                onLog?.invoke(CimProtocol.formatLog("StationClient", "Fallo en handshake - reintentando...", false))
-                delay(2000)
-                performHandshakeSafe()
+        handshakeAttempts = 0
+        val handshake = CimMessageBuilder.createPermissionHandshake(
+            sourceMac = macAddress,
+            sourceApp = AppType.values().firstOrNull { it.name.equals(stationName, ignoreCase = true) } ?: AppType.UNKNOWN,
+            stationName = stationName,
+            password = password,
+            stationUuid = stationUuid
+        ).toTransportString()
+
+        while (isActive && handshakeAttempts < 5) {
+            try {
+                val success = sendSafe(handshake)
+                if (success) {
+                    onLog?.invoke(CimProtocol.formatLog("StationClient", "Handshake completado", true))
+                    return
+                }
+                handshakeAttempts++
+                onLog?.invoke(CimProtocol.formatLog("StationClient", "Handshake fallido, intento ${handshakeAttempts}", false))
+                delay(1500L * handshakeAttempts)
+            } catch (e: Exception) {
+                handshakeAttempts++
+                onLog?.invoke(CimProtocol.formatLog("StationClient", "Excepción en handshake (intento ${handshakeAttempts}): ${e.message}", false))
+                delay(1500L * handshakeAttempts)
             }
-        } catch (e: Exception) {
-            onLog?.invoke(CimProtocol.formatLog("StationClient", "Excepción en handshake: ${e.message}", false))
+        }
+        if (handshakeAttempts >= 5) {
+            onLog?.invoke(CimProtocol.formatLog("StationClient", "Handshake abortado tras 5 intentos", false))
         }
     }
 
@@ -238,18 +248,19 @@ class StationClient(
 
         reconnectJob = scope.launch {
             var delayMs = reconnectDelayBase
-            while (isActive) {
+            while (isActive && !tcpClient.isSocketConnected()) {
                 try {
                     onLog?.invoke(CimProtocol.formatLog("StationClient", "Intentando reconectar en ${delayMs}ms...", false))
                     delay(delayMs)
                     tcpClient.connect()
-                    // Esperar un poco para ver si conecta (TcpClient invocará onConnectionStateChanged)
-                    delay(3000)
-                    // Si conectó, salir del loop
+                    delay(2500)
                     if (tcpClient.isSocketConnected()) {
+                        onLog?.invoke(CimProtocol.formatLog("StationClient", "Reconexión exitosa", true))
                         break
                     }
-                } catch (_: Exception) {}
+                } catch (e: Exception) {
+                    onLog?.invoke(CimProtocol.formatLog("StationClient", "Error reconectando: ${e.message}", false))
+                }
                 delayMs = (delayMs * 2).coerceAtMost(reconnectDelayMax)
             }
         }

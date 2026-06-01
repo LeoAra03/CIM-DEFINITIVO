@@ -19,6 +19,8 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.min
@@ -31,7 +33,8 @@ import kotlin.math.min
 class BluetoothHardwareManager(
     private val context: Context,
     private val onLog: (String) -> Unit,
-    private val onDataReceived: ((String, String) -> Unit)? = null
+    private val onDataReceived: ((String, String) -> Unit)? = null,
+    private val permissionManager: PermissionManager? = null
 ) {
     private val bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
     private val adapter = bluetoothManager.adapter
@@ -43,6 +46,13 @@ class BluetoothHardwareManager(
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val reconnectAttempts = ConcurrentHashMap<String, Int>()
     private val reconnectJobs = ConcurrentHashMap<String, Job>()
+    
+    // Comunicación centralizada de autorización
+    private val commCoordinator = CommunicationCoordinator(
+        permissionManager = permissionManager,
+        onLog = onLog,
+        onMessageReceived = { mac, msg -> onDataReceived?.invoke(mac, msg) }
+    )
 
     private val _connectionStates = MutableStateFlow<Map<String, Boolean>>(emptyMap())
     val connectionStates: StateFlow<Map<String, Boolean>> = _connectionStates.asStateFlow()
@@ -51,6 +61,7 @@ class BluetoothHardwareManager(
     val discoveredHardware: SnapshotStateMap<String, String> = mutableStateMapOf()
 
     private val SERVICE_UUID = UUID.fromString("6E400001-B5A3-F393-E0A9-E50E24DCCA9E")
+    private val writeLocks = ConcurrentHashMap<String, Mutex>()
     private val CHAR_UUID_RX = UUID.fromString("6E400002-B5A3-F393-E0A9-E50E24DCCA9E")
     private val CHAR_UUID_TX = UUID.fromString("6E400003-B5A3-F393-E0A9-E50E24DCCA9E")
     private val CCCD_UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
@@ -78,6 +89,15 @@ class BluetoothHardwareManager(
             @SuppressLint("MissingPermission")
             override fun onScanResult(ct: Int, res: ScanResult) {
                 registerDiscoveredDevice(res.device.address, res.device.name, res.isConnectable)
+            }
+
+            @SuppressLint("MissingPermission")
+            override fun onBatchScanResults(results: MutableList<ScanResult>) {
+                results.forEach { res -> registerDiscoveredDevice(res.device.address, res.device.name, res.isConnectable) }
+            }
+
+            override fun onScanFailed(errorCode: Int) {
+                onLog("⚠ Escaneo BLE fallido: $errorCode")
             }
         }
         activeBleScanCallback = cb
@@ -367,12 +387,12 @@ class BluetoothHardwareManager(
     }
 
     @SuppressLint("MissingPermission")
-    fun send(cmd: String, requireAuthorization: Boolean = false, authorized: Boolean = true) {
+    fun send(cmd: String, address: String? = null, requireAuthorization: Boolean = false, authorized: Boolean = true) {
         if (requireAuthorization && !authorized) {
             onLog("✗ No autorizado para enviar: $cmd")
             return
         }
-        val target = connectedDevices.keys.firstOrNull()
+        val target = address ?: connectedDevices.keys.firstOrNull()
         if (target == null) {
             onLog("✗ ERROR: NO CONEXIÓN BLE")
             return
@@ -386,20 +406,22 @@ class BluetoothHardwareManager(
             onLog("✗ ERROR: No GATT para $address")
             return
         }
-        try {
-            val rxChar = targetGatt.getService(SERVICE_UUID)?.getCharacteristic(CHAR_UUID_RX)
-            if (rxChar == null) {
-                onLog("✗ ERROR: CARACTERÍSTICA NO ENCONTRADA en $address")
-                return
+        val rxChar = targetGatt.getService(SERVICE_UUID)?.getCharacteristic(CHAR_UUID_RX)
+        if (rxChar == null) {
+            onLog("✗ ERROR: CARACTERÍSTICA NO ENCONTRADA en $address")
+            return
+        }
+
+        scope.launch {
+            val lock = writeLocks.getOrPut(address) { Mutex() }
+            lock.withLock {
+                sendLargeCommand(targetGatt, rxChar, cmd)
             }
-            sendLargeCommand(targetGatt, rxChar, cmd)
-        } catch (e: Exception) {
-            onLog("✗ ERROR TX a $address: ${e.message}")
         }
     }
 
     @SuppressLint("MissingPermission")
-    private fun sendLargeCommand(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, cmd: String) {
+    private suspend fun sendLargeCommand(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, cmd: String) {
         val bytes = (cmd + "\n").toByteArray(Charsets.UTF_8)
         if (bytes.size <= MAX_BLE_PACKET) {
             writeChunk(gatt, characteristic, bytes)
@@ -416,7 +438,7 @@ class BluetoothHardwareManager(
             writeChunk(gatt, characteristic, chunk)
             onLog("→ TX FRAG[$fragmentNumber]: ${String(chunk, Charsets.UTF_8)}")
             fragmentNumber++
-            Thread.sleep(20)
+            delay(25)
         }
     }
 

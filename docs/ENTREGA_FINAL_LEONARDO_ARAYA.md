@@ -1,4 +1,4 @@
-﻿---
+---
 title: "Entrega Final — Sistema CIM v6.0"
 author: "Leonardo Araya Labarca"
 description: "Computer Integrated Manufacturing — IECI — Universidad del Biobío"

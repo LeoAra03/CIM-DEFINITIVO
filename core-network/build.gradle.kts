@@ -2,6 +2,7 @@ plugins {
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
+    kotlin("kapt")
 }
 
 android {
@@ -63,4 +64,7 @@ dependencies {
 
     // 👁️ OpenCV para ArUco (Official Maven artifact)
     api("org.opencv:opencv:4.9.0")
+
+    implementation("com.google.dagger:hilt-android:2.47")
+    kapt("com.google.dagger:hilt-compiler:2.47")
 }

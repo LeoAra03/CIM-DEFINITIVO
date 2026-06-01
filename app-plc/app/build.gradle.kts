@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.plc"
+    namespace = "com.industria.plc"
     compileSdk = 35
 
     defaultConfig {

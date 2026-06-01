@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.myapplication"
+    namespace = "com.industria.calidad"
     compileSdk = 35
 
     defaultConfig {

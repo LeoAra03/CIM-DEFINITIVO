@@ -42,6 +42,7 @@ Practica_2/
 
 > `output-apks/` ahora contiene las 5 APKs de entrega y el binario de firmware canónico.
 > Las variantes de release se conservan en `output-apks/release/` y los bins históricos en `output-apks/firmware-archive/`.
+> Los elementos de preparación personal para la sesión (como notas y listas de mañana) están en `.para-maniana/`, que está en `.gitignore` y no se sube a GitHub.
 
 ---
 

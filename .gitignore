@@ -41,7 +41,11 @@ docs/_pdf_build_temp.*
 # --- Clones vendor muy pesados (opcional en local) ---
 espessif/
 
-# --- Carpetas de entrega antiguas / artefactos sueltos ---
+# --- Paquete ZIP portable (regenerar: .\entrega\crear_paquete_zip.ps1) ---
+CIM_V6_PAQUETE_ENTREGA.zip
+entrega/CIM_V6_PAQUETE_ENTREGA/
+
+# --- Carpetas de entrega antiguas ---
 ENTREGA_FINAL_CIM_V6/
 DOCUMENTACION_FINAL/
 CIM_V6_*.zip
@@ -49,6 +53,9 @@ CIM_V6_*.zip
 # --- Sistema operativo ---
 .DS_Store
 Thumbs.db
+
+# --- Carpeta personal para uso mañana ---
+.para-maniana/
 
 # --- Logs temporales ---
 *.log

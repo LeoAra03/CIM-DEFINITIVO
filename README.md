@@ -14,33 +14,34 @@
 
 | Documento | Descripción |
 |-----------|-------------|
-| [docs/ENTREGA_FINAL_LEONARDO_ARAYA.pdf](docs/ENTREGA_FINAL_LEONARDO_ARAYA.pdf) | Informe completo (entrega académica) |
+| [docs/ENTREGA_FINAL_LEONARDO_ARAYA.pdf](docs/ENTREGA_FINAL_LEONARDO_ARAYA.pdf) | Informe completo de la entrega académica |
 | [docs/ENTREGA_FINAL_LEONARDO_ARAYA.md](docs/ENTREGA_FINAL_LEONARDO_ARAYA.md) | Fuente Markdown del informe |
-| [docs/GUIA_LABORATORIO_MANANA.md](docs/GUIA_LABORATORIO_MANANA.md) | Checklist para sesión en planta |
-| [docs/INFORME_FUNCIONALIDAD.md](docs/INFORME_FUNCIONALIDAD.md) | Auditoría funcional (~83 %) y riesgos |
-| [CHANGELOG_FIXES.md](CHANGELOG_FIXES.md) | Registro de correcciones v6.0 |
+| [docs/GUIA_LABORATORIO_MANANA.md](docs/GUIA_LABORATORIO_MANANA.md) | Checklist de instalación y prueba en planta |
+| [docs/INFORME_FUNCIONALIDAD.md](docs/INFORME_FUNCIONALIDAD.md) | Auditoría funcional y riesgos |
+| [CHANGELOG_FIXES.md](CHANGELOG_FIXES.md) | Registro de correcciones y ajustes v6.0 |
 
 ---
 
-## Estructura del repositorio
+## Organización del proyecto
 
 ```
 Practica_2/
-├── app-coordinador/     # Hub maestro (TCP :8888, autorización BT)
+├── app-coordinador/     # Hub maestro (TCP, autorización Bluetooth)
 ├── app-plc/             # Cinta transportadora / PLC
 ├── app-manufactura/     # Robot Scorbot + láser CNC
 ├── app-calidad/         # Visión ArUco/QR (OpenCV)
-├── app-almacen/         # Rack 18 posiciones
+├── app-almacen/         # Rack de almacenamiento y logística
 ├── core-network/        # Librería compartida (TCP, BT, protocolo CIM)
 ├── firmware/Firmware_Support/   # Firmware ESP32 (PlatformIO)
-├── simulacion_esp32/    # Demo Wokwi (telemetría)
-├── scripts/             # Flash ESP32, ADB, automatización
-├── docs/                # Manuales, PDF, imágenes, guías
-├── binarios_particionados/  # APKs particionadas (>100 MB GitHub)
-└── entorno_mobile/      # Deploy multi-emulador (ADB)
+├── simulacion_esp32/    # Demo Wokwi de telemetría
+├── scripts/             # Automatización, flashing y pruebas hardware
+├── docs/                # Manuales, guías y entrega académica
+├── binarios_particionados/  # APKs divididas para GitHub
+└── output-apks/         # APKs finales + firmware para entrega
 ```
 
-> **Nota:** Las APKs compiladas (`output-apks/`) no están en el repo por tamaño. Compílalas localmente o reconstruye desde `binarios_particionados/`.
+> `output-apks/` ahora contiene las 5 APKs de entrega y el binario de firmware canónico.
+> Las variantes de release se conservan en `output-apks/release/` y los bins históricos en `output-apks/firmware-archive/`.
 
 ---
 
@@ -48,82 +49,73 @@ Practica_2/
 
 - **JDK 17**
 - **Android SDK** API 35 (`compileSdk 35`)
-- **Gradle** (wrapper incluido: `gradlew`)
-- **PlatformIO CLI** (`pip install platformio`) — firmware ESP32
-- **ADB** — instalar APKs en dispositivos
+- **Gradle wrapper** incluido (`gradlew`)
+- **PlatformIO CLI** (`pip install platformio`)
+- **ADB** para instalar APKs en dispositivos Android
 
-Extensiones recomendadas para Cursor/VS Code: ver [.vscode/extensions.json](.vscode/extensions.json).
+Extensiones recomendadas: ver `.vscode/extensions.json`.
 
 ---
 
-## Compilar e instalar
+## Compilación y entrega
 
 ```powershell
-# Tests + 5 APKs → output-apks/
+# Compila todos los módulos y exporta las APKs a output-apks/
 .\gradlew testAllModules buildAllApks
 
-# Firmware ESP32
+# Compila firmware ESP32
 cd firmware\Firmware_Support
 pio run
 
-# Instalar apps en dispositivos (ADB)
-.\docs\logs\Install-CIM.ps1
-
-# Flashear ESP32
-.\scripts\hardware-testing\flash_and_monitor_esp32.ps1
+# Empaqueta la entrega
+cd ..\..
+.\entrega\crear_paquete_zip.ps1
 ```
 
-Regenerar PDF del informe:
-
-```powershell
-cd docs
-npm install
-npm run pdf
-```
+> El archivo `output-apks/cim_esp32_firmware_v6.bin` es el firmware CANÓNICO para flashear los nodos.
 
 ---
 
-## Despliegue en laboratorio (5 pasos)
+## Instalación en laboratorio
 
-1. Flashear cada ESP32 con `cim_esp32_firmware_v6.bin` (mismo firmware en todos los nodos).
-2. Instalar las 5 APKs en dispositivos Android (una app por estación + hub).
-3. Abrir **app-coordinador** → **START** hub → anotar IP.
-4. En cada estación → pestaña **SINCRO** → vincular IP del coordinador.
-5. FAB Bluetooth → emparejar ESP32 → autorizar MAC en el hub.
+1. Flashear cada ESP32 con `output-apks/cim_esp32_firmware_v6.bin`.
+2. Instalar las 5 APKs desde `output-apks/`.
+3. Iniciar **app-coordinador** y copiar la IP del hub.
+4. En cada estación, ir a la pestaña **SINCRO** y vincular la IP.
+5. Autorizar desde Bluetooth/Hub para permitir la comunicación entre estaciones.
 
 Detalle completo: [docs/GUIA_LABORATORIO_MANANA.md](docs/GUIA_LABORATORIO_MANANA.md).
 
 ---
 
-## Manuales técnicos
+## Documentación técnica
 
 | # | Tema |
 |---|------|
-| [01](docs/manuals/01_ARQUITECTURA_SISTEMA.md) | Arquitectura hub-and-spoke |
+| [01](docs/manuals/01_ARQUITECTURA_SISTEMA.md) | Arquitectura del sistema |
 | [02](docs/manuals/02_PROTOCOLO_COMUNICACION_CIM.md) | Protocolo CIM |
 | [03](docs/manuals/03_MOTOR_BLUETOOTH_HIBRIDO.md) | Bluetooth BLE + SPP |
-| [04](docs/manuals/04_SISTEMA_VISION_ARTIFICIAL.md) | ArUco / QR / OpenCV |
-| [05](docs/manuals/05_GUIA_ESTACIONES_TRABAJO.md) | UI por estación |
-| [06](docs/manuals/06_DESPLIEGUE_Y_CONFIGURACION.md) | Red, permisos, troubleshooting |
+| [04](docs/manuals/04_SISTEMA_VISION_ARTIFICIAL.md) | Visión artificial y OpenCV |
+| [05](docs/manuals/05_GUIA_ESTACIONES_TRABAJO.md) | UI y operación de estaciones |
+| [06](docs/manuals/06_DESPLIEGUE_Y_CONFIGURACION.md) | Red, permisos y troubleshooting |
 
 ---
 
-## APKs grandes en GitHub
+## Resumen de entrega
 
-Las APKs con OpenCV superan el límite de 100 MB. Si incluyes `binarios_particionados/`:
-
-```powershell
-Get-Content ./binarios_particionados/CIM_V6_PART_* -Raw | Set-Content CIM_V6_ENTREGA_FINAL.zip
-```
+- **5 APKs de estación** listas en `output-apks/`
+- **Binario de firmware** en `output-apks/cim_esp32_firmware_v6.bin`
+- **Release antiguos** en `output-apks/release/`
+- **Firmware histórico** en `output-apks/firmware-archive/`
 
 ---
 
-## Estado del proyecto
+## Estado actual
 
-- **Build Android:** OK (`buildAllApks`, `testAllModules`)
+- **Android:** OK (`buildAllApks`, `testAllModules`)
 - **Firmware:** OK (`pio run` en `firmware/Firmware_Support`)
-- **Tests documentados:** 30/30 PASS (core-network, coordinador, plc)
-- **Validación en planta física:** pendiente de sesión con ESP32 y actuadores reales
+- **Pruebas:** 30/30 documentadas y automatizadas en core-network y apps
+- **Entrega:** lista para paquete final y validación en planta
 
 ---
 

@@ -23,15 +23,21 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.graphics.Color
 import com.sistema.distribuido.network.AppIdentifier
+import com.sistema.distribuido.network.CommunicationCoordinator
 import com.sistema.distribuido.network.GlobalBluetoothManager
 import com.sistema.distribuido.network.GlobalPermissionManager
 import com.sistema.distribuido.network.protocol.CimProtocol
 import com.sistema.distribuido.network.protocol.AppType
 import com.sistema.distribuido.network.prefecto.*
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.util.*
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    @Inject
+    lateinit var commCoordinator: CommunicationCoordinator
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         AppIdentifier.init(this, AppType.PLC)
@@ -60,6 +66,7 @@ fun PLCApp() {
     var isConnectedNet by remember { mutableStateOf(false) }
     var authorizationState by remember { mutableStateOf(CimProtocol.AUTH_STATE_DISCONNECTED) }
     val isAuthorized by remember { derivedStateOf { authorizationState == CimProtocol.AUTH_STATE_VALIDATED } }
+    var independentMode by remember { mutableStateOf(false) }
     var ipCoordinator by remember { mutableStateOf("192.168.1.100") }
     var selectedTab by remember { mutableStateOf(0) }
 
@@ -70,6 +77,20 @@ fun PLCApp() {
     fun addLog(msg: String) {
         val time = java.text.SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
         logs.add(0, "[$time] $msg")
+    }
+
+    fun sendPlcHardwareCommand(command: String, logText: String) {
+        if (!isAuthorized && !independentMode) {
+            addLog("✗ No autorizado - activar modo autónomo o esperar VALIDADO por coordinador")
+            return
+        }
+        bluetoothManager.send(command, requireAuthorization = !independentMode, authorized = isAuthorized)
+        if (isAuthorized) {
+            scope.launch {
+                commCoordinator.routeCommand(AppIdentifier.getInstance().deviceMac, command)
+            }
+        }
+        addLog(if (independentMode) "[AUTÓNOMO] $logText" else logText)
     }
 
     val stationClient = remember(ipCoordinator) {
@@ -109,11 +130,16 @@ fun PLCApp() {
                 when (selectedTab) {
                     0 -> {
                         IndustrialCard("Energía y Sistema", Icons.Default.PowerSettingsNew) {
-                            val isActive = isConnectedNet && isAuthorized && isConnectedBt
-                            IndustrialStatusRow("Estado Operativo", if(isActive) "SISTEMA VINCULADO" else "STANDBY (BT/NET REQ)", isActive)
+                            val isActive = isConnectedBt && (isAuthorized || independentMode)
+                            IndustrialStatusRow("Estado Operativo", if(isActive) "SISTEMA VINCULADO" else "STANDBY (BT REQUERIDO)", isActive)
+                            Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                Text("Modo Autónomo", color = IndustrialTheme.TextoSecundario)
+                                Switch(checked = independentMode, onCheckedChange = { independentMode = it }, colors = SwitchDefaults.colors(checkedThumbColor = IndustrialTheme.Exito))
+                            }
+                            IndustrialStatusRow("Modo Autónomo", if(independentMode) "ACTIVO" else "DESACTIVADO", independentMode)
                             Row(Modifier.fillMaxWidth(), Arrangement.spacedBy(12.dp)) {
-                                IndustrialActionButton(texto = "Arranque", icono = Icons.Default.PlayArrow, modifier = Modifier.weight(1f), colorFondo = IndustrialTheme.Exito, enabled = isActive, onClick = { addLog("SISTEMA: Power On Sequence Initiated") })
-                                IndustrialActionButton(texto = "Parada", icono = Icons.Default.Stop, modifier = Modifier.weight(1f), colorFondo = IndustrialTheme.Error, enabled = isActive, onClick = { addLog("SISTEMA: Emergency Stop Engaged") })
+                                IndustrialActionButton(texto = "Arranque", icono = Icons.Default.PlayArrow, modifier = Modifier.weight(1f), colorFondo = IndustrialTheme.Exito, enabled = isActive, onClick = { sendPlcHardwareCommand("PLC:START", "PLC: START") })
+                                IndustrialActionButton(texto = "Parada", icono = Icons.Default.Stop, modifier = Modifier.weight(1f), colorFondo = IndustrialTheme.Error, enabled = isActive, onClick = { sendPlcHardwareCommand("PLC:STOP", "PLC: STOP") })
                             }
                         }
 
@@ -128,15 +154,20 @@ fun PLCApp() {
                                                 texto = "$stationFrom>$stationTo",
                                                 icono = Icons.Default.Send,
                                                 modifier = Modifier.weight(1f).height(34.dp),
-                                                colorFondo = if(isConnectedNet && isAuthorized) IndustrialTheme.Primario.copy(alpha = 0.3f) else IndustrialTheme.Tarjeta,
-                                                enabled = isConnectedNet && isAuthorized,
+                                                colorFondo = if(isConnectedBt && (isAuthorized || independentMode)) IndustrialTheme.Primario.copy(alpha = 0.3f) else IndustrialTheme.Tarjeta,
+                                                enabled = isConnectedBt && (isAuthorized || independentMode),
                                                 buttonHeight = 34.dp,
                                                 fillMaxWidth = false,
-                                                onClick = { 
-                                                    scope.launch {
-                                                        stationClient.sendSafe("C:DELIVER|$stationFrom|$stationTo")
+                                                onClick = {
+                                                    if (isConnectedBt) {
+                                                        bluetoothManager.send("C:DELIVER|$stationFrom|$stationTo", requireAuthorization = !independentMode, authorized = isAuthorized)
+                                                        addLog(if (independentMode) "[AUTÓNOMO] CMD: C:DELIVER $stationFrom -> $stationTo" else "CMD: C:DELIVER $stationFrom -> $stationTo")
                                                     }
-                                                    addLog("CMD: C:DELIVER $stationFrom -> $stationTo")
+                                                    if (isConnectedNet && isAuthorized) {
+                                                        scope.launch {
+                                                            stationClient.sendSafe("C:DELIVER|$stationFrom|$stationTo")
+                                                        }
+                                                    }
                                                 }
                                             )
                                         }

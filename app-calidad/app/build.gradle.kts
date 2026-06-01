@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("org.jetbrains.kotlin.kapt")
+    id("com.google.dagger.hilt.android")
 }
 
 android {
@@ -55,6 +57,10 @@ dependencies {
     implementation(libs.androidx.compose.material.icons.extended)
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation(project(":core-network"))
+
+    // Hilt
+    implementation("com.google.dagger:hilt-android:2.47")
+    kapt("com.google.dagger:hilt-compiler:2.47")
 
     // CameraX
     val cameraVersion = "1.3.1"

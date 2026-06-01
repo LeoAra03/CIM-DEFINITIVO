@@ -12,6 +12,7 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.Alignment
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -28,9 +29,14 @@ import com.sistema.distribuido.network.*
 import com.sistema.distribuido.network.prefecto.*
 import com.sistema.distribuido.network.protocol.AppType
 import com.sistema.distribuido.network.protocol.CimProtocol
+import dagger.hilt.android.AndroidEntryPoint
 import java.util.*
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    @Inject
+    lateinit var commCoordinator: CommunicationCoordinator
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         IndustrialErrorManager.install(this) {}
@@ -64,6 +70,7 @@ fun CalidadApp() {
     var isConnectedNet by remember { mutableStateOf(false) }
     var authorizationState by remember { mutableStateOf(CimProtocol.AUTH_STATE_DISCONNECTED) }
     val isAuthorized by remember { derivedStateOf { authorizationState == CimProtocol.AUTH_STATE_VALIDATED } }
+    var independentMode by remember { mutableStateOf(false) }
     var ipCoordinator by remember { mutableStateOf("192.168.1.100") }
     var selectedTab by remember { mutableStateOf(0) }
     var approvedCount by remember { mutableStateOf(1240) }
@@ -75,12 +82,17 @@ fun CalidadApp() {
     }
 
     fun sendAuthorizedHardwareCommand(command: String, logText: String) {
-        if (!isAuthorized) {
-            addLog("✗ No autorizado - esperar VALIDADO por coordinador")
+        if (!isAuthorized && !independentMode) {
+            addLog("✗ No autorizado - activar modo autónomo o esperar VALIDADO por coordinador")
             return
         }
-        bt.send(command)
-        addLog(logText)
+        bt.send(command, requireAuthorization = !independentMode, authorized = isAuthorized)
+        if (isAuthorized) {
+            scope.launch {
+                commCoordinator.routeCommand(AppIdentifier.getInstance().deviceMac, command)
+            }
+        }
+        addLog(if (independentMode) "[AUTÓNOMO] $logText" else logText)
     }
 
     fun handleIncomingCoordinatorCommand(command: String) {
@@ -100,7 +112,7 @@ fun CalidadApp() {
         }
     }
 
-    val stationClient = remember {
+    val stationClient = remember(ipCoordinator) {
         StationClient(host = ipCoordinator, port = 8888, stationName = "CALIDAD", password = CimProtocol.PASSWORD_ACTUAL, stationUuid = "CIM-CAL-03").apply {
             onLog = { msg -> logs.add(0, "[NET] $msg") }
             onStatusChanged = { isConnectedNet = it }
@@ -143,14 +155,14 @@ fun CalidadApp() {
                                 )
                             }
                             Spacer(Modifier.height(16.dp))
-                            IndustrialActionButton("Capturar y Validar", Icons.Default.Camera, enabled = isConnectedBt && isAuthorized, onClick = { sendAuthorizedHardwareCommand("CAM:SNAP", "CMD: TRIGGER SCAN") })
+                            IndustrialActionButton("Capturar y Validar", Icons.Default.Camera, enabled = isConnectedBt && (isAuthorized || independentMode), onClick = { sendAuthorizedHardwareCommand("CAM:SNAP", "CMD: TRIGGER SCAN") })
                             Spacer(Modifier.height(8.dp))
                             Row(Modifier.fillMaxWidth(), Arrangement.spacedBy(8.dp)) {
-                                IndustrialActionButton("PASS", Icons.Default.CheckCircle, modifier = Modifier.weight(1f), colorFondo = IndustrialTheme.Exito, enabled = isConnectedBt && isAuthorized, onClick = {
+                                IndustrialActionButton("PASS", Icons.Default.CheckCircle, modifier = Modifier.weight(1f), colorFondo = IndustrialTheme.Exito, enabled = isConnectedBt && (isAuthorized || independentMode), onClick = {
                                     approvedCount += 1
                                     sendAuthorizedHardwareCommand("VAL:PASS", "RESULT: APPROVED")
                                 })
-                                IndustrialActionButton("FAIL", Icons.Default.Cancel, modifier = Modifier.weight(1f), colorFondo = IndustrialTheme.Error, enabled = isConnectedBt && isAuthorized, onClick = {
+                                IndustrialActionButton("FAIL", Icons.Default.Cancel, modifier = Modifier.weight(1f), colorFondo = IndustrialTheme.Error, enabled = isConnectedBt && (isAuthorized || independentMode), onClick = {
                                     rejectedCount += 1
                                     sendAuthorizedHardwareCommand("VAL:FAIL", "RESULT: REJECTED")
                                 })
@@ -182,6 +194,11 @@ fun CalidadApp() {
                             IndustrialTextField(valor = ipCoordinator, onValueChange = { ipCoordinator = it }, label = "IP Coordinador")
                             IndustrialStatusRow("Conexión HUB", if(isConnectedNet) "SINCRONIZADO" else "STANDBY", isConnectedNet)
                             IndustrialStatusRow("Autorización", authorizationState, isAuthorized)
+                            Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                Text("Modo Autónomo", color = IndustrialTheme.TextoSecundario)
+                                Switch(checked = independentMode, onCheckedChange = { independentMode = it }, colors = SwitchDefaults.colors(checkedThumbColor = IndustrialTheme.Exito))
+                            }
+                            IndustrialStatusRow("Modo Autónomo", if(independentMode) "ACTIVO" else "DESACTIVADO", independentMode)
                             IndustrialActionButton(texto = if(isConnectedNet) "OPERATIVO" else "VINCULAR", icono = Icons.Default.Router, colorFondo = if(isConnectedNet) IndustrialTheme.Exito else IndustrialTheme.Primario, onClick = { stationClient.connect() })
                         }
                     }

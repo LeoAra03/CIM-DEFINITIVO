@@ -15,6 +15,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -24,9 +26,14 @@ import com.sistema.distribuido.network.*
 import com.sistema.distribuido.network.prefecto.*
 import com.sistema.distribuido.network.protocol.AppType
 import com.sistema.distribuido.network.protocol.CimProtocol
+import dagger.hilt.android.AndroidEntryPoint
 import java.util.*
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    @Inject
+    lateinit var commCoordinator: CommunicationCoordinator
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         IndustrialErrorManager.install(this) {}
@@ -54,6 +61,7 @@ class MainActivity : ComponentActivity() {
 fun AlmacenApp() {
     val context = LocalContext.current
     val logs = remember { mutableStateListOf<String>() }
+    val scope = rememberCoroutineScope()
     val bt = GlobalBluetoothManager.getInstance()
     val connectionStates by bt.connectionStates.collectAsState()
     val isConnectedBt by remember { derivedStateOf { connectionStates.values.any { it } } }
@@ -61,6 +69,7 @@ fun AlmacenApp() {
     var isConnectedNet by remember { mutableStateOf(false) }
     var authorizationState by remember { mutableStateOf(CimProtocol.AUTH_STATE_DISCONNECTED) }
     val isAuthorized by remember { derivedStateOf { authorizationState == CimProtocol.AUTH_STATE_VALIDATED } }
+    var independentMode by remember { mutableStateOf(false) }
     var ipCoordinator by remember { mutableStateOf("192.168.1.100") }
     var selectedTab by remember { mutableStateOf(0) }
 
@@ -69,7 +78,7 @@ fun AlmacenApp() {
         logs.add(0, "[$time] $msg")
     }
 
-    val stationClient = remember {
+    val stationClient = remember(ipCoordinator) {
         StationClient(host = ipCoordinator, port = 8888, stationName = "ALMACEN", password = CimProtocol.PASSWORD_ACTUAL, stationUuid = "CIM-ALM-01").apply {
             onLog = { msg -> logs.add(0, "[NET] $msg") }
             onStatusChanged = { isConnectedNet = it }
@@ -78,12 +87,17 @@ fun AlmacenApp() {
     }
 
     fun sendAuthorizedHardwareCommand(command: String, logText: String) {
-        if (!isAuthorized) {
-            addLog("✗ No autorizado - esperar VALIDADO por coordinador")
+        if (!isAuthorized && !independentMode) {
+            addLog("✗ No autorizado - activar modo autónomo o esperar VALIDADO por coordinador")
             return
         }
-        bt.send(command)
-        addLog(logText)
+        bt.send(command, requireAuthorization = !independentMode, authorized = isAuthorized)
+        if (isAuthorized) {
+            scope.launch {
+                commCoordinator.routeCommand(AppIdentifier.getInstance().deviceMac, command)
+            }
+        }
+        addLog(if (independentMode) "[AUTÓNOMO] $logText" else logText)
     }
 
     IndustrialScaffold(
@@ -112,8 +126,8 @@ fun AlmacenApp() {
                                             texto = "$posId",
                                             icono = Icons.Default.Inventory2,
                                             modifier = Modifier.weight(1f).height(36.dp),
-                                            colorFondo = if(isConnectedBt && isAuthorized) IndustrialTheme.Primario.copy(alpha = 0.3f) else IndustrialTheme.Tarjeta,
-                                            enabled = isConnectedBt && isAuthorized,
+                                            colorFondo = if(isConnectedBt && (isAuthorized || independentMode)) IndustrialTheme.Primario.copy(alpha = 0.3f) else IndustrialTheme.Tarjeta,
+                                            enabled = isConnectedBt && (isAuthorized || independentMode),
                                             buttonHeight = 36.dp,
                                             fillMaxWidth = false,
                                             onClick = { sendAuthorizedHardwareCommand("STO:$posId", "CMD: STORE AT POS $posId") }
@@ -133,6 +147,11 @@ fun AlmacenApp() {
                             IndustrialTextField(valor = ipCoordinator, onValueChange = { ipCoordinator = it }, label = "IP Hub Central")
                             IndustrialStatusRow("Servicio Hub", if(isConnectedNet) "ACTIVO" else "DOWN", isConnectedNet)
                             IndustrialStatusRow("Autorización", authorizationState, isAuthorized)
+                            Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                Text("Modo Autónomo", color = IndustrialTheme.TextoSecundario)
+                                Switch(checked = independentMode, onCheckedChange = { independentMode = it }, colors = SwitchDefaults.colors(checkedThumbColor = IndustrialTheme.Exito))
+                            }
+                            IndustrialStatusRow("Modo Autónomo", if(independentMode) "ACTIVO" else "DESACTIVADO", independentMode)
                             IndustrialActionButton(texto = "Sincronizar", icono = Icons.Default.Router, onClick = { stationClient.connect() })
                         }
                     }

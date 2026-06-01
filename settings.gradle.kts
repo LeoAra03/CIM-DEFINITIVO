@@ -18,11 +18,13 @@ rootProject.name = "Practica_2"
 // Core
 include(":core-network")
 
-// Estaciones independientes (NEW v7.0)
-include(":app-scorbot:app")
-include(":app-vision:app")
-include(":app-laser:app")
-include(":app-conveyor:app")
+// Módulos de soporte de manufactura
+// support-scorbot, support-vision y support-laser son soporte para
+// manufactura y no se entregan como APKs independientes.
+include(":support-scorbot:app")
+include(":support-vision:app")
+include(":support-laser:app")
+include(":support-conveyor:app")
 
 // Coordinador y sistemas legados
 include(":app-coordinador:app")
@@ -33,10 +35,10 @@ include(":app-almacen:app")
 
 // Mapear nombres de proyectos
 project(":core-network").name = "core-network"
-project(":app-scorbot:app").name = "app-scorbot"
-project(":app-vision:app").name = "app-vision"
-project(":app-laser:app").name = "app-laser"
-project(":app-conveyor:app").name = "app-conveyor"
+project(":support-scorbot:app").name = "support-scorbot"
+project(":support-vision:app").name = "support-vision"
+project(":support-laser:app").name = "support-laser"
+project(":support-conveyor:app").name = "support-conveyor"
 project(":app-coordinador:app").name = "app-coordinador"
 project(":app-plc:app").name = "app-plc"
 project(":app-calidad:app").name = "app-calidad"

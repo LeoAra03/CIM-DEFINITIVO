@@ -59,3 +59,8 @@ Thumbs.db
 
 # --- Logs temporales ---
 *.log
+
+# --- Scripts y carpetas obsoletos (mantener localmente pero no en Git) ---
+deploy_apks.ps1
+entorno_mobile/
+tools/organize_workspace.ps1

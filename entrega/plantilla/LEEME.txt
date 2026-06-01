@@ -1,0 +1,62 @@
+================================================================================
+  SISTEMA CIM v6.0 — PAQUETE DE ENTREGA PORTABLE
+  Universidad del Biobío — Leonardo Araya Labarca — IECI
+================================================================================
+
+CONTENIDO DE ESTA CARPETA
+-------------------------
+  1_DOCUMENTACION/     PDF informe final + guía de laboratorio
+  2_APK_ANDROID/       5 aplicaciones para instalar en celulares/tablets
+  3_FIRMWARE_ESP32/    Binario + script para flashear cada ESP32
+  4_SCRIPTS/           Instalación masiva de APKs vía ADB
+
+REQUISITOS
+----------
+  • Windows 10/11 con PowerShell
+  • Android 10+ (API 29) en cada dispositivo
+  • Cable USB + drivers (ADB para APKs; CP210x/CH340 para ESP32)
+  • ADB en PATH (Android SDK platform-tools) — opcional: instalar Android Studio
+  • Para ESP32: esptool.py (pip install esptool) O PlatformIO (pio)
+
+PASO 1 — INSTALAR APKs EN CELULARES
+------------------------------------
+  1. Activa "Depuración USB" en cada Android.
+  2. Conecta el celular por USB.
+  3. Abre PowerShell en esta carpeta y ejecuta:
+
+       cd 4_SCRIPTS
+       .\Instalar-APKs.ps1
+
+  Orden recomendado de apps:
+    • app-coordinador.apk  → 1 dispositivo (HUB central)
+    • app-plc.apk          → estación cinta
+    • app-manufactura.apk  → robot / láser
+    • app-calidad.apk      → control calidad (con cámara)
+    • app-almacen.apk      → almacén
+
+PASO 2 — FLASHEAR ESP32
+-----------------------
+  1. Conecta el ESP32 por USB.
+  2. Identifica el puerto COM (Administrador de dispositivos → COMx).
+  3. Ejecuta:
+
+       cd 3_FIRMWARE_ESP32
+       .\Flashear-ESP32.ps1 -Port COM3
+
+  (Reemplaza COM3 por tu puerto.)
+  Repite en CADA nodo ESP32 con el MISMO firmware.
+
+PASO 3 — PONER EN MARCHA
+------------------------
+  1. Todos los Android en la MISMA red Wi-Fi.
+  2. Abre app-coordinador → START hub → anota la IP.
+  3. En cada estación → SINCRO → IP del hub → VINCULAR.
+  4. FAB Bluetooth → emparejar ESP32 → autorizar en el hub.
+
+  Detalle: ver 1_DOCUMENTACION/GUIA_LABORATORIO_MANANA.md
+
+DOCUMENTACIÓN COMPLETA
+----------------------
+  Informe académico: 1_DOCUMENTACION/ENTREGA_FINAL_LEONARDO_ARAYA.pdf
+
+================================================================================

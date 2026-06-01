@@ -222,7 +222,7 @@ class StationClient(
             stationUuid = stationUuid
         ).toTransportString()
 
-        while (isActive && handshakeAttempts < 5) {
+        while (scope.isActive && handshakeAttempts < 5) {
             try {
                 val success = sendSafe(handshake)
                 if (success) {
@@ -248,7 +248,7 @@ class StationClient(
 
         reconnectJob = scope.launch {
             var delayMs = reconnectDelayBase
-            while (isActive && !tcpClient.isSocketConnected()) {
+            while (scope.isActive && !tcpClient.isSocketConnected()) {
                 try {
                     onLog?.invoke(CimProtocol.formatLog("StationClient", "Intentando reconectar en ${delayMs}ms...", false))
                     delay(delayMs)
@@ -269,7 +269,7 @@ class StationClient(
     private fun startHeartbeat() {
         stopHeartbeat()
         heartbeatJob = scope.launch {
-            while (isActive && tcpClient.isSocketConnected()) {
+            while (scope.isActive && tcpClient.isSocketConnected()) {
                 try {
                     // Enviar heartbeat o estado cada 10s
                     val status = if (isAuthorized) CimProtocol.READY else CimProtocol.IDLE

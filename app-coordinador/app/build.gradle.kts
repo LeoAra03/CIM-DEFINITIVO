@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    id("com.google.dagger.hilt.android")
+    kotlin("kapt")
 }
 
 android {
@@ -82,6 +84,8 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material.icons.extended)
+    implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
+    implementation("com.jakewharton.timber:timber:5.0.1")
 
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     
@@ -92,6 +96,10 @@ dependencies {
     implementation("androidx.camera:camera-view:1.3.1")
 
     implementation(project(":core-network"))
+
+    // Hilt Dependency Injection
+    implementation("com.google.dagger:hilt-android:2.47")
+    kapt("com.google.dagger:hilt-compiler:2.47")
 
     // Ktor Server
     implementation(libs.ktor.server.core)

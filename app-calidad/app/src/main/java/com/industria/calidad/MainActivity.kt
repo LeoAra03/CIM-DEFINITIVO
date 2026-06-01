@@ -53,13 +53,13 @@ class MainActivity : ComponentActivity() {
                 }
                 launcher.launch(p.toTypedArray())
             }
-            CalidadApp()
+            CalidadApp(commCoordinator)
         }
     }
 }
 
 @Composable
-fun CalidadApp() {
+fun CalidadApp(commCoordinator: CommunicationCoordinator) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val logs = remember { mutableStateListOf<String>() }

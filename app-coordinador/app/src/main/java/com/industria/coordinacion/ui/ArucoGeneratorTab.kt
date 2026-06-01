@@ -95,7 +95,7 @@ fun ArucoGeneratorTab(
                             bitmap = generatedBitmap!!.asImageBitmap(),
                             contentDescription = "ArUco Marcador ${arucoId}",
                             modifier = Modifier.fillMaxSize(),
-                            contentScale = androidx.compose.material3.ContentScale.Fit
+                            contentScale = ContentScale.Fit
                         )
                     }
                     Spacer(Modifier.height(12.dp))

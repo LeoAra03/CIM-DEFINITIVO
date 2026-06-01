@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,7 +19,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.sistema.distribuido.coordinador.components.AuthorizationDialog
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.sistema.distribuido.coordinador.ui.components.AuthorizationDialog
 import com.sistema.distribuido.coordinador.viewmodels.HubViewModel
 import kotlinx.coroutines.delay
 import timber.log.Timber
@@ -32,7 +34,7 @@ import timber.log.Timber
  * 3. Permite revocar autorizaciones
  */
 @Composable
-fun HubScreen(viewModel: HubViewModel = viewModel()) {
+fun HubScreen(viewModel: HubViewModel = hiltViewModel()) {
     val pendingDevices by viewModel.pendingDevices.collectAsState()
     val authorizedDevices by viewModel.authorizedDevices.collectAsState()
     val rejectedDevices by viewModel.rejectedDevices.collectAsState()
@@ -132,14 +134,17 @@ fun HubScreen(viewModel: HubViewModel = viewModel()) {
             authDialogState?.let { dialog ->
                 AuthorizationDialog(
                     deviceName = dialog.name,
-                    deviceMac = dialog.mac,
-                    deviceType = dialog.type,
-                    timeoutMs = dialog.timeoutMs,
+                    mac = dialog.mac,
+                    appType = dialog.type,
+                    timeoutSeconds = (dialog.timeoutMs / 1000).toInt(),
                     onApprove = { rememberDecision ->
                         viewModel.approveDevice(dialog.mac, rememberDecision)
                     },
                     onReject = { rememberDecision ->
                         viewModel.rejectDevice(dialog.mac, rememberDecision)
+                    },
+                    onDismiss = {
+                        viewModel.dismissAuthorizationDialog()
                     }
                 )
             }

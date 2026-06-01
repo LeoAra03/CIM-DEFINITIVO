@@ -1,11 +1,13 @@
 package com.sistema.distribuido.coordinador.viewmodels
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.sistema.distribuido.network.AuthorizationManager
 import com.sistema.distribuido.network.CommunicationCoordinator
 import com.sistema.distribuido.network.PermissionManager
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import javax.inject.Inject
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -20,11 +22,12 @@ import timber.log.Timber
  * 3. Exponer estados de coordinación a la UI (AuthorizationDialog, DeviceList)
  * 4. Integración con CommunicationCoordinator y AuthorizationManager
  */
-class HubViewModel(
-    private val permissionManager: PermissionManager,
-    private val authorizationManager: AuthorizationManager,
+@HiltViewModel
+class HubViewModel @Inject constructor(
+    application: Application,
     private val commCoordinator: CommunicationCoordinator
-) : ViewModel() {
+) : AndroidViewModel(application) {
+    private val permissionManager = PermissionManager(application.applicationContext)
 
     // ====== ESTADO PÚBLICO ======
 
@@ -53,18 +56,18 @@ class HubViewModel(
         viewModelScope.launch {
             commCoordinator.coordinationStatus.collect { status ->
                 Timber.tag("HubViewModel").d("Estado de coordinación actualizado: ${status.size} dispositivos")
-                updateDeviceStates(status)
+                updateDeviceStates()
             }
         }
     }
 
-    private fun updateDeviceStates(status: Map<String, Any>) {
+    private fun updateDeviceStates() {
         // Actualizar lista de pendientes
         val pending = commCoordinator.getPendingDevices()
-        val pendingList = pending.map { sessionState ->
+        val pendingList = pending.map { mac ->
             PendingDeviceState(
-                mac = sessionState.key,
-                name = "Device_${sessionState.key.takeLast(2)}",
+                mac = mac,
+                name = "Device_${mac.takeLast(2)}",
                 type = "STATION",
                 timestamp = System.currentTimeMillis()
             )
@@ -78,7 +81,7 @@ class HubViewModel(
 
         // Actualizar autorizados
         val authorized = commCoordinator.getAuthorizedDevices()
-        val authorizedList = authorized.map { (mac, _) ->
+        val authorizedList = authorized.map { mac ->
             AuthorizedDeviceState(
                 mac = mac,
                 name = "Device_${mac.takeLast(2)}",
@@ -89,7 +92,7 @@ class HubViewModel(
 
         // Actualizar rechazados
         val rejected = commCoordinator.getRejectedDevices()
-        _rejectedDevices.value = rejected.keys.toList()
+        _rejectedDevices.value = rejected
     }
 
     // ====== ACCIONES DE AUTORIZACIÓN ======
@@ -98,17 +101,9 @@ class HubViewModel(
         Timber.tag("HubViewModel").i("Aprobando dispositivo: $deviceMac (recordar: $rememberDecision)")
 
         viewModelScope.launch {
-            // 1. Registrar decisión en PermissionManager
-            permissionManager.grantPermission(deviceMac, "ALL", "MANUAL_APPROVAL")
-
-            // 2. Enviar AUTHORIZED al coordinador
-            commCoordinator.sendAuthorizationResponse(deviceMac, authorized = true)
-
-            // 3. Cerrar diálogo
+            permissionManager.approve(deviceMac, rememberDecision)
             _currentAuthorizationDialog.value = null
-
-            // 4. Recargar estado
-            updateDeviceStates(commCoordinator.coordinationStatus.value)
+            updateDeviceStates()
         }
     }
 
@@ -116,19 +111,9 @@ class HubViewModel(
         Timber.tag("HubViewModel").w("Rechazando dispositivo: $deviceMac (recordar: $rememberDecision)")
 
         viewModelScope.launch {
-            // 1. Registrar decisión
-            if (rememberDecision) {
-                permissionManager.denyPermission(deviceMac)
-            }
-
-            // 2. Enviar REJECTED
-            commCoordinator.sendAuthorizationResponse(deviceMac, authorized = false)
-
-            // 3. Cerrar diálogo
+            permissionManager.reject(deviceMac, rememberDecision)
             _currentAuthorizationDialog.value = null
-
-            // 4. Recargar
-            updateDeviceStates(commCoordinator.coordinationStatus.value)
+            updateDeviceStates()
         }
     }
 
@@ -137,7 +122,7 @@ class HubViewModel(
 
         viewModelScope.launch {
             commCoordinator.revokeAuthorization(deviceMac)
-            updateDeviceStates(commCoordinator.coordinationStatus.value)
+            updateDeviceStates()
         }
     }
 

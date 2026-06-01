@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.layout.ContentScale
 import kotlinx.coroutines.launch
 import android.util.Base64
@@ -56,13 +57,13 @@ class MainActivity : ComponentActivity() {
                 }
                 launcher.launch(p.toTypedArray())
             }
-            ManufacturaApp()
+            ManufacturaApp(commCoordinator)
         }
     }
 }
 
 @Composable
-fun ManufacturaApp() {
+fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val logs = remember { mutableStateListOf<String>() }
@@ -391,8 +392,10 @@ fun ManufacturaApp() {
                             modifier = Modifier.weight(1f),
                             colorFondo = Color.DarkGray,
                             onClick = {
-                                val sent = stationClient.sendEventSafe("SIM_ACK")
-                                addLog(if (sent) "SIM_ESP32: ACK enviado" else "SIM_ESP32: ACK fallido")
+                                scope.launch {
+                                    val sent = stationClient.sendEventSafe("SIM_ACK")
+                                    addLog(if (sent) "SIM_ESP32: ACK enviado" else "SIM_ESP32: ACK fallido")
+                                }
                             }
                         )
                         IndustrialActionButton(
@@ -401,8 +404,10 @@ fun ManufacturaApp() {
                             modifier = Modifier.weight(1f),
                             colorFondo = Color.DarkGray,
                             onClick = {
-                                val sent = stationClient.sendEventSafe("SIM_FINISH")
-                                addLog(if (sent) "SIM_ESP32: FINISH enviado" else "SIM_ESP32: FINISH fallido")
+                                scope.launch {
+                                    val sent = stationClient.sendEventSafe("SIM_FINISH")
+                                    addLog(if (sent) "SIM_ESP32: FINISH enviado" else "SIM_ESP32: FINISH fallido")
+                                }
                             }
                         )
                     }

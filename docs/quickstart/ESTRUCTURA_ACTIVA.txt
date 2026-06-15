@@ -1,0 +1,19 @@
+ESTRUCTURA ACTIVA
+================
+
+Para trabajar cómodo, usa esto:
+
+- apps/           -> APKs y acceso rápido
+- app-almacen/    -> proyecto Android
+- app-calidad/    -> proyecto Android
+- app-coordinador/-> proyecto Android
+- app-manufactura/-> proyecto Android
+- app-plc/        -> proyecto Android
+- core-network/   -> librería compartida
+- firmware/       -> firmware ESP32 activo
+- docs/           -> documentación y guía rápida
+- scripts/        -> scripts de instalación y compilación
+- output-apks/    -> APKs generados
+
+Todo lo demás está en:
+- legacy/

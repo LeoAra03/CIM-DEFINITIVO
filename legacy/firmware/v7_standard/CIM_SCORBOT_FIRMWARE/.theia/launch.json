@@ -1,0 +1,16 @@
+// Definimos el pin donde está el LED integrado. 
+// En la ESP32 D1 R32 suele ser el pin 2.
+const int ledPin = 2; 
+
+void setup() {
+  // Configuramos el pin del LED como salida (OUTPUT)
+  pinMode(ledPin, OUTPUT);
+}
+
+void loop() {
+  digitalWrite(ledPin, HIGH);   // Enciende el LED (envía voltaje)
+  delay(1000);                  // Espera 1 segundo (1000 milisegundos)
+  
+  digitalWrite(ledPin, LOW);    // Apaga el LED (corta el voltaje)
+  delay(1000);                  // Espera 1 segundo antes de repetir
+}

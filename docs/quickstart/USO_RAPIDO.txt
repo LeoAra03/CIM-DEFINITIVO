@@ -1,0 +1,16 @@
+USO RAPIDO
+==========
+
+1. Instalar APKs:
+   powershell -ExecutionPolicy Bypass -File .\scripts\install_apks.ps1
+
+2. Compilar apps:
+   powershell -ExecutionPolicy Bypass -File .\scripts\build_all_apps.ps1
+
+3. Flashear ESP32:
+   cd firmware\Firmware_Support
+   pio run -t upload -e esp32dev
+
+4. Ver logs:
+   cd firmware\Firmware_Support
+   pio device monitor -b 115200

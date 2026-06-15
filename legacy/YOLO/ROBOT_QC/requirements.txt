@@ -1,0 +1,29 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+REQUIREMENTS.TXT - Dependencias del proyecto ROBOT QC
+======================================================
+
+Instalar con: pip install -r requirements.txt
+"""
+
+# Framework YOLO para detección de objetos
+ultralytics>=8.0.0
+
+# Procesamiento de imágenes
+opencv-python>=4.8.0
+numpy>=1.24.0
+Pillow>=10.0.0
+
+# Interfaz gráfica
+tkinter  # Incluido en Python (no requiere pip en la mayoría de SO)
+
+# Comunicación serial
+pyserial>=3.5
+
+# Utilidades
+python-dotenv>=1.0.0  # Opcional: para variables de entorno
+
+# Development/Testing (opcional)
+pytest>=7.0.0
+pytest-cov>=4.0.0

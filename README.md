@@ -1,63 +1,77 @@
-﻿# Sistema CIM v6.0 — Control Industrial Distribuido
+# CIM - Sistema de Control Industrial Inteligente
 
-Proyecto personal de entrega: 5 apps Android + `core-network` + firmware ESP32.
+Proyecto completamente **minimalista** y **organizado por funcionalidad**.
 
-## Qué hay aquí
+## 📁 Estructura Principal
 
-- `app-coordinador/` — Hub maestro con autorización Bluetooth y red TCP
-- `app-plc/` — estación de cinta transportadora / PLC
-- `app-manufactura/` — estación de robot + láser CNC
-- `app-calidad/` — estación de visión OpenCV ArUco/QR
-- `app-almacen/` — estación de logística y almacenamiento
-- `support-scorbot/`, `support-vision/`, `support-laser/`, `support-conveyor/` — módulos de soporte para manufactura, PLC y sistema de cinta; no se entregan como APKs independientes
-- `core-network/` — lógica compartida de comunicación
-- `firmware/Firmware_Support/` — firmware ESP32
-- `output-apks/` — APKs debug actuales y firmware listo para instalar
-- `.para-maniana/` — mi carpeta personal para la demo de mañana (ignorada por Git)
+Solo **5 carpetas principales**:
 
-## Documentos clave
-
-- `docs/GUIA_LABORATORIO_MANANA.md` — checklist y pasos de laboratorio
-- `docs/ENTREGA_FINAL_LEONARDO_ARAYA.md` — informe de entrega
-- `CHANGELOG_FIXES.md` — correcciones recientes
-- `.para-maniana/README.md` — guía personal de mañana
-
-## Compilación rápida
-
-```powershell
-# Compila todos los módulos y exporta las APKs a output-apks/
-.\gradlew testAllModules buildAllApks
+```
+📦 Practica_2/
+├── 📱 android/          ← Apps Android + core-network
+├── 🔧 esp32/            ← Firmware + scripts ESP32
+├── 📚 docs/             ← Documentación del proyecto
+├── 📋 logs/             ← Logs de sistema y apps
+├── ⚙️ config/            ← Configuración (Gradle, scripts, etc.)
+├── 🗂️ legacy/            ← Archivos antiguos (no usar)
+├── 🔨 build/            ← Outputs de compilación
+└── README.md
 ```
 
-Para firmware ESP32:
+## ⚡ Acceso Rápido
 
-```powershell
-cd firmware\Firmware_Support
-pio run
-```
+| Necesito... | Voy a... |
+|---|---|
+| Instalar una app | `android/apks/` |
+| Cargar firmware ESP32 | `esp32/firmware/` |
+| Leer documentación | `docs/project/` |
+| Ver logs | `logs/` |
+| Configurar o buildear | `config/` |
 
-Para copiar las APKs actuales a tu carpeta personal:
+## 🏗️ Contenido Específico
 
-```powershell
-.\scripts\copy_outputs_for_tomorrow.ps1
-```
+### **android/**
+- `apps/` - Todos los módulos Android del proyecto
+- `apks/` - APKs compiladas listas para instalar
+- `core-network/` - Librería compartida de comunicación
 
-## Instalación rápida
+### **esp32/**
+- `firmware/` - Código del microcontrolador
+  - `Firmware_Support/` - Herramientas de soporte
+  - `v7_standard/` - Versión estándar
+- `scripts/` - Scripts Python y auxiliares
 
-- Usa `output-apks/` o `.para-maniana/APKS_INSTALABLES/`
-- Instala con `adb install -r`
-- Abre primero `app-coordinador`, luego las demás estaciones
-- Autoriza dispositivos desde el hub y prueba la sincronización
+### **docs/**
+- `project/` - Documentación oficial del proyecto
+- `quickstart/` - Guías de inicio rápido
 
-## Estado actual
+### **config/**
+- `settings.gradle.kts` - Configuración de módulos
+- `build.gradle.kts` - Configuración de build
+- `gradle-wrapper/` - Gradle portable
+- `scripts/` - Scripts de instalación y deploy
 
-- APKs listas en `output-apks/`
-- Carpeta personal `.para-maniana/` preparada para la entrega
-- `.para-maniana/` está en `.gitignore`, no se sube al repositorio
-- `ENTREGA_FINAL_CIM_V6/` y `binarios_particionados/` se eliminaron; solo se conserva el paquete de entrega actual
-- `support-conveyor` ahora sirve como soporte para la cinta transportadora de `app-plc`
-- `support-conveyor` ahora sirve como soporte para la cinta transportadora de `app-plc`
+## 🚀 Para Empezar
 
----
+1. **Compilar apps Android:**
+   ```powershell
+   cd config
+   .\gradle-wrapper\gradlew.bat :app-coordinador:app:assembleDebug
+   ```
 
-*Entrega personal preparada para la demo.*
+2. **Flashear ESP32:**
+   ```
+   Abre PlatformIO → esp32/firmware/ → upload
+   ```
+
+3. **Instalar APKs:**
+   ```
+   Ve a: android/apks/ → copia los .apk a tu teléfono
+   ```
+
+## ✅ Todo está donde debe estar
+- ✓ Apps Android consolidadas en una carpeta
+- ✓ Firmware ESP32 en su propio lugar
+- ✓ Documentación centralizada
+- ✓ Sin clutter de configuraciones sueltas
+- ✓ Archivos antiguos en legacy/ (ocultos)

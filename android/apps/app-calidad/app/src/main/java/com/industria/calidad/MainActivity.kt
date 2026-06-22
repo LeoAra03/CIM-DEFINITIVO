@@ -79,6 +79,8 @@ fun CalidadApp(commCoordinator: CommunicationCoordinator) {
     var approvedCount by remember { mutableStateOf(1240) }
     var rejectedCount by remember { mutableStateOf(68) }
     var yoloModeEnabled by remember { mutableStateOf(false) }
+    var expectedAruco by remember { mutableStateOf("") }
+    var lastDetectedAruco by remember { mutableStateOf<Int?>(null) }
     val arucoBitmap by viewModel.arucoBitmap.collectAsState()
     val progress by viewModel.progress.collectAsState()
     val jobStatus by viewModel.status.collectAsState()
@@ -171,7 +173,28 @@ fun CalidadApp(commCoordinator: CommunicationCoordinator) {
                                         visionMode = if (yoloModeEnabled) IndustrialVisionAnalyzer.VisionMode.YOLO else IndustrialVisionAnalyzer.VisionMode.ARUCO,
                                         onArucoFound = { results ->
                                             if (results.isNotEmpty()) {
-                                                addLog("VISIÓN: Detectado ArUco #${results[0].id}")
+                                                val id = results[0].id
+                                                if (id != lastDetectedAruco) {
+                                                    lastDetectedAruco = id
+                                                    addLog("VISIÓN: Detectado ArUco #$id")
+                                                    scope.launch { stationClient.sendEventSafe("ARUCO_DETECTED:$id") }
+                                                    val exp = expectedAruco.trim().toIntOrNull()
+                                                    if (exp != null) {
+                                                        if (exp == id) {
+                                                            addLog("✓ PATRÓN ArUco OK (#$id coincide)")
+                                                            if (independentMode) {
+                                                                approvedCount += 1
+                                                                sendAuthorizedHardwareCommand("VAL:PASS", "RESULT: APPROVED (ArUco $id)")
+                                                            }
+                                                        } else {
+                                                            addLog("✗ PATRÓN ArUco NO coincide (esperado #$exp, leído #$id)")
+                                                            if (independentMode) {
+                                                                rejectedCount += 1
+                                                                sendAuthorizedHardwareCommand("VAL:FAIL", "RESULT: REJECTED (ArUco $id)")
+                                                            }
+                                                        }
+                                                    }
+                                                }
                                             }
                                         },
                                         onQrFound = { qr ->
@@ -235,6 +258,14 @@ fun CalidadApp(commCoordinator: CommunicationCoordinator) {
                                     sendAuthorizedHardwareCommand("VAL:FAIL", "RESULT: REJECTED")
                                     sendAuthorizedHardwareCommand("R:DISCARD", "CMD: DISCARD FAILED PIECE")
                                 })
+                            }
+                            Spacer(Modifier.height(12.dp))
+                            Text("RECONOCIMIENTO DE PATRÓN ArUco", color = IndustrialTheme.TextoSecundario, fontSize = 10.sp)
+                            IndustrialTextField(valor = expectedAruco, onValueChange = { expectedAruco = it.filter { c -> c.isDigit() }.take(2) }, label = "ArUco esperado (0-49, vacío = solo leer)")
+                            IndustrialStatusRow("Último ArUco leído", lastDetectedAruco?.let { "#$it" } ?: "--", lastDetectedAruco != null)
+                            val expId = expectedAruco.trim().toIntOrNull()
+                            if (expId != null && lastDetectedAruco != null) {
+                                IndustrialStatusRow("Coincidencia patrón", if (expId == lastDetectedAruco) "OK" else "NO COINCIDE", expId == lastDetectedAruco)
                             }
                         }
                     }

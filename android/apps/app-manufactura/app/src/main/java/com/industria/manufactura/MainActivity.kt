@@ -114,7 +114,7 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                         }
                         addLog("✓ G-code recibido: $filename (${bytes.size} bytes)")
                     } catch (e: Exception) {
-                        addLog("✗ Error guardando G-code: ${e.message}")
+                        addLog("✗ Error guardando G-code: ${e.message ?: "desconocido"}")
                     }
                 } else {
                     addLog("⚠ Formato LASER_LOAD inválido")
@@ -132,7 +132,7 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                         }
                         addLog("✓ G-code recibido (legacy): $filename (${bytes.size} bytes)")
                     } catch (e: Exception) {
-                        addLog("✗ Error guardando G-code legacy: ${e.message}")
+                        addLog("✗ Error guardando G-code legacy: ${e.message ?: "desconocido"}")
                     }
                 } else {
                     addLog("⚠ Formato GCODE_LOAD inválido")
@@ -174,7 +174,7 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                     val sent = stationClient.sendEventSafe(payload)
                     if (sent) addLog("IMG: archivo '$filename' cargado y enviado") else addLog("IMG: fallo al enviar archivo '$filename'")
                 } catch (e: Exception) {
-                    addLog("IMG: error leyendo archivo: ${e.message}")
+                    addLog("IMG: error leyendo archivo: ${e.message ?: "desconocido"}")
                 }
             }
         } else {
@@ -292,7 +292,7 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                                     try {
                                         gcodeLauncher.launch(arrayOf("*/*"))
                                     } catch (e: Exception) {
-                                        addLog("IMG: error abriendo selector de archivos: ${e.message}")
+                                        addLog("IMG: error abriendo selector de archivos: ${e.message ?: "desconocido"}")
                                     }
                                 })
                             } else {
@@ -326,7 +326,7 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                                                     addLog("VISIÓN: ArUco #$id generado (${size}x${size}px)")
                                                 }
                                             } catch (e: Exception) {
-                                                addLog("ERROR: ${e.message}")
+                                                addLog("ERROR: ${e.message ?: "desconocido"}")
                                             } finally {
                                                 isGeneratingAruco = false
                                             }

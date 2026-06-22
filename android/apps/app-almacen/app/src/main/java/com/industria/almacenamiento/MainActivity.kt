@@ -74,7 +74,6 @@ fun AlmacenApp(commCoordinator: CommunicationCoordinator) {
     var ipCoordinator by remember { mutableStateOf("192.168.1.100") }
     var selectedTab by remember { mutableStateOf(0) }
     var selectedRackPosition by remember { mutableStateOf(1) }
-    var runProgram by remember { mutableStateOf("STORE") }
 
     fun addLog(msg: String) {
         val time = java.text.SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
@@ -193,34 +192,15 @@ fun AlmacenApp(commCoordinator: CommunicationCoordinator) {
                             Spacer(Modifier.height(12.dp))
                             IndustrialActionButton("DESCARTAR PIEZA", Icons.Default.DeleteForever, colorFondo = IndustrialTheme.Error, enabled = isConnectedBt && (isAuthorized || independentMode), onClick = { sendAuthorizedHardwareCommand("R:DISCARD", "CMD: DISCARD FAILED PIECE") })
                         }
-                        IndustrialCard("Programas Scorbot (RUN)", Icons.Default.Terminal, headerColor = IndustrialTheme.Secundario) {
-                            Text("Ejecuta rutinas de almacenamiento en el controlador (estilo hyperterminal)", color = IndustrialTheme.TextoSecundario, fontSize = 10.sp)
-                            Spacer(Modifier.height(8.dp))
-                            val runEnabled = isConnectedBt && (isAuthorized || independentMode)
-                            Row(Modifier.fillMaxWidth(), Arrangement.spacedBy(8.dp)) {
-                                IndustrialActionButton("ALMACENAR", Icons.Default.PlayArrow, Modifier.weight(1f), enabled = runEnabled, onClick = { sendAuthorizedHardwareCommand("R:RUN STORE", "RUN STORE") })
-                                IndustrialActionButton("RETIRAR", Icons.Default.PlayArrow, Modifier.weight(1f), enabled = runEnabled, onClick = { sendAuthorizedHardwareCommand("R:RUN PICK", "RUN PICK") })
-                                IndustrialActionButton("AUTO", Icons.Default.Autorenew, Modifier.weight(1f), colorFondo = IndustrialTheme.Exito, enabled = runEnabled, onClick = { sendAuthorizedHardwareCommand("R:AUTO", "AUTO") })
-                            }
-                            Spacer(Modifier.height(12.dp))
-                            Text("COMANDO RUN MANUAL", color = IndustrialTheme.TextoSecundario, fontSize = 10.sp)
-                            IndustrialTextField(valor = runProgram, onValueChange = { runProgram = it.uppercase() }, label = "Programa (ej: STORE, PICK)")
-                            Spacer(Modifier.height(8.dp))
-                            IndustrialActionButton(
-                                texto = "EJECUTAR RUN",
-                                icono = Icons.Default.PlayCircle,
-                                colorFondo = IndustrialTheme.Primario,
-                                enabled = runEnabled,
-                                onClick = {
-                                    val prog = runProgram.trim()
-                                    if (prog.isNotEmpty()) {
-                                        sendAuthorizedHardwareCommand("R:RUN $prog", "RUN $prog")
-                                    } else {
-                                        addLog("⚠ Ingresa un nombre de programa para RUN")
-                                    }
-                                }
-                            )
-                        }
+                        ScorbotRunConsole(
+                            enabled = isConnectedBt && (isAuthorized || independentMode),
+                            presets = listOf("ALMACENAR" to "STORE", "RETIRAR" to "PICK"),
+                            initialProgram = "STORE",
+                            descripcion = "Ejecuta rutinas de almacenamiento en el controlador (estilo hyperterminal)",
+                            manualLabel = "Programa (ej: STORE, PICK)",
+                            onRun = { prog -> sendAuthorizedHardwareCommand("R:RUN $prog", "RUN $prog") },
+                            onAuto = { sendAuthorizedHardwareCommand("R:AUTO", "AUTO") }
+                        )
                     }
                 }
 

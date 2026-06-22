@@ -100,9 +100,9 @@ fun PLCApp(commCoordinator: CommunicationCoordinator) {
 
     fun handlePlcEvent(raw: String) {
         val cmd = raw.trim()
-        val pos = Regex("POS:(\\d+)").find(cmd)?.groupValues?.getOrNull(1)?.toIntOrNull()
+        val pos = Regex("POS:(\\d+)").find(cmd)?.groupValues?.getOrNull(1)?.toIntOrNull() ?: return
         when {
-            cmd.startsWith("SENSOR_ACTIVATED") && pos != null -> {
+            cmd.startsWith("SENSOR_ACTIVATED") -> {
                 palletPresent[pos] = true
                 lastTrackingEvent = "Pallet detectado en estación $pos"
                 if (holdStations[pos] == true) {
@@ -111,7 +111,7 @@ fun PLCApp(commCoordinator: CommunicationCoordinator) {
                     addLog("TRACKING: pallet pasa por estación $pos")
                 }
             }
-            cmd.startsWith("PALLET_CLEARED") && pos != null -> {
+            cmd.startsWith("PALLET_CLEARED") -> {
                 palletPresent[pos] = false
                 lastTrackingEvent = "Estación $pos liberada"
                 addLog("TRACKING: estación $pos liberada")

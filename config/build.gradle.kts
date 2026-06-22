@@ -34,7 +34,7 @@ tasks.register("buildAllApks") {
 
     // Depender de las tareas assembleDebug de cada subproyecto (ruta jerárquica)
     appModules.forEach { moduleName ->
-        dependsOn(":$moduleName:$moduleName:assembleDebug")
+        dependsOn(":$moduleName:assembleDebug")
     }
 
     doLast {
@@ -44,7 +44,7 @@ tasks.register("buildAllApks") {
 
         appModules.forEach { moduleName ->
             // Buscar el archivo APK en la carpeta de build del subproyecto interno
-            val projectBuildDir = project(":$moduleName:$moduleName").layout.buildDirectory
+            val projectBuildDir = project(":$moduleName").layout.buildDirectory
             val debugDir = projectBuildDir.dir("outputs/apk/debug").get().asFile
 
             val apkFile = debugDir.listFiles()?.find { it.name.endsWith(".apk") && !it.name.contains("androidTest") }
@@ -75,8 +75,8 @@ tasks.register("testAllModules") {
 
     dependsOn(
         ":core-network:testDebugUnitTest",
-        ":app-coordinador:app-coordinador:testDebugUnitTest",
-        ":app-plc:app-plc:testDebugUnitTest"
+        ":app-coordinador:testDebugUnitTest",
+        ":app-plc:testDebugUnitTest"
     )
 
     doLast {
@@ -90,11 +90,11 @@ tasks.register("cleanAllModules") {
     description = "Limpia artefactos de build de todos los módulos"
     dependsOn(
         ":core-network:clean",
-        ":app-coordinador:app-coordinador:clean",
-        ":app-plc:app-plc:clean",
-        ":app-calidad:app-calidad:clean",
-        ":app-manufactura:app-manufactura:clean",
-        ":app-almacen:app-almacen:clean"
+        ":app-coordinador:clean",
+        ":app-plc:clean",
+        ":app-calidad:clean",
+        ":app-manufactura:clean",
+        ":app-almacen:clean"
     )
 }
 

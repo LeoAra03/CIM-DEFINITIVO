@@ -16,19 +16,21 @@ dependencyResolutionManagement {
 rootProject.name = "Practica_2"
 
 // Core activo
-include(":android:core-network")
+include(":core-network")
+project(":core-network").projectDir = file("../android/core-network")
 
 // Apps principales del sistema
-include(":android:apps:app-coordinador:app")
-include(":android:apps:app-plc:app")
-include(":android:apps:app-calidad:app")
-include(":android:apps:app-manufactura:app")
-include(":android:apps:app-almacen:app")
+include(":app-coordinador")
+project(":app-coordinador").projectDir = file("../android/apps/app-coordinador/app")
 
-// Mapear nombres de proyectos
-project(":android:core-network").name = "core-network"
-project(":android:apps:app-coordinador:app").name = "app-coordinador"
-project(":android:apps:app-plc:app").name = "app-plc"
-project(":android:apps:app-calidad:app").name = "app-calidad"
-project(":android:apps:app-manufactura:app").name = "app-manufactura"
-project(":android:apps:app-almacen:app").name = "app-almacen"
+include(":app-plc")
+project(":app-plc").projectDir = file("../android/apps/app-plc/app")
+
+include(":app-calidad")
+project(":app-calidad").projectDir = file("../android/apps/app-calidad/app")
+
+include(":app-manufactura")
+project(":app-manufactura").projectDir = file("../android/apps/app-manufactura/app")
+
+include(":app-almacen")
+project(":app-almacen").projectDir = file("../android/apps/app-almacen/app")

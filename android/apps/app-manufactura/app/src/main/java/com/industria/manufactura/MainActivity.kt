@@ -198,7 +198,6 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
             Column(Modifier.weight(1f).padding(16.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 when (selectedTab) {
                     0 -> {
-                        var runProgram by remember { mutableStateOf("ARU") }
                         IndustrialCard("Control Scorbot", Icons.Default.PrecisionManufacturing) {
                             Row(Modifier.fillMaxWidth(), Arrangement.spacedBy(8.dp)) {
                                 IndustrialActionButton("HOME", Icons.Default.Home, Modifier.weight(1f), enabled = isConnectedBt && (isAuthorized || independentMode), onClick = { sendAuthorizedHardwareCommand("R:HOME", "CMD: HOME") })
@@ -217,40 +216,14 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                             Spacer(Modifier.height(12.dp))
                             IndustrialActionButton("GUARDAR PUNTO", Icons.Default.Save, colorFondo = IndustrialTheme.Exito, enabled = isConnectedBt && (isAuthorized || independentMode), onClick = { sendAuthorizedHardwareCommand("R:SAVE", "CMD: SAVE") })
                         }
-                        IndustrialCard("Programas Scorbot (RUN)", Icons.Default.Terminal, headerColor = IndustrialTheme.Secundario) {
-                            Text("Ejecuta programas cargados en el controlador (estilo hyperterminal)", color = IndustrialTheme.TextoSecundario, fontSize = 10.sp)
-                            Spacer(Modifier.height(8.dp))
-                            val runEnabled = isConnectedBt && (isAuthorized || independentMode)
-                            Row(Modifier.fillMaxWidth(), Arrangement.spacedBy(8.dp)) {
-                                IndustrialActionButton("ARU", Icons.Default.PlayArrow, Modifier.weight(1f), enabled = runEnabled, onClick = { sendAuthorizedHardwareCommand("R:RUN ARU", "RUN ARU") })
-                                IndustrialActionButton("ARU1", Icons.Default.PlayArrow, Modifier.weight(1f), enabled = runEnabled, onClick = { sendAuthorizedHardwareCommand("R:RUN ARU1", "RUN ARU1") })
-                                IndustrialActionButton("ARU2", Icons.Default.PlayArrow, Modifier.weight(1f), enabled = runEnabled, onClick = { sendAuthorizedHardwareCommand("R:RUN ARU2", "RUN ARU2") })
-                            }
-                            Spacer(Modifier.height(8.dp))
-                            Row(Modifier.fillMaxWidth(), Arrangement.spacedBy(8.dp)) {
-                                IndustrialActionButton("ARU3", Icons.Default.PlayArrow, Modifier.weight(1f), enabled = runEnabled, onClick = { sendAuthorizedHardwareCommand("R:RUN ARU3", "RUN ARU3") })
-                                IndustrialActionButton("ARU4", Icons.Default.PlayArrow, Modifier.weight(1f), enabled = runEnabled, onClick = { sendAuthorizedHardwareCommand("R:RUN ARU4", "RUN ARU4") })
-                                IndustrialActionButton("AUTO", Icons.Default.Autorenew, Modifier.weight(1f), colorFondo = IndustrialTheme.Exito, enabled = runEnabled, onClick = { sendAuthorizedHardwareCommand("R:AUTO", "AUTO") })
-                            }
-                            Spacer(Modifier.height(12.dp))
-                            Text("COMANDO RUN MANUAL", color = IndustrialTheme.TextoSecundario, fontSize = 10.sp)
-                            IndustrialTextField(valor = runProgram, onValueChange = { runProgram = it.uppercase() }, label = "Programa (ej: ARU, MYPROG)")
-                            Spacer(Modifier.height(8.dp))
-                            IndustrialActionButton(
-                                texto = "EJECUTAR RUN",
-                                icono = Icons.Default.PlayCircle,
-                                colorFondo = IndustrialTheme.Primario,
-                                enabled = runEnabled,
-                                onClick = {
-                                    val prog = runProgram.trim()
-                                    if (prog.isNotEmpty()) {
-                                        sendAuthorizedHardwareCommand("R:RUN $prog", "RUN $prog")
-                                    } else {
-                                        addLog("⚠ Ingresa un nombre de programa para RUN")
-                                    }
-                                }
-                            )
-                        }
+                        ScorbotRunConsole(
+                            enabled = isConnectedBt && (isAuthorized || independentMode),
+                            presets = listOf("ARU" to "ARU", "ARU1" to "ARU1", "ARU2" to "ARU2", "ARU3" to "ARU3", "ARU4" to "ARU4"),
+                            initialProgram = "ARU",
+                            manualLabel = "Programa (ej: ARU, MYPROG)",
+                            onRun = { prog -> sendAuthorizedHardwareCommand("R:RUN $prog", "RUN $prog") },
+                            onAuto = { sendAuthorizedHardwareCommand("R:AUTO", "AUTO") }
+                        )
                     }
                     1 -> {
                         IndustrialCard("Grabado Láser CNC", Icons.Default.FlashOn, headerColor = IndustrialTheme.Advertencia) {

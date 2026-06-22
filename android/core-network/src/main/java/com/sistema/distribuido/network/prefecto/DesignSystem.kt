@@ -290,3 +290,49 @@ fun IndustrialTerminal(logs: List<String>, modifier: Modifier = Modifier) {
         }
     }
 }
+
+/**
+ * Consola de programas Scorbot estilo "RUN" (hyperterminal).
+ * [presets] son pares etiqueta -> nombre de programa. [onRun] recibe el nombre del
+ * programa (sin envoltura) para que el llamador lo mande como "R:RUN <prog>".
+ */
+@Composable
+fun ScorbotRunConsole(
+    enabled: Boolean,
+    presets: List<Pair<String, String>>,
+    onRun: (String) -> Unit,
+    onAuto: () -> Unit,
+    initialProgram: String = "",
+    descripcion: String = "Ejecuta programas cargados en el controlador (estilo hyperterminal)",
+    manualLabel: String = "Programa (ej: ARU)"
+) {
+    var runProgram by remember { mutableStateOf(initialProgram) }
+    IndustrialCard("Programas Scorbot (RUN)", Icons.Default.Terminal, headerColor = IndustrialTheme.Secundario) {
+        Text(descripcion, color = IndustrialTheme.TextoSecundario, fontSize = 10.sp)
+        Spacer(Modifier.height(8.dp))
+        presets.chunked(3).forEach { fila ->
+            Row(Modifier.fillMaxWidth(), Arrangement.spacedBy(8.dp)) {
+                fila.forEach { (label, prog) ->
+                    IndustrialActionButton(label, Icons.Default.PlayArrow, Modifier.weight(1f), enabled = enabled, onClick = { onRun(prog) })
+                }
+                repeat(3 - fila.size) { Spacer(Modifier.weight(1f)) }
+            }
+            Spacer(Modifier.height(8.dp))
+        }
+        IndustrialActionButton("AUTO", Icons.Default.Autorenew, colorFondo = IndustrialTheme.Exito, enabled = enabled, onClick = onAuto)
+        Spacer(Modifier.height(12.dp))
+        Text("COMANDO RUN MANUAL", color = IndustrialTheme.TextoSecundario, fontSize = 10.sp)
+        IndustrialTextField(valor = runProgram, onValueChange = { runProgram = it.uppercase() }, label = manualLabel)
+        Spacer(Modifier.height(8.dp))
+        IndustrialActionButton(
+            texto = "EJECUTAR RUN",
+            icono = Icons.Default.PlayCircle,
+            colorFondo = IndustrialTheme.Primario,
+            enabled = enabled,
+            onClick = {
+                val prog = runProgram.trim()
+                if (prog.isNotEmpty()) onRun(prog)
+            }
+        )
+    }
+}

@@ -70,6 +70,10 @@ fun PLCApp(commCoordinator: CommunicationCoordinator) {
     var independentMode by remember { mutableStateOf(false) }
     var ipCoordinator by remember { mutableStateOf("192.168.1.100") }
     var selectedTab by remember { mutableStateOf(0) }
+    val palletPresent = remember { mutableStateMapOf<Int, Boolean>() }
+    val holdStations = remember { mutableStateMapOf<Int, Boolean>() }
+    var lastTrackingEvent by remember { mutableStateOf("--") }
+    val trackingStations = listOf("ALMACEN" to 1, "MANUFACTURA" to 2, "CALIDAD" to 3, "PLC/SALIDA" to 4)
 
     val bluetoothManager = GlobalBluetoothManager.getInstance()
     val connectionStates by bluetoothManager.connectionStates.collectAsState()
@@ -94,6 +98,27 @@ fun PLCApp(commCoordinator: CommunicationCoordinator) {
         addLog(if (independentMode) "[AUTÓNOMO] $logText" else logText)
     }
 
+    fun handlePlcEvent(raw: String) {
+        val cmd = raw.trim()
+        val pos = Regex("POS:(\\d+)").find(cmd)?.groupValues?.getOrNull(1)?.toIntOrNull()
+        when {
+            cmd.startsWith("SENSOR_ACTIVATED") && pos != null -> {
+                palletPresent[pos] = true
+                lastTrackingEvent = "Pallet detectado en estación $pos"
+                if (holdStations[pos] == true) {
+                    sendPlcHardwareCommand("C:STOP|$pos", "PALLET DETENIDO en estación $pos")
+                } else {
+                    addLog("TRACKING: pallet pasa por estación $pos")
+                }
+            }
+            cmd.startsWith("PALLET_CLEARED") && pos != null -> {
+                palletPresent[pos] = false
+                lastTrackingEvent = "Estación $pos liberada"
+                addLog("TRACKING: estación $pos liberada")
+            }
+        }
+    }
+
     val stationClient = remember(ipCoordinator) {
         com.sistema.distribuido.network.StationClient(
             host = ipCoordinator,
@@ -106,6 +131,7 @@ fun PLCApp(commCoordinator: CommunicationCoordinator) {
             onLog = { msg -> logs.add(0, "[NET] $msg") }
             onStatusChanged = { isConnectedNet = it }
             onAuthorizationStateChanged = { authorizationState = it }
+            onCommandReceived = { cmd -> scope.launch { handlePlcEvent(cmd) } }
         }
     }
 
@@ -124,7 +150,8 @@ fun PLCApp(commCoordinator: CommunicationCoordinator) {
         Column(Modifier.padding(padding).fillMaxSize()) {
             ScrollableTabRow(selectedTabIndex = selectedTab, containerColor = Color.Black, contentColor = IndustrialTheme.Primario, edgePadding = 16.dp, divider = {}) {
                 Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 }, text = { Text("CONTROL", fontSize = 12.sp) })
-                Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 }, text = { Text("SINCRO", fontSize = 12.sp) })
+                Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 }, text = { Text("TRACKING", fontSize = 12.sp) })
+                Tab(selected = selectedTab == 2, onClick = { selectedTab = 2 }, text = { Text("SINCRO", fontSize = 12.sp) })
             }
 
             Column(Modifier.weight(1f).padding(16.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -178,6 +205,40 @@ fun PLCApp(commCoordinator: CommunicationCoordinator) {
                         }
                     }
                     1 -> {
+                        IndustrialCard("Tracking de Pallets", Icons.Default.Sensors, headerColor = IndustrialTheme.Secundario) {
+                            IndustrialStatusRow("Último evento", lastTrackingEvent, true)
+                            Text("Activa 'Detener' para frenar el pallet cuando pase por la estación", color = IndustrialTheme.TextoSecundario, fontSize = 10.sp)
+                            Spacer(Modifier.height(8.dp))
+                            trackingStations.forEach { (name, pos) ->
+                                val present = palletPresent[pos] == true
+                                val hold = holdStations[pos] == true
+                                Column(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                                    Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                        Text("$pos · $name", color = Color.White, fontWeight = FontWeight.Bold)
+                                        Text(if (present) "● PALLET" else "○ vacío", color = if (present) IndustrialTheme.Exito else IndustrialTheme.TextoSecundario, fontSize = 12.sp)
+                                    }
+                                    Row(Modifier.fillMaxWidth(), Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                                        Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                                            Text("Detener", color = IndustrialTheme.TextoSecundario, fontSize = 11.sp)
+                                            Switch(checked = hold, onCheckedChange = { holdStations[pos] = it; addLog("TRACKING: estación $pos ${if(it) "se detendrá" else "paso libre"}") }, colors = SwitchDefaults.colors(checkedThumbColor = IndustrialTheme.Advertencia))
+                                        }
+                                        IndustrialActionButton("STOP", Icons.Default.Stop, Modifier.weight(1f), colorFondo = IndustrialTheme.Error, enabled = isConnectedBt && (isAuthorized || independentMode), onClick = { sendPlcHardwareCommand("C:STOP|$pos", "PALLET DETENIDO en estación $pos") })
+                                        IndustrialActionButton("Liberar", Icons.Default.PlayArrow, Modifier.weight(1f), colorFondo = IndustrialTheme.Exito, enabled = isConnectedBt && (isAuthorized || independentMode), onClick = { palletPresent[pos] = false; sendPlcHardwareCommand("C:FREE|$pos", "Estación $pos liberada") })
+                                    }
+                                }
+                                HorizontalDivider(color = IndustrialTheme.Borde)
+                            }
+                        }
+                        IndustrialCard("Simulador de Pallet", Icons.Default.DirectionsRun, headerColor = Color.Magenta) {
+                            Text("Simula el paso de un pallet por una estación (pruebas sin hardware)", color = IndustrialTheme.TextoSecundario, fontSize = 10.sp)
+                            Row(Modifier.fillMaxWidth(), Arrangement.spacedBy(8.dp)) {
+                                trackingStations.forEach { (_, pos) ->
+                                    IndustrialActionButton("POS $pos", Icons.Default.Sensors, Modifier.weight(1f), onClick = { handlePlcEvent("SENSOR_ACTIVATED|POS:$pos") })
+                                }
+                            }
+                        }
+                    }
+                    2 -> {
                         IndustrialCard("Red Industrial", Icons.Default.Lan, headerColor = IndustrialTheme.Secundario) {
                             IndustrialTextField(valor = ipCoordinator, onValueChange = { ipCoordinator = it }, label = "IP Coordinador")
                             IndustrialStatusRow("Enlace de Datos", if(isConnectedNet) "SINCRO OK" else "OFFLINE", isConnectedNet)
@@ -194,6 +255,7 @@ fun PLCApp(commCoordinator: CommunicationCoordinator) {
                                 stationClient.sendEventSafe("SENSOR_ACTIVATED|POS:5")
                             }
                         }
+                        handlePlcEvent("SENSOR_ACTIVATED|POS:5")
                         addLog("SIM_ESP32: SENSOR_ACTIVATED | POS: 5") 
                     })
                 }

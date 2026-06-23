@@ -32,9 +32,9 @@ class BLECallbacks : public BLEServerCallbacks {
 
 class RxCallbacks : public BLECharacteristicCallbacks {
   void onWrite(BLECharacteristic* pCharacteristic) override {
-    std::string value = pCharacteristic->getValue();
+    String value = pCharacteristic->getValue();
     if (value.length() > 0) {
-      incomingCommand = String(value.c_str());
+      incomingCommand = value;
       Serial.print("RX: ");
       Serial.println(incomingCommand);
     }

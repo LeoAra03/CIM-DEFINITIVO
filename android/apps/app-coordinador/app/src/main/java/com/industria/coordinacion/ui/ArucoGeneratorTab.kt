@@ -26,6 +26,7 @@ import kotlinx.coroutines.launch
 fun ArucoGeneratorTab(
     onGenerateAruco: (String) -> Unit,
     onUseWithLaser: (String) -> Unit = {},
+    enabled: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     var arucoId by remember { mutableStateOf("1") }
@@ -57,6 +58,7 @@ fun ArucoGeneratorTab(
                     texto = if (isGenerating) "Generando..." else "Generar Pattern", 
                     icono = Icons.Default.Autorenew, 
                     loading = isGenerating,
+                    enabled = enabled,
                     onClick = { 
                         scope.launch {
                             isGenerating = true
@@ -105,6 +107,7 @@ fun ArucoGeneratorTab(
                             icono = Icons.Default.FlashOn, 
                             modifier = Modifier.weight(1f),
                             colorFondo = IndustrialTheme.Advertencia,
+                            enabled = enabled,
                             onClick = { onUseWithLaser("ARUCO_${arucoId}") }
                         )
                         IndustrialActionButton(
@@ -112,6 +115,7 @@ fun ArucoGeneratorTab(
                             icono = Icons.Default.Save, 
                             modifier = Modifier.weight(1f),
                             colorFondo = IndustrialTheme.Exito,
+                            enabled = enabled,
                             onClick = { isGenerated = false; generatedBitmap = null }
                         )
                     }

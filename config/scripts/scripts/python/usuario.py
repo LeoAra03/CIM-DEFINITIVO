@@ -44,7 +44,11 @@ HOST, PORT = "10.4.3.76", 8888
 SCORBOT_EOL_DEFAULT = "\r"
 
 PROFILE="photo"; F_TRAVEL=1000; SIZE_MM=(20,20); OFFSET_DX,OFFSET_DY,OFFSET_FEED=270,-170,1000
-RUTAS_IMAGENES = {f"Opción {i}": rf"C:\Users\cimla\Pictures\Camera Roll\aruco_{i}.png" for i in range(1,16)}
+
+# --- Refactorización Profesional: Rutas Relativas ---
+# Se asume que las imágenes están en una carpeta 'images' junto al script.
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+RUTAS_IMAGENES = {f"Opción {i}": os.path.join(SCRIPT_DIR, "images", f"aruco_{i}.png") for i in range(1,16)}
 OPCIONES = list(RUTAS_IMAGENES.keys())
 
 # ===================== Cliente TCP =====================

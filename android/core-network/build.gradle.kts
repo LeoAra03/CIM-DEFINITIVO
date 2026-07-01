@@ -68,4 +68,13 @@ dependencies {
 
     implementation("com.google.dagger:hilt-android:2.47")
     kapt("com.google.dagger:hilt-compiler:2.47")
+
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
+
+    // TLS 1.3 (Conscrypt)
+    implementation("org.conscrypt:conscrypt-android:2.5.2")
+
+    // TensorFlow Lite — YOLOv8 en borde
+    implementation("org.tensorflow:tensorflow-lite:2.14.0")
+    implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
 }

@@ -29,7 +29,8 @@ tasks.register("buildAllApks") {
         "app-plc",
         "app-calidad",
         "app-manufactura",
-        "app-almacen"
+        "app-almacen",
+        "wear-coordinador"
     )
 
     // Depender de las tareas assembleDebug de cada subproyecto (ruta jerárquica)
@@ -94,7 +95,8 @@ tasks.register("cleanAllModules") {
         ":app-plc:clean",
         ":app-calidad:clean",
         ":app-manufactura:clean",
-        ":app-almacen:clean"
+        ":app-almacen:clean",
+        ":wear-coordinador:clean"
     )
 }
 

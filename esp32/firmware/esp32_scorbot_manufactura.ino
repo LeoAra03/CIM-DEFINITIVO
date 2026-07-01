@@ -1,118 +1,17 @@
-#include <Arduino.h>
-#include <BluetoothSerial.h>
-#include <BLEDevice.h>
-#include <BLEServer.h>
-#include <BLEUtils.h>
-#include <BLE2902.h>
-
+/*
+ * CIM Manufactura - Wemos D1 ESP32 R32
+ * BLE Nordic UART + Scorbot Serial2 (GPIO16/17)
+ */
 #define DEVICE_NAME "CIM_SCORBOT_MAN"
-#define SERVICE_UUID "6E400001-B5A3-F393-E0A9-E50E24DCCA9E"
-#define CHAR_UUID_RX "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"
-#define CHAR_UUID_TX "6E400003-B5A3-F393-E0A9-E50E24DCCA9E"
-
-BluetoothSerial SerialBT;
-BLEServer *pServer = nullptr;
-BLECharacteristic *pTxCharacteristic = nullptr;
-BLECharacteristic *pRxCharacteristic = nullptr;
-
-bool deviceConnected = false;
-String incomingCommand = "";
-
-class BLECallbacks : public BLEServerCallbacks {
-  void onConnect(BLEServer* pServer) override {
-    deviceConnected = true;
-    Serial.println("BLE connected");
-  }
-
-  void onDisconnect(BLEServer* pServer) override {
-    deviceConnected = false;
-    Serial.println("BLE disconnected");
-  }
-};
-
-class RxCallbacks : public BLECharacteristicCallbacks {
-  void onWrite(BLECharacteristic* pCharacteristic) override {
-    String value = pCharacteristic->getValue();
-    if (value.length() > 0) {
-      incomingCommand = value;
-      Serial.print("RX: ");
-      Serial.println(incomingCommand);
-    }
-  }
-};
-
-void sendStatus(const String &text) {
-  if (deviceConnected && pTxCharacteristic) {
-    pTxCharacteristic->setValue(text.c_str());
-    pTxCharacteristic->notify();
-  }
-  if (Serial) {
-    Serial.print("TX: ");
-    Serial.println(text);
-  }
-}
-
-void handleCommand(const String &command) {
-  if (command.startsWith("R:")) {
-    if (command == "R:HOME") {
-      sendStatus("ACTUATOR: HOME");
-    } else if (command == "R:READY") {
-      sendStatus("ACTUATOR: READY");
-    } else if (command.startsWith("R:MOVE:")) {
-      sendStatus("ACTUATOR: " + command.substring(2));
-    } else if (command == "R:DISCARD") {
-      sendStatus("ACTUATOR: DISCARD PIECE");
-    } else {
-      sendStatus("ACTUATOR: UNKNOWN R CMD");
-    }
-  } else if (command.startsWith("CAM:") || command.startsWith("VAL:") || command.startsWith("STO:")) {
-    sendStatus("RECEIVED: " + command);
-  } else {
-    sendStatus("UNKNOWN COMMAND");
-  }
-}
-
-void setupBLE() {
-  BLEDevice::init(DEVICE_NAME);
-  pServer = BLEDevice::createServer();
-  pServer->setCallbacks(new BLECallbacks());
-
-  BLEService *pService = pServer->createService(SERVICE_UUID);
-  pTxCharacteristic = pService->createCharacteristic(CHAR_UUID_TX, BLECharacteristic::PROPERTY_NOTIFY);
-  pTxCharacteristic->addDescriptor(new BLE2902());
-  pRxCharacteristic = pService->createCharacteristic(CHAR_UUID_RX, BLECharacteristic::PROPERTY_WRITE);
-  pRxCharacteristic->setCallbacks(new RxCallbacks());
-
-  pService->start();
-  BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
-  pAdvertising->addServiceUUID(SERVICE_UUID);
-  pAdvertising->setScanResponse(true);
-  pAdvertising->start();
-
-  Serial.println("BLE service started");
-}
+#define STATION_TYPE "ROBOT_ARM"
+#include <BluetoothSerial.h>
+#include "cim_ble_firmware.h"
 
 void setup() {
   Serial.begin(115200);
-  delay(1000);
-  Serial.println(DEVICE_NAME);
-  SerialBT.begin(DEVICE_NAME);
-  setupBLE();
+  cimBleSetup();
 }
 
 void loop() {
-  if (SerialBT.available()) {
-    String command = SerialBT.readStringUntil('\n');
-    command.trim();
-    if (command.length() > 0) {
-      handleCommand(command);
-    }
-  }
-
-  if (incomingCommand.length() > 0) {
-    handleCommand(incomingCommand);
-    incomingCommand = "";
-  }
-
-  delay(50);
+  cimBleLoop();
 }

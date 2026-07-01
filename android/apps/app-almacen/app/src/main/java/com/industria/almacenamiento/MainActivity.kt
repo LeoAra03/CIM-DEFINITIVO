@@ -72,8 +72,17 @@ fun AlmacenApp(commCoordinator: CommunicationCoordinator) {
     val isAuthorized by remember { derivedStateOf { authorizationState == CimProtocol.AUTH_STATE_VALIDATED } }
     var independentMode by remember { mutableStateOf(false) }
     var ipCoordinator by remember { mutableStateOf("192.168.1.100") }
+    val discoveredHubIp = rememberHubIp(context)
+    LaunchedEffect(discoveredHubIp.value) {
+        discoveredHubIp.value?.let { ip ->
+            if (ip != ipCoordinator) ipCoordinator = ip
+        }
+    }
     var selectedTab by remember { mutableStateOf(0) }
     var selectedRackPosition by remember { mutableStateOf(1) }
+    val isOperationalReady by remember {
+        derivedStateOf { isConnectedBt && (isAuthorized || independentMode) }
+    }
 
     fun addLog(msg: String) {
         val time = java.text.SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
@@ -147,7 +156,7 @@ fun AlmacenApp(commCoordinator: CommunicationCoordinator) {
                             IndustrialActionButton(
                                 texto = "ALMACENAR EN POS $selectedRackPosition",
                                 icono = Icons.Default.Send,
-                                enabled = isConnectedBt && (isAuthorized || independentMode),
+                                enabled = isOperationalReady,
                                 onClick = { sendAuthorizedHardwareCommand("STO:$selectedRackPosition", "CMD: STORE AT POS $selectedRackPosition") }
                             )
                             Spacer(Modifier.height(8.dp))
@@ -155,7 +164,7 @@ fun AlmacenApp(commCoordinator: CommunicationCoordinator) {
                                 texto = "RUN SCORBOT EN POS $selectedRackPosition",
                                 icono = Icons.Default.PlayCircle,
                                 colorFondo = IndustrialTheme.Secundario,
-                                enabled = isConnectedBt && (isAuthorized || independentMode),
+                                enabled = isOperationalReady,
                                 onClick = { sendAuthorizedHardwareCommand("R:RUN STORE $selectedRackPosition", "RUN STORE $selectedRackPosition") }
                             )
                         }
@@ -170,30 +179,30 @@ fun AlmacenApp(commCoordinator: CommunicationCoordinator) {
                                 Switch(checked = independentMode, onCheckedChange = { independentMode = it }, colors = SwitchDefaults.colors(checkedThumbColor = IndustrialTheme.Exito))
                             }
                             IndustrialStatusRow("Modo Autónomo", if(independentMode) "ACTIVO" else "DESACTIVADO", independentMode)
-                            IndustrialActionButton(texto = "Sincronizar", icono = Icons.Default.Router, onClick = { stationClient.connect() })
+                            IndustrialActionButton(texto = "Sincronizar", icono = Icons.Default.Router, enabled = true, onClick = { stationClient.connect() })
                         }
                     }
                     2 -> {
                         IndustrialCard("Control Scorbot", Icons.Default.PrecisionManufacturing) {
                             Row(Modifier.fillMaxWidth(), Arrangement.spacedBy(8.dp)) {
-                                IndustrialActionButton("HOME", Icons.Default.Home, Modifier.weight(1f), enabled = isConnectedBt && (isAuthorized || independentMode), onClick = { sendAuthorizedHardwareCommand("R:HOME", "CMD: HOME") })
-                                IndustrialActionButton("READY", Icons.Default.Check, Modifier.weight(1f), enabled = isConnectedBt && (isAuthorized || independentMode), onClick = { sendAuthorizedHardwareCommand("R:READY", "CMD: READY") })
+                                IndustrialActionButton("HOME", Icons.Default.Home, Modifier.weight(1f), enabled = isOperationalReady, onClick = { sendAuthorizedHardwareCommand("R:HOME", "CMD: HOME") })
+                                IndustrialActionButton("READY", Icons.Default.Check, Modifier.weight(1f), enabled = isOperationalReady, onClick = { sendAuthorizedHardwareCommand("R:READY", "CMD: READY") })
                             }
                             Spacer(Modifier.height(12.dp))
                             Text("MOVIMIENTO MANUAL", color = IndustrialTheme.TextoSecundario, fontSize = 10.sp)
                             Row(Modifier.fillMaxWidth().padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                IndustrialActionButton("X-", Icons.Default.KeyboardArrowLeft, Modifier.weight(1f).height(44.dp), enabled = isConnectedBt && (isAuthorized || independentMode), onClick = { sendAuthorizedHardwareCommand("R:MOVE:X:-10", "CMD: MOVE X -10") })
-                                IndustrialActionButton("X+", Icons.Default.KeyboardArrowRight, Modifier.weight(1f).height(44.dp), enabled = isConnectedBt && (isAuthorized || independentMode), onClick = { sendAuthorizedHardwareCommand("R:MOVE:X:+10", "CMD: MOVE X +10") })
+                                IndustrialActionButton("X-", Icons.Default.KeyboardArrowLeft, Modifier.weight(1f).height(44.dp), enabled = isOperationalReady, onClick = { sendAuthorizedHardwareCommand("R:MOVE:X:-10", "CMD: MOVE X -10") })
+                                IndustrialActionButton("X+", Icons.Default.KeyboardArrowRight, Modifier.weight(1f).height(44.dp), enabled = isOperationalReady, onClick = { sendAuthorizedHardwareCommand("R:MOVE:X:+10", "CMD: MOVE X +10") })
                             }
                             Row(Modifier.fillMaxWidth().padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                IndustrialActionButton("Y-", Icons.Default.KeyboardArrowDown, Modifier.weight(1f).height(44.dp), enabled = isConnectedBt && (isAuthorized || independentMode), onClick = { sendAuthorizedHardwareCommand("R:MOVE:Y:-10", "CMD: MOVE Y -10") })
-                                IndustrialActionButton("Y+", Icons.Default.KeyboardArrowUp, Modifier.weight(1f).height(44.dp), enabled = isConnectedBt && (isAuthorized || independentMode), onClick = { sendAuthorizedHardwareCommand("R:MOVE:Y:+10", "CMD: MOVE Y +10") })
+                                IndustrialActionButton("Y-", Icons.Default.KeyboardArrowDown, Modifier.weight(1f).height(44.dp), enabled = isOperationalReady, onClick = { sendAuthorizedHardwareCommand("R:MOVE:Y:-10", "CMD: MOVE Y -10") })
+                                IndustrialActionButton("Y+", Icons.Default.KeyboardArrowUp, Modifier.weight(1f).height(44.dp), enabled = isOperationalReady, onClick = { sendAuthorizedHardwareCommand("R:MOVE:Y:+10", "CMD: MOVE Y +10") })
                             }
                             Spacer(Modifier.height(12.dp))
-                            IndustrialActionButton("DESCARTAR PIEZA", Icons.Default.DeleteForever, colorFondo = IndustrialTheme.Error, enabled = isConnectedBt && (isAuthorized || independentMode), onClick = { sendAuthorizedHardwareCommand("R:DISCARD", "CMD: DISCARD FAILED PIECE") })
+                            IndustrialActionButton("DESCARTAR PIEZA", Icons.Default.DeleteForever, colorFondo = IndustrialTheme.Error, enabled = isOperationalReady, onClick = { sendAuthorizedHardwareCommand("R:DISCARD", "CMD: DISCARD FAILED PIECE") })
                         }
                         ScorbotRunConsole(
-                            enabled = isConnectedBt && (isAuthorized || independentMode),
+                            enabled = isOperationalReady,
                             presets = listOf("ALMACENAR" to "STORE", "RETIRAR" to "PICK"),
                             initialProgram = "STORE",
                             descripcion = "Ejecuta rutinas de almacenamiento en el controlador (estilo hyperterminal)",
@@ -201,12 +210,6 @@ fun AlmacenApp(commCoordinator: CommunicationCoordinator) {
                             onRun = { prog -> sendAuthorizedHardwareCommand("R:RUN $prog", "RUN $prog") },
                             onAuto = { sendAuthorizedHardwareCommand("R:AUTO", "AUTO") }
                         )
-                    }
-                }
-
-                if (true) {
-                    IndustrialCard("Debug de Almacén", Icons.Default.DeveloperMode, headerColor = Color.Magenta) {
-                        IndustrialActionButton(texto = "Simular Almacenado", icono = Icons.Default.CheckCircle, colorFondo = Color.DarkGray, onClick = { addLog("SIM_ESP32: STORE_SUCCESS | POS: 12") })
                     }
                 }
 

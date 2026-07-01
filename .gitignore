@@ -25,6 +25,33 @@ captures/
 *.aab
 *.dex
 output-apks/
+config/output-apks/
+android/apks/*.apk
+
+# --- Build logs ---
+BUILD_LOG.txt
+BUILD_LOG_*.txt
+build_*.log
+config/build_*.log
+
+# --- Python (TFLite test, hub simulator) ---
+venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+.venv
+
+# --- Resultados de test YOLO offline ---
+tflite_inference_result.json
+tflite_output.json
+output_detection.json
+output_detection.jpg
+test_output/
 
 # --- PlatformIO (regenerable con pio run) ---
 .pio/
@@ -53,14 +80,28 @@ CIM_V6_*.zip
 # --- Sistema operativo ---
 .DS_Store
 Thumbs.db
+desktop.ini
 
 # --- Carpeta personal para uso mañana ---
 .para-maniana/
 
 # --- Logs temporales ---
 *.log
+logcat_*.txt
+last*_logcat.txt
 
 # --- Scripts y carpetas obsoletos (mantener localmente pero no en Git) ---
 deploy_apks.ps1
 entorno_mobile/
 tools/organize_workspace.ps1
+
+# --- Archivos temporales del sistema ---
+*.tmp
+*.bak
+*.swp
+*~
+
+# --- Gradle wrapper logs ---
+gradle-app.setting
+
+

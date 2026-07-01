@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package cim.protocol;
+
+option java_package = "com.sistema.distribuido.network.proto";
+option java_multiple_files = false;
+
+// Estado de estación CIM — equivalente binario a CimMessage para alto rendimiento.
+message StationState {
+  string station_id = 1;
+  string app_type = 2;
+  string status = 3;
+  int64 timestamp = 4;
+  string payload = 5;
+}
+
+message CommandEnvelope {
+  string id = 1;
+  int64 timestamp = 2;
+  string source_mac = 3;
+  string dest_mac = 4;
+  string command_type = 5;
+  string priority = 6;
+  string session_id = 7;
+  string payload = 8;
+}

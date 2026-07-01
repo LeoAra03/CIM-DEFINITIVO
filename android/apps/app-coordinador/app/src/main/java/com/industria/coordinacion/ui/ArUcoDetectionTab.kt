@@ -42,6 +42,7 @@ data class DetectedArUco(
 @Composable
 fun ArUcoDetectionTab(
     onArucoDetected: (DetectedArUco) -> Unit = {},
+    enabled: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     var detectedArucos by remember { mutableStateOf<List<DetectedArUco>>(emptyList()) }
@@ -115,6 +116,7 @@ fun ArUcoDetectionTab(
                                         icono = if (isDetecting) Icons.Default.Pause else Icons.Default.PlayArrow,
                                         modifier = Modifier.weight(1f),
                                         colorFondo = if (isDetecting) IndustrialTheme.Error else IndustrialTheme.Exito,
+                                        enabled = enabled,
                                         onClick = { isDetecting = !isDetecting }
                                     )
                                     IndustrialActionButton(
@@ -122,6 +124,7 @@ fun ArUcoDetectionTab(
                                         icono = Icons.Default.Delete,
                                         modifier = Modifier.weight(1f),
                                         colorFondo = IndustrialTheme.Advertencia,
+                                        enabled = enabled,
                                         onClick = {
                                             detectedArucos = emptyList()
                                             lastQrContent = ""
@@ -149,6 +152,7 @@ fun ArUcoDetectionTab(
                                     Text("Posición: ${aruco.center}", color = Color.Gray, fontSize = 11.sp)
                                     Spacer(Modifier.height(8.dp))
                                     IndustrialActionButton("Enviar al Robot", Icons.Default.Send) {
+                                        if (!enabled) return@IndustrialActionButton
                                         onArucoDetected(aruco)
                                     }
                                 }

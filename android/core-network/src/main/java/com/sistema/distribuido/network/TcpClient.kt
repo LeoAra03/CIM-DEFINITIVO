@@ -1,5 +1,7 @@
 package com.sistema.distribuido.network
 
+import com.sistema.distribuido.network.protocol.CimProtocol
+import com.sistema.distribuido.network.protocol.CimTransportCodec
 import kotlinx.coroutines.*
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -27,8 +29,7 @@ class TcpClient(private val host: String, private val port: Int, private val max
             while (isRunning && attempts < maxRetries && !connected) {
                 try {
                     PerformanceProfiler.trace("TCP_CONNECT") {
-                        socket = Socket()
-                        socket?.connect(InetSocketAddress(host, port), 2000)
+                        socket = TlsSocketHelper.createClientSocket(host, port, 2000)
                         socket?.soTimeout = 2000
                         // socket?.getOutputStream() puede ser null por interoperabilidad Java; asignamos solo si no es null
                         socket?.getOutputStream()?.let { out ->
@@ -48,7 +49,7 @@ class TcpClient(private val host: String, private val port: Int, private val max
                         try {
                             inputLine = reader.readLine()
                             if (inputLine == null) break
-                            onMessageReceived?.invoke(inputLine!!)
+                            onMessageReceived?.invoke(CimTransportCodec.tryUnwrap(inputLine!!))
                         } catch (e: java.net.SocketTimeoutException) {
                             // continue loop to allow heartbeat and retries
                             continue
@@ -73,11 +74,17 @@ class TcpClient(private val host: String, private val port: Int, private val max
         }
     }
 
+    private fun wrapOutgoing(message: String): String {
+        return if (CimProtocol.USE_CRC_V2 && !message.startsWith(CimTransportCodec.PREFIX)) {
+            CimTransportCodec.wrap(message)
+        } else message
+    }
+
     fun send(message: String) {
         scope.launch {
             try {
-                writer?.println(message)
-                writer?.flush() // Fuerza el envío inmediato del mensaje a través del socket
+                writer?.println(wrapOutgoing(message))
+                writer?.flush()
             } catch (e: Exception) {
                 // log silently
             }
@@ -94,7 +101,7 @@ class TcpClient(private val host: String, private val port: Int, private val max
             val s = socket
             val w = writer
             if (s != null && s.isConnected && !s.isClosed && w != null) {
-                w.println(message)
+                w.println(wrapOutgoing(message))
                 w.flush()
                 return@withContext !w.checkError()
             }

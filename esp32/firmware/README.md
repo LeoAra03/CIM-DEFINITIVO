@@ -28,6 +28,17 @@ Firmware BLE para la placa **Wemos D1 ESP32 R32** (ESP-WROOM-32), compatible con
 3. `cim_ble_firmware.h` debe estar en la misma carpeta
 4. Subir por USB (115200 baud serial monitor)
 
+## Carpeta lista para prueba (Scorbot Manufactura)
+
+- Carpeta Arduino lista: `esp32/firmware/arduino/esp32_scorbot_manufactura/`
+- Abrir en Arduino IDE: `esp32_scorbot_manufactura.ino`
+- Dependencias: Core **ESP32 by Espressif Systems** (incluye la librería `BLE` usada por `BLEDevice.h`)
+- Nombre BLE esperado: `CIM_SCORBOT_MAN`
+- Salida serial esperada al iniciar (115200):
+  - `CIM BLE Firmware - Wemos D1 ESP32 R32`
+  - `Dispositivo: CIM_SCORBOT_MAN`
+  - `Esperando conexion Android...`
+
 ## Protocolo BLE
 
 - Servicio Nordic UART: `6E400001-B5A3-F393-E0A9-E50E24DCCA9E`

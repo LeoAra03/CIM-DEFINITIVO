@@ -1,13 +1,15 @@
-# 📋 INFORME FINAL DEL PROYECTO CIM v6.0
+# 📋 INFORME HISTÓRICO DE AVANCE DEL PROYECTO CIM v6.0
 ## Sistema de Manufactura Flexible Integrada por Computadora
 
-**Estudiante:** Leonardo Araya  
-**Institución:** [Universidad]  
-**Fecha de Entrega:** 28 de Julio de 2026  
-**Versión del Sistema:** 6.0 FINAL  
-**Total de Horas Invertidas:** 240 horas (10 marzo - 14 julio 2026)
+**Estudiante:** Leonardo Araya
+**Institución:** [Universidad]
+**Fecha de Entrega:** 28 de Julio de 2026
+**Versión del Sistema:** 6.0 EN VALIDACIÓN
+**Horas registradas:** bitácora histórica; debe contrastarse con evidencia verificable antes de entrega final
 
 ---
+
+> **Nota de auditoría 2026-07-28:** este documento se conserva como material histórico de entrega. Para el estado verificable actual usar `docs/deliverables/`, CI y bitácora actualizada.
 
 ## 1. RESUMEN EJECUTIVO
 
@@ -20,15 +22,15 @@ El presente informe documenta el desarrollo completo del **Sistema CIM v6.0** (C
 | 5 Aplicaciones Android independientes | ✅ Completado | `android/apps/app-*` |
 | Core de red compartido (27 archivos Kotlin) | ✅ Completado | `android/core-network/` |
 | Protocolo CIM v5.1 implementado | ✅ Completado | `CimMessage`, `CimProtocol` |
-| 4 Firmwares ESP32 funcionales | ✅ Completado | `3_FIRMWARE_ESP32/` |
-| Paquete de entrega portable | ✅ Completado | `PAQUETE_FINAL_ENTREGA/` |
-| 240 horas documentadas | ✅ Completado | Bitácora adjunta |
-| Sistema 100% operable en simulación | ✅ Completado | Scripts + Modo Autónomo |
+| 4 firmwares ESP32 activos | ⚠ Pendiente ensayo físico | `esp32/firmware/` |
+| Repositorio de entrega portable | ✅ Estructura activa | `CIM-DEFINITIVO/` |
+| Horas documentadas | ⚠ Histórico | Requiere contraste con evidencia |
+| Puerta 100% automatizable en simulación | ✅ Validable | `tools/validate_system_100.py` |
 | Control real del Coordinador | ✅ Mejorado | `simulateFullCycle()` con CommandBroker |
 
 ---
 
-## 2. DESCRIPCIÓN DEL SISTEMA FINAL
+## 2. DESCRIPCIÓN DEL SISTEMA EN VALIDACIÓN
 
 ### 2.1 Arquitectura General
 
@@ -287,29 +289,29 @@ Envía STO:07 → app-almacen (si está conectada)
 
 ---
 
-## 6. PAQUETE DE ENTREGA FINAL
+## 6. ESTRUCTURA ACTIVA DE ENTREGA
 
 ### 6.1 Estructura Organizada
 
 ```
-PAQUETE_FINAL_ENTREGA/
-├── 1_DOCUMENTACION/
+CIM-DEFINITIVO/
+├── docs/
 │   ├── LEEME.txt
 │   ├── GUIA_LABORATORIO_MANANA.md
-│   └── ENTREGA_FINAL_LEONARDO_ARAYA.pdf (placeholder)
-├── 2_APKS/
+│   └── ENTREGA_FINAL_LEONARDO_ARAYA.pdf (generado desde fuentes actuales)
+├── config/output-apks/
 │   ├── app-coordinador.apk
 │   ├── app-plc.apk
 │   ├── app-manufactura.apk
 │   ├── app-calidad.apk
 │   └── app-almacen.apk
-├── 3_FIRMWARE/
+├── esp32/firmware/
 │   ├── cim_scorbot_firmware.ino
 │   ├── cim_plc_firmware.ino
 │   ├── cim_calidad_firmware.ino
 │   ├── cim_almacen_firmware.ino
 │   └── Flashear-ESP32.ps1
-├── 4_SCRIPTS/
+├── tools/powershell/
 │   ├── Instalar-APKs.ps1
 │   ├── Flashear-ESP32.ps1
 │   ├── Simular_Ciclo_Completo.ps1
@@ -334,7 +336,7 @@ PAQUETE_FINAL_ENTREGA/
 | Coordinador central con autorización | ✅ | PermissionManager + TcpServer 8888 |
 | Modo autónomo por estación | ✅ | Switch en cada app |
 | Paquete portable para profesor | ✅ | Scripts + LEEME.txt |
-| 240 horas de trabajo documentadas | ✅ | Bitácora adjunta |
+| Horas de trabajo documentadas | ⚠ | Bitácora histórica pendiente de auditoría final |
 | Sistema operable en simulación | ✅ | TestModeManager + Scripts |
 | Control real del Coordinador | ✅ | simulateFullCycle() con CommandBroker |
 
@@ -344,7 +346,7 @@ PAQUETE_FINAL_ENTREGA/
 2. **Protocolo CIM v5.1 robusto** — Handshake, autorización, heartbeat, reconexión
 3. **UI Industrial profesional** — Tema unificado, componentes reutilizables
 4. **Firmware ESP32 completo** — 4 dispositivos con comandos específicos
-5. **Documentación exhaustiva** — 240 horas bitacoreadas + informes
+5. **Documentación viva** — bitácora e informes sujetos a evidencia verificable
 
 ### 7.3 Trabajo Futuro Recomendado
 
@@ -365,10 +367,10 @@ PAQUETE_FINAL_ENTREGA/
 
 ---
 
-**Documento elaborado por:** Leonardo Araya  
-**Fecha:** 28 de Julio de 2026  
-**Versión:** 1.0 FINAL
+**Documento elaborado por:** Leonardo Araya
+**Fecha:** 28 de Julio de 2026
+**Versión:** 1.0 EN VALIDACIÓN
 
 ---
 
-*Este informe certifica que el proyecto CIM v6.0 ha sido desarrollado en su totalidad cumpliendo con los requisitos académicos y técnicos establecidos.*
+*Este informe histórico no certifica la entrega final por sí solo. La declaración final debe basarse en CI verde, checksums, bitácora actual y ensayos de hardware documentados.*

@@ -231,14 +231,11 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun requestBluetoothPermissions() {
-        val permissions = mutableListOf(
-            Manifest.permission.BLUETOOTH_SCAN,
-            Manifest.permission.BLUETOOTH_CONNECT,
-            Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.CAMERA
-        )
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
-            permissions.add(Manifest.permission.ACCESS_COARSE_LOCATION)
+        val permissions = mutableListOf(Manifest.permission.CAMERA)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            permissions.addAll(listOf(Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT))
+        } else {
+            permissions.addAll(listOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
         }
         permissionLauncher.launch(permissions.toTypedArray())
     }
@@ -288,7 +285,7 @@ class MainActivity : ComponentActivity() {
             Log.w("TcpServer", "No se pudo registrar dispositivo TCP: ${e.message}", e)
         }
 
-        if (password != CimProtocol.PASSWORD_ACTUAL) {
+        if (!CimProtocol.isPairingSecretValid(password)) {
             AuthorizationManager.deny(mac)
             val response = com.sistema.distribuido.network.protocol.CimMessage(
                 sourceMac = AppIdentifier.getInstance().deviceMac,
@@ -362,7 +359,7 @@ class MainActivity : ComponentActivity() {
             Log.w("TcpServer", "No se pudo registrar dispositivo TCP: ${e.message}", e)
         }
 
-        if (password != CimProtocol.PASSWORD_ACTUAL) {
+        if (!CimProtocol.isPairingSecretValid(password)) {
             AuthorizationManager.deny(mac)
             tcpServer?.sendToClientByMac(mac, CimProtocol.RESPONSE_DENIED)
             Log.w("TcpServer", "Handshake DENIED por contraseña inválida: $mac")

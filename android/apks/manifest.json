@@ -1,38 +1,12 @@
-﻿[
-    {
-        "name":  "app-almacen.apk",
-        "size_mb":  163.55,
-        "path":  "C:\\Users\\Leo\\Desktop\\Test Practica2\\Practica_2\\CIM-DEFINITIVO\\android\\apks\\app-almacen.apk",
-        "md5":  "DDAF34E7BD416E59CCCF26AAF059D3CA"
-    },
-    {
-        "name":  "app-calidad.apk",
-        "size_mb":  164.83,
-        "path":  "C:\\Users\\Leo\\Desktop\\Test Practica2\\Practica_2\\CIM-DEFINITIVO\\android\\apks\\app-calidad.apk",
-        "md5":  "600117DC18CDC3CF6106C7049A1BA9E9"
-    },
-    {
-        "name":  "app-coordinador.apk",
-        "size_mb":  168.96,
-        "path":  "C:\\Users\\Leo\\Desktop\\Test Practica2\\Practica_2\\CIM-DEFINITIVO\\android\\apks\\app-coordinador.apk",
-        "md5":  "78595961FE8BD7EF66AA6DA783090FA1"
-    },
-    {
-        "name":  "app-manufactura.apk",
-        "size_mb":  163.04,
-        "path":  "C:\\Users\\Leo\\Desktop\\Test Practica2\\Practica_2\\CIM-DEFINITIVO\\android\\apks\\app-manufactura.apk",
-        "md5":  "E712D5F995019C487BCF864E0E71A259"
-    },
-    {
-        "name":  "app-plc.apk",
-        "size_mb":  164.65,
-        "path":  "C:\\Users\\Leo\\Desktop\\Test Practica2\\Practica_2\\CIM-DEFINITIVO\\android\\apks\\app-plc.apk",
-        "md5":  "DB2DD3C1BD0DE78175D53573567EFC09"
-    },
-    {
-        "name":  "wear-coordinador.apk",
-        "size_mb":  230.48,
-        "path":  "C:\\Users\\Leo\\Desktop\\Test Practica2\\Practica_2\\CIM-DEFINITIVO\\android\\apks\\wear-coordinador.apk",
-        "md5":  "E60341DEAAFB8997819D19BD24F2B7EF"
-    }
-]
+{
+  "generated": false,
+  "description": "Las APKs no se versionan. Ejecuta `cd config && ./gradlew buildAllApks validateApks writeApkChecksums` para generar config/output-apks/ y SHA256SUMS.txt.",
+  "expectedApks": [
+    "app-coordinador.apk",
+    "app-plc.apk",
+    "app-manufactura.apk",
+    "app-calidad.apk",
+    "app-almacen.apk",
+    "wear-coordinador.apk"
+  ]
+}

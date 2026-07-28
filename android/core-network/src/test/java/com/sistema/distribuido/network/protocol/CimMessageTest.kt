@@ -70,4 +70,19 @@ class CimMessageTest {
         assertEquals(AppType.CALIDAD, handshake.sourceApp)
         assertEquals(AppType.COORDINADOR, handshake.destApp)
     }
+
+    @Test
+    fun pairingSecretUsesHashForTransport() {
+        val wireSecret = CimProtocol.pairingSecretForTransport("token-local")
+        assertTrue(wireSecret.startsWith("sha256:"))
+        assertFalse(wireSecret.contains("token-local"))
+
+        CimProtocol.PASSWORD_ACTUAL = "token-local"
+        try {
+            assertTrue(CimProtocol.isPairingSecretValid(wireSecret))
+            assertFalse(CimProtocol.isPairingSecretValid("token-incorrecto"))
+        } finally {
+            CimProtocol.PASSWORD_ACTUAL = CimProtocol.DEFAULT_PAIRING_TOKEN
+        }
+    }
 }

@@ -1,13 +1,27 @@
 # Android
 
-Aquí van todo lo relacionado con las apps Android del proyecto.
+Código Android activo del proyecto CIM.
 
 ## Contenido
-- [apks](apks/): APKs listos para instalar
-- proyectos de Android Studio en las carpetas de cada app
-- archivos de instalación y recursos de UI
 
-## Uso rápido
-- revisar los APKs en [apks](apks/)
-- abrir las carpetas de las apps Android desde la raíz del proyecto
-- usar [scripts/install_apks.ps1](../scripts/install_apks.ps1) para copiar los APKs a esta carpeta
+- `core-network/`: biblioteca compartida de protocolo, red, BLE, visión y utilidades.
+- `apps/app-coordinador/`: hub de coordinación.
+- `apps/app-plc/`: estación PLC/cinta.
+- `apps/app-manufactura/`: estación robot/láser.
+- `apps/app-calidad/`: estación de visión/calidad.
+- `apps/app-almacen/`: estación de almacenamiento.
+- `apps/wear-coordinador/`: app Wear OS de supervisión.
+- `apks/`: documentación de instalación; no versiona APKs.
+
+## Build rápido
+
+```bash
+cd config
+./gradlew testAllModules lintAll buildAllApks validateApks writeApkChecksums
+```
+
+Los artefactos quedan en `config/output-apks/`.
+
+## Instalación
+
+Usa `tools/powershell/Instalar-APKs.ps1` o instala manualmente con ADB desde `config/output-apks/`.

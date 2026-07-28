@@ -39,14 +39,17 @@ Este documento informa únicamente resultados verificables. No constituye certif
 
 ## Evidencia de compilación
 
-La ejecución de GitHub Actions correspondiente al commit de esta fase concluyó exitosamente:
+La validación automática definida para el commit de entrega es:
 
-- Workflow: `Android CIM CI`
-- Validación: `testAllModules`
-- Compilación: `buildAllApks`
-- Resultado: seis APK debug como artefactos de CI.
+- `python3 tools/validate_system_100.py` para la puerta estructural 100% automatizable en simulación.
+- Workflow: `Android CIM CI` ejecutable manualmente con `workflow_dispatch` para la rama de entrega.
+- Pruebas: `testAllModules`.
+- Análisis estático Android: `lintAll`.
+- Compilación: `buildAllApks`.
+- Validación de artefactos: `validateApks` y `writeApkChecksums`.
+- Resultado esperado: seis APK debug como artefactos de CI y `SHA256SUMS.txt`.
 
-La evidencia específica debe vincularse desde la ejecución de Actions correspondiente al commit de entrega.
+La evidencia específica debe vincularse desde la ejecución de Actions correspondiente al commit de entrega. Esta evidencia no reemplaza pruebas de hardware físico.
 
 ## Mejoras verificables incorporadas
 
@@ -60,6 +63,10 @@ La evidencia específica debe vincularse desde la ejecución de Actions correspo
 - Máquina de estados de pallet que bloquea transiciones imposibles.
 - Visualización arcade basada en eventos aceptados.
 - Herramientas de inspección/exportación del checkpoint YOLO `bestMH.pt`.
+- Puerta 100% automatizable para estructura activa y modo simulado.
+- Firma release sin contraseñas embebidas en Gradle.
+- Handshake Android con token transportado como hash SHA-256.
+- Checksums SHA-256 generados para las APKs debug.
 
 ## Limitaciones vigentes
 

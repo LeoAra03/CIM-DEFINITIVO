@@ -7,6 +7,25 @@ plugins {
     kotlin("kapt")
 }
 
+val releaseStoreFilePath = providers.gradleProperty("CIM_RELEASE_STORE_FILE")
+    .orElse(providers.environmentVariable("CIM_RELEASE_STORE_FILE"))
+    .orNull
+val releaseStorePassword = providers.gradleProperty("CIM_RELEASE_STORE_PASSWORD")
+    .orElse(providers.environmentVariable("CIM_RELEASE_STORE_PASSWORD"))
+    .orNull
+val releaseKeyAlias = providers.gradleProperty("CIM_RELEASE_KEY_ALIAS")
+    .orElse(providers.environmentVariable("CIM_RELEASE_KEY_ALIAS"))
+    .orNull
+val releaseKeyPassword = providers.gradleProperty("CIM_RELEASE_KEY_PASSWORD")
+    .orElse(providers.environmentVariable("CIM_RELEASE_KEY_PASSWORD"))
+    .orNull
+val hasReleaseSigning = listOf(
+    releaseStoreFilePath,
+    releaseStorePassword,
+    releaseKeyAlias,
+    releaseKeyPassword
+).all { !it.isNullOrBlank() }
+
 android {
     namespace = "com.industria.coordinacion"
     compileSdk = 35
@@ -21,13 +40,16 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    // Signing configuration for release builds (auto-created keystore at project root)
+    // Signing configuration for release builds.
+    // Secrets must come from CI/local environment; no keystores or passwords are versioned.
     signingConfigs {
-        create("release") {
-            storeFile = rootProject.file("release.keystore")
-            storePassword = "cimkeystorepass"
-            keyAlias = "cim_release"
-            keyPassword = "cimkeystorepass"
+        if (hasReleaseSigning) {
+            create("release") {
+                storeFile = rootProject.file(releaseStoreFilePath!!)
+                storePassword = releaseStorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+            }
         }
     }
 
@@ -42,8 +64,9 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            // Use the signing config defined above to produce a release-signed APK
-            signingConfig = signingConfigs.getByName("release")
+            if (hasReleaseSigning) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
     compileOptions {

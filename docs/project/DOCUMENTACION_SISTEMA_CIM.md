@@ -1,60 +1,74 @@
-# 🏭 SISTEMA INDUSTRIAL CIM v7.0 - MANUAL DE IMPLEMENTACIÓN
+# Sistema Industrial CIM v6.0 — Manual de implementación activo
 
-Este documento describe la arquitectura, despliegue y operación del sistema de manufactura flexible (CIM).
+Este documento resume la arquitectura, despliegue y operación del sistema de manufactura flexible CIM desde la estructura activa del repositorio.
 
-## 📱 APLICACIONES ANDROID (APKs)
+## Aplicaciones Android
 
-El sistema consta de 5 estaciones principales desarrolladas en Kotlin/Compose:
+El sistema consta de cinco estaciones Android principales, una app Wear y una librería compartida:
 
-1.  **`app-coordinador`**: El cerebro de la red. Autoriza conexiones y supervisa el tráfico de datos.
-2.  **`app-manufactura`**: Controla el **Robot Scorbot** y el **Grabado Láser CNC**.
-3.  **`app-calidad`**: Realiza inspección por visión artificial (ArUco/YOLO) y controla un **Robot Scorbot** para descartes.
-4.  **`app-almacen`**: Gestiona la matriz de racks y utiliza un **Robot Scorbot** para el picking de piezas.
-5.  **`app-plc`**: Controla la **Cinta Transportadora** y los sensores de proximidad.
+1. `app-coordinador`: hub de red, autorización y supervisión.
+2. `app-manufactura`: robot Scorbot, láser/G-code y visión de apoyo.
+3. `app-calidad`: inspección por visión ArUco/YOLO y validación PASS/FAIL.
+4. `app-almacen`: gestión de racks, almacenamiento y retiro.
+5. `app-plc`: cinta transportadora, sensores y eventos de pallet.
+6. `wear-coordinador`: supervisión compacta Wear OS.
+7. `core-network`: protocolo, registro, BLE/TCP, visión y utilidades comunes.
 
----
+## Firmware ESP32/Wemos D1 R32
 
-## 🔧 FIRMWARE ARDUINO (WEMOS D1 R32)
+La carpeta canónica es `esp32/firmware/`:
 
-Se han estandarizado los scripts en la carpeta `/firmware/v7_standard/`:
+- `esp32_plc_master.ino`
+- `esp32_scorbot_manufactura.ino`
+- `esp32_scorbot_calidad.ino`
+- `esp32_scorbot_almacen.ino`
+- `cim_ble_firmware.h`
 
-*   **`CIM_SCORBOT_FIRMWARE.ino`**: Cargar en las placas destinadas a los brazos robóticos.
-    *   *Nota:* Cambiar `DEVICE_NAME` según la estación (MAN, CAL, ALM).
-*   **`CIM_PLC_FIRMWARE.ino`**: Cargar en la placa que controla los relés de la cinta y los sensores.
+No usar firmwares desde `archive/` para nuevas pruebas.
 
-### Configuración BLE
-Todos los dispositivos usan el protocolo **CIM over BLE**:
-*   **Service UUID:** `6E400001-B5A3-F393-E0A9-E50E24DCCA9E`
-*   **TX (Notify):** `6E400003-...`
-*   **RX (Write):** `6E400002-...`
-
----
-
-## 📡 PROTOCOLO DE RED
+## Protocolo de red
 
 La comunicación es híbrida:
-1.  **Bluetooth (Local):** Entre la App de la estación y su hardware (ESP32).
-2.  **TCP/Wi-Fi (Red):** Entre las Apps de las estaciones y el Coordinador Central.
 
-### Formato de Mensaje CIM
-`ID|TIMESTAMP|SOURCE_MAC|SOURCE_APP|DEST_MAC|DEST_APP|CMD|PRIORITY|SESSION|PAYLOAD`
+1. Bluetooth/BLE entre la app de estación y su hardware local ESP32.
+2. TCP/Wi-Fi entre estaciones Android y Coordinador.
 
----
+Formato de mensaje principal:
 
-## 🚀 PASOS PARA EL DESPLIEGUE
+```text
+ID|TIMESTAMP|SOURCE_MAC|SOURCE_APP|DEST_MAC|DEST_APP|CMD|PRIORITY|SESSION|PAYLOAD
+```
 
-1.  **Limpieza:** Se han eliminado todos los archivos `.md` antiguos para evitar confusión.
-2.  **Compilación:** Ejecutar `./gradlew assembleDebug` para generar las 5 APKs.
-3.  **Hardware:** Cargar los archivos `.ino` en las Wemos R32 usando el Arduino IDE.
-4.  **Vinculación:**
-    *   Abrir Coordinador y anotar la IP de la red local.
-    *   Abrir cada App de estación, ingresar la IP del Coordinador y pulsar "Sincronizar".
-    *   Aprobar las solicitudes de permiso en la pantalla del Coordinador.
-    *   Conectar el Bluetooth en cada estación para habilitar el control físico.
+El handshake Android transporta el token de emparejamiento como `sha256:<hash>` y requiere aprobación del Coordinador.
 
----
+## Validación automática
 
-## 📂 UBICACIÓN DE BINARIOS
+Desde la raíz:
 
-*   **APKs Finales:** `/output-apks/v7_final/`
-*   **Firmware ESP32:** `/firmware/v7_standard/`
+```bash
+python3 tools/validate_system_100.py
+```
+
+Desde `config/`:
+
+```bash
+./gradlew testAllModules
+./gradlew lintAll
+./gradlew buildAllApks validateApks writeApkChecksums
+```
+
+## Ubicación de artefactos
+
+- APKs debug: `config/output-apks/*.apk`
+- Checksums: `config/output-apks/SHA256SUMS.txt`
+- Reporte estructural opcional: `logs/system_100_validation.json`
+- Scripts PowerShell: `tools/powershell/`
+
+## Despliegue básico
+
+1. Generar APKs con Gradle o descargar artefactos de CI.
+2. Instalar APKs con ADB o `tools/powershell/Instalar-APKs.ps1`.
+3. Abrir Coordinador, iniciar el hub y revisar solicitudes.
+4. Abrir cada estación, usar la IP descubierta/indicada y solicitar autorización.
+5. Para hardware físico, flashear desde `esp32/firmware/` y registrar evidencia en la bitácora.
+6. No energizar actuadores reales sin E-stop físico, límites e interlocks validados.

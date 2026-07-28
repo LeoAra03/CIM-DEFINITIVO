@@ -12,7 +12,7 @@ Script que:
 #>
 
 $ErrorActionPreference = "Stop"
-$ProjectRoot = Split-Path -Parent $PSScriptRoot
+$ProjectRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..")
 $OutputDir = Join-Path $ProjectRoot "config\output-apks"
 $ApkDir = Join-Path $ProjectRoot "android\apks"
 $BuildLog = Join-Path $ProjectRoot "build_log.txt"
@@ -86,12 +86,16 @@ Get-ChildItem -Path $ApkDir -Filter "*.apk" | ForEach-Object {
     $manifest.apks += @{
         name = $_.Name
         size_mb = [Math]::Round($_.Length / 1MB, 2)
-        path = $_.FullName
-        md5 = (Get-FileHash $_.FullName -Algorithm MD5).Hash
+        path = "android/apks/$($_.Name)"
+        sha256 = (Get-FileHash $_.FullName -Algorithm SHA256).Hash
     }
 }
 
 $manifest | ConvertTo-Json | Set-Content (Join-Path $ApkDir "manifest.json") -Encoding UTF8
+$shaLines = Get-ChildItem -Path $ApkDir -Filter "*.apk" | Sort-Object Name | ForEach-Object {
+    "$((Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant())  $($_.Name)"
+}
+$shaLines | Set-Content (Join-Path $ApkDir "SHA256SUMS.txt") -Encoding UTF8
 
 # Generar INSTALL_GUIDE.md
 $installGuide = @"
@@ -136,7 +140,7 @@ adb install -r app-almacen.apk
 - **Min SDK**: 26 (Android 8.0)
 - **Target SDK**: 35 (Android 15)
 - **Soporte**: Hilt DI, Jetpack Compose, BLE + WiFi
-- **Tamaño típico**: 150-180 MB por app (incluye todas las librerías)
+- **Tamaño**: variable por módulo y dependencias nativas; verificar `manifest.json` y `SHA256SUMS.txt`
 
 ---
 *Generado: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")*

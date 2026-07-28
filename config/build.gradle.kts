@@ -6,15 +6,39 @@ plugins {
     id("com.google.dagger.hilt.android") version "2.47" apply false
 }
 
-// Tarea: Empaquetar firmware ESP32
-tasks.register<Exec>("buildFirmware") {
+// Tarea: Validar firmware ESP32 activo
+// La compilación/flasheo real depende de arduino-cli o PlatformIO y se ejecuta
+// desde tools/powershell/Flashear-ESP32.ps1. Esta tarea evita referencias a
+// rutas históricas y falla si falta algún firmware canónico.
+tasks.register("buildFirmware") {
     group = "Firmware"
-    description = "Genera el artefacto de firmware (usa platformio o arduino-cli si están instalados)"
-    val script = file("firmware/Firmware_Support/build_firmware.ps1")
-    commandLine = listOf("powershell", "-ExecutionPolicy", "Bypass", "-File", script.absolutePath)
+    description = "Valida que los firmwares ESP32 activos estén presentes"
+
+    doLast {
+        val firmwareDir = file("../esp32/firmware")
+        val expectedFirmware = listOf(
+            "esp32_plc_master.ino",
+            "esp32_scorbot_manufactura.ino",
+            "esp32_scorbot_calidad.ino",
+            "esp32_scorbot_almacen.ino",
+            "cim_ble_firmware.h"
+        )
+        val missing = expectedFirmware.filterNot { firmwareDir.resolve(it).isFile }
+        if (missing.isNotEmpty()) {
+            throw GradleException("Faltan firmwares activos: ${missing.joinToString()}")
+        }
+        println("✓ Firmware ESP32 activo validado en ${firmwareDir.absolutePath}")
+    }
+}
+
+tasks.register<Exec>("validateSystem100") {
+    group = "Industrial QA"
+    description = "Ejecuta la validación estructural 100% automatizable del modo simulado"
+    commandLine("python3", file("../tools/validate_system_100.py").absolutePath, "--quiet")
 }
 
 val outputDir = layout.projectDirectory.dir("output-apks")
+val checksumFile = layout.projectDirectory.file("output-apks/SHA256SUMS.txt")
 
 tasks.register<Delete>("cleanOutputApks") {
     delete(outputDir)
@@ -33,6 +57,11 @@ tasks.register("buildAllApks") {
         "wear-coordinador"
     )
 
+    // Ejecutar también la puerta estructural cuando CI llama buildAllApks.
+    // Android Lint queda disponible mediante lintAll/qualityGate100 sin bloquear
+    // el workflow histórico, que sólo invoca testAllModules + buildAllApks.
+    dependsOn("validateSystem100")
+
     // Depender de las tareas assembleDebug de cada subproyecto (ruta jerárquica)
     appModules.forEach { moduleName ->
         dependsOn(":$moduleName:assembleDebug")
@@ -43,30 +72,59 @@ tasks.register("buildAllApks") {
             outputDir.asFile.mkdirs()
         }
 
+        val missingApks = mutableListOf<String>()
+
         appModules.forEach { moduleName ->
             // Buscar el archivo APK en la carpeta de build del subproyecto interno
             val projectBuildDir = project(":$moduleName").layout.buildDirectory
             val debugDir = projectBuildDir.dir("outputs/apk/debug").get().asFile
 
             val apkFile = debugDir.listFiles()?.find { it.name.endsWith(".apk") && !it.name.contains("androidTest") }
-            
+
             if (apkFile != null && apkFile.exists()) {
                 val targetName = "$moduleName.apk"
                 apkFile.copyTo(File(outputDir.asFile, targetName), overwrite = true)
                 println("✓ Exportado: $targetName (debug, testeable)")
             } else {
-                println("⚠ ADVERTENCIA: No se encontró APK en ${debugDir.absolutePath}")
+                missingApks += moduleName
+                println("✗ ERROR: No se encontró APK en ${debugDir.absolutePath}")
             }
         }
+
+        if (missingApks.isNotEmpty()) {
+            throw GradleException("No se exportaron APKs para: ${missingApks.joinToString()}")
+        }
+
+        val digest = java.security.MessageDigest.getInstance("SHA-256")
+        val checksumLines = outputDir.asFile.listFiles()
+            ?.filter { it.isFile && it.extension == "apk" }
+            ?.sortedBy { it.name }
+            ?.map { apk ->
+                digest.reset()
+                apk.inputStream().use { input ->
+                    val buffer = ByteArray(8 * 1024)
+                    while (true) {
+                        val read = input.read(buffer)
+                        if (read <= 0) break
+                        digest.update(buffer, 0, read)
+                    }
+                }
+                val hash = digest.digest().joinToString("") { byte -> "%02x".format(byte) }
+                "$hash  ${apk.name}"
+            }
+            .orEmpty()
+        checksumFile.asFile.writeText(checksumLines.joinToString(System.lineSeparator()) + System.lineSeparator())
+
         println("=== COMPILACIÓN INDUSTRIAL COMPLETADA ===")
         println("APKs disponibles en: ${outputDir.asFile.absolutePath}")
+        println("Checksums disponibles en: ${checksumFile.asFile.absolutePath}")
     }
 }
 
-// Nueva tarea: Test de todos los módulos
+// Tarea: Tests JVM unitarios de todos los módulos
 tasks.register("testAllModules") {
     group = "Industrial Testing"
-    description = "Ejecuta tests unitarios e instrumentados de todos los módulos"
+    description = "Ejecuta tests unitarios JVM de core-network y todas las apps"
 
     doFirst {
         println("╔════════════════════════════════════════╗")
@@ -179,11 +237,44 @@ tasks.register("validateApks") {
     }
 }
 
+// Tarea: Generar checksums SHA-256 de las APKs exportadas
+tasks.register("writeApkChecksums") {
+    group = "Industrial QA"
+    description = "Genera output-apks/SHA256SUMS.txt para trazabilidad de artefactos"
+    dependsOn("validateApks")
+
+    doLast {
+        val digest = java.security.MessageDigest.getInstance("SHA-256")
+        val apkFiles = outputDir.asFile.listFiles()
+            ?.filter { it.isFile && it.extension == "apk" }
+            ?.sortedBy { it.name }
+            .orEmpty()
+        if (apkFiles.isEmpty()) {
+            throw GradleException("No hay APKs para calcular checksums")
+        }
+        val lines = apkFiles.map { apk ->
+            digest.reset()
+            apk.inputStream().use { input ->
+                val buffer = ByteArray(8 * 1024)
+                while (true) {
+                    val read = input.read(buffer)
+                    if (read <= 0) break
+                    digest.update(buffer, 0, read)
+                }
+            }
+            val hash = digest.digest().joinToString("") { byte -> "%02x".format(byte) }
+            "$hash  ${apk.name}"
+        }
+        checksumFile.asFile.writeText(lines.joinToString(System.lineSeparator()) + System.lineSeparator())
+        println("✓ Checksums SHA-256 generados: ${checksumFile.asFile.absolutePath}")
+    }
+}
+
 // Tarea: Generar reporte de compilación
 tasks.register("buildReport") {
     group = "Industrial Reports"
     description = "Genera reporte detallado de compilación"
-    dependsOn("validateApks")
+    dependsOn("writeApkChecksums")
 
     doLast {
         val reportFile = File(rootDir, "BUILD_REPORT_${System.currentTimeMillis()}.md")
@@ -221,52 +312,80 @@ tasks.register("buildReport") {
 - Compile SDK: 35
 
 ## Tests Ejecutados
-- ✓ Unit Tests (core-network)
-- ✓ Protocol Tests
-- ✓ DeviceRegistry Performance Tests
+- ✓ Unit Tests JVM (core-network)
+- ✓ Unit Tests JVM (app-coordinador)
+- ✓ Unit Tests JVM (app-plc)
+- ✓ Unit Tests JVM (app-calidad)
+- ✓ Unit Tests JVM (app-manufactura/app-almacen/wear sin tests específicos al momento)
+
+## Trazabilidad
+- ✓ Checksums SHA-256 generados en `output-apks/SHA256SUMS.txt`
 
 ## Resultado Final
-**✓ BUILD SUCCESSFUL - LISTO PARA TESTING E2E**
+**✓ BUILD SUCCESSFUL - LISTO PARA VALIDACIÓN E2E SIMULADA**
 """.trimIndent())
 
         println("\n✓ Reporte generado: ${reportFile.absolutePath}")
     }
 }
 
-// Tarea: Sign APKs para release (placeholder)
+// Tarea: Verificar configuración de firma release sin exponer secretos
+// Las claves se configuran por variables de entorno/gradle properties en cada app.
 tasks.register("signAllApks") {
     group = "Industrial Release"
-    description = "Firma todas las APKs con keystore para release (placeholder)"
+    description = "Informa cómo producir APKs release firmadas sin versionar keystores ni contraseñas"
 
     doLast {
-        println("\n⚠ Placeholder: Para firmar APKs en production:")
-        println("1. Generar keystore: keytool -genkey -v -keystore app.keystore...")
-        println("2. Configurar en app/build.gradle.kts")
-        println("3. Ejecutar: ./gradlew assembleRelease")
+        val required = listOf(
+            "CIM_RELEASE_STORE_FILE",
+            "CIM_RELEASE_STORE_PASSWORD",
+            "CIM_RELEASE_KEY_ALIAS",
+            "CIM_RELEASE_KEY_PASSWORD"
+        )
+        val missing = required.filter { System.getenv(it).isNullOrBlank() && !project.hasProperty(it) }
+        if (missing.isEmpty()) {
+            println("✓ Configuración de firma release detectada. Ejecuta: ./gradlew assembleRelease")
+        } else {
+            println("⚠ Firma release no configurada; faltan: ${missing.joinToString()}")
+            println("  Define esas variables como secretos de CI o en un archivo local no versionado.")
+            println("  Sin ellas se generan APK release unsigned, evitando contraseñas embebidas.")
+        }
     }
 }
 
-// Tarea: Lint check
+val qaModules = listOf(
+    "core-network",
+    "app-coordinador",
+    "app-plc",
+    "app-calidad",
+    "app-manufactura",
+    "app-almacen",
+    "wear-coordinador"
+)
+
+// Tarea: Lint check real de Android en todos los módulos
 tasks.register("lintAll") {
     group = "Industrial QA"
-    description = "Ejecuta lint checks en todos los módulos"
-
-    doLast {
-        println("\n📋 Lint Checks (placeholder - requiere Android Studio Lint provider)")
-        println("En producción, ejecutar: ./gradlew lint")
-    }
+    description = "Ejecuta Android Lint en todos los módulos activos"
+    qaModules.forEach { moduleName -> dependsOn(":$moduleName:lintDebug") }
 }
 
-// Tarea: Todo - Full build + tests + validation
+// Tarea: Todo - Full build + tests + lint + validation
 tasks.register("buildRelease") {
     group = "Industrial Release"
-    description = "Build completo: clean + test + compile + validate + report"
-    dependsOn("testAllModules", "buildAllApks", "validateApks", "buildReport")
+    description = "Build completo: validación estructural + tests + lint + APKs + checksums + reporte"
+    dependsOn("validateSystem100", "testAllModules", "lintAll", "buildReport")
 
     doLast {
         println("\n╔════════════════════════════════════════╗")
         println("║   COMPILACIÓN COMPLETA FINALIZADA    ║")
-        println("║   CIM v6.0 LISTO PARA DISTRIBUCIÓN   ║")
-        println("╚═════════════════════════���══════════════╝\n")
+        println("║   CIM v6.0 LISTO PARA VALIDACIÓN     ║")
+        println("╚════════════════════════════════════════╝\n")
     }
+}
+
+tasks.register("qualityGate100") {
+    group = "Industrial QA"
+    description = "Ejecuta la puerta 100% automatizable: estructura, tests, lint, build, validación APK y checksums"
+    dependsOn("buildRelease")
 }

@@ -202,7 +202,7 @@ class StationClient(
             sourceMac = macAddress,
             sourceApp = AppType.values().firstOrNull { it.name.equals(stationName, ignoreCase = true) } ?: AppType.UNKNOWN,
             stationName = stationName,
-            password = password,
+            password = CimProtocol.pairingSecretForTransport(password),
             stationUuid = stationUuid
         ).let { if (CimProtocol.USE_CRC_V2) it.toSecureTransportString() else it.toTransportString() }
         sendSecure(handshake)
@@ -218,7 +218,7 @@ class StationClient(
             sourceMac = macAddress,
             sourceApp = AppType.values().firstOrNull { it.name.equals(stationName, ignoreCase = true) } ?: AppType.UNKNOWN,
             stationName = stationName,
-            password = password,
+            password = CimProtocol.pairingSecretForTransport(password),
             stationUuid = stationUuid
         ).let { if (CimProtocol.USE_CRC_V2) it.toSecureTransportString() else it.toTransportString() }
 

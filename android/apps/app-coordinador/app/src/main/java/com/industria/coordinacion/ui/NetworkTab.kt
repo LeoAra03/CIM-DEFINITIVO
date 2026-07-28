@@ -30,6 +30,9 @@ data class ConnectedDevice(
     val isConnected: Boolean,
     val isAuthorized: Boolean,
     val rssi: Int = 0,
+    val ip: String = "",
+    val stationUuid: String = "",
+    val version: String = "",
     val lastSeen: Long = System.currentTimeMillis(),
     val occupant: String? = null
 )
@@ -261,6 +264,11 @@ fun NetworkTab(
                             Column(Modifier.weight(1f)) {
                                 Text(device.name, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                                 Text(device.mac, color = Color.Gray, fontSize = 10.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
+                                Text(
+                                    "UUID: ${device.stationUuid.ifBlank { "no informado"} · v${device.version.ifBlank { "?" }}",
+                                    color = IndustrialTheme.TextoSecundario,
+                                    fontSize = 10.sp
+                                )
                             }
                             Text(device.appType, color = IndustrialTheme.Primario, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                         }
@@ -271,6 +279,10 @@ fun NetworkTab(
                             Text(if(device.isConnected) "ONLINE" else "OFFLINE", color = IndustrialTheme.TextoSecundario, fontSize = 10.sp)
                             Spacer(Modifier.width(16.dp))
                             Text("RSSI: ${device.rssi} dBm", color = IndustrialTheme.TextoSecundario, fontSize = 10.sp)
+                            if (device.ip.isNotBlank()) {
+                                Spacer(Modifier.width(12.dp))
+                                Text("IP: ${device.ip}", color = IndustrialTheme.TextoSecundario, fontSize = 10.sp)
+                            }
                         }
 
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

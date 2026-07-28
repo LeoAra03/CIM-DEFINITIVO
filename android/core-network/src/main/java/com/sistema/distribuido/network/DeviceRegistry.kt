@@ -23,6 +23,7 @@ data class DeviceInfo(
     // Nuevos campos para protocolo CIM v5.1
     var mac: String = "",
     var appType: AppType = AppType.UNKNOWN,
+    val stationUuid: String = "",
     var rssi: Int = 0,
     @Volatile var lastSeen: Long = System.currentTimeMillis(),
     @Volatile var authorized: Boolean = false,

@@ -279,6 +279,7 @@ class MainActivity : ComponentActivity() {
                 tipo = com.sistema.distribuido.network.DeviceType.UNKNOWN,
                 mac = mac,
                 appType = appType,
+                stationUuid = stationUuid,
                 isConnected = true
             )
             GlobalDeviceRegistry.registry.register(mac, deviceInfo)
@@ -352,6 +353,7 @@ class MainActivity : ComponentActivity() {
                 tipo = com.sistema.distribuido.network.DeviceType.UNKNOWN,
                 mac = mac,
                 appType = appType,
+                stationUuid = stationUuid,
                 isConnected = true
             )
             GlobalDeviceRegistry.registry.register(mac, deviceInfo)

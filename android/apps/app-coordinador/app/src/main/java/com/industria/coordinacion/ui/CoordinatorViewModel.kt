@@ -273,7 +273,9 @@ class CoordinatorViewModel : ViewModel() {
                     rssi = device.rssi,
                     ip = device.ip,
                     stationUuid = device.stationUuid,
-                    version = device.version
+                    version = device.version,
+                    hardwareModel = device.hardwareModel,
+                    capabilities = device.capabilities
                 )
             }
             val activeBluetooth = connectedDevices.count { it.isConnected }

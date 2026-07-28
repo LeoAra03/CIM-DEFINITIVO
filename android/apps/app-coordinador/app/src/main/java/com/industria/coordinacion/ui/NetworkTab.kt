@@ -33,6 +33,8 @@ data class ConnectedDevice(
     val ip: String = "",
     val stationUuid: String = "",
     val version: String = "",
+    val hardwareModel: String = "",
+    val capabilities: String = "",
     val lastSeen: Long = System.currentTimeMillis(),
     val occupant: String? = null
 )
@@ -269,6 +271,20 @@ fun NetworkTab(
                                     color = IndustrialTheme.TextoSecundario,
                                     fontSize = 10.sp
                                 )
+                                if (device.hardwareModel.isNotBlank()) {
+                                    Text(
+                                        "Modelo: ${device.hardwareModel}",
+                                        color = IndustrialTheme.TextoSecundario,
+                                        fontSize = 10.sp
+                                    )
+                                }
+                                if (device.capabilities.isNotBlank()) {
+                                    Text(
+                                        "Capacidades: ${device.capabilities}",
+                                        color = IndustrialTheme.TextoSecundario,
+                                        fontSize = 9.sp
+                                    )
+                                }
                             }
                             Text(device.appType, color = IndustrialTheme.Primario, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                         }

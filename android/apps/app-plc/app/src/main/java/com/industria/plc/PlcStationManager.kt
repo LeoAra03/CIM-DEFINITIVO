@@ -58,6 +58,3 @@ private fun addLogWithLimit(logs: MutableList<String>, message: String) {
         logs.removeAt(0)
     }
 }
-
-// FIX #82: Límite de logs
-private val MAX_LOG_SIZE = 500

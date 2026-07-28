@@ -3,6 +3,11 @@ package com.industria.plc
 
 import android.util.Log
 import com.sistema.distribuido.network.GlobalBluetoothManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
@@ -13,9 +18,8 @@ import javax.inject.Singleton
  * Reemplaza la simulación anterior con datos reales del hardware
  */
 @Singleton
-class RealPalletDetector @Inject constructor(
-    private val bluetoothManager: GlobalBluetoothManager
-) {
+class RealPalletDetector @Inject constructor() {
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val _palletStates = MutableStateFlow<Map<Int, Boolean>>(emptyMap())
     val palletStates: StateFlow<Map<Int, Boolean>> = _palletStates
 
@@ -23,10 +27,15 @@ class RealPalletDetector @Inject constructor(
     val lastEvent: StateFlow<String> = _lastEvent
 
     init {
-        // Escuchar datos BLE del ESP32 del PLC
-        bluetoothManager.receivedData.observeForever { data ->
-            if (data != null && data.contains("SENSOR_ACTIVATED")) {
-                parseSensorData(data)
+        // BluetoothHardwareManager expone mensajes como Flow, no como LiveData.
+        // La suscripción es opcional para permitir ejecutar la app sin hardware BLE.
+        GlobalBluetoothManager.getInstanceOrNull()?.let { manager ->
+            scope.launch {
+                manager.incomingMessages.collect { data ->
+                    if (data.contains("SENSOR_ACTIVATED")) {
+                        parseSensorData(data)
+                    }
+                }
             }
         }
     }

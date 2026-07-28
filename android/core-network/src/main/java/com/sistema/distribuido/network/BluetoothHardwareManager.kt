@@ -421,6 +421,16 @@ class BluetoothHardwareManager(
             else -> AppType.UNKNOWN
         }
         scope.launch {
+            val capabilitySet = capabilities.split(",").map { it.trim() }.filter { it.isNotBlank() }.toSet()
+            val verdict = StationIdentityPolicy.evaluate(
+                StationIdentity(stationUuid, appType, stationType, model, capabilitySet)
+            )
+            if (!verdict.accepted) {
+                GlobalPermissionManager.getInstance().ban(mac, "Identidad CIM inválida: ${verdict.reason}")
+                disconnect(mac)
+                onLog("🚫 CIM_ID bloqueado [$mac]: ${verdict.reason}")
+                return@launch
+            }
             val info = DeviceInfo(
                 ip = "",
                 nombre = deviceName,
@@ -434,7 +444,7 @@ class BluetoothHardwareManager(
                 isConnected = true
             )
             GlobalDeviceRegistry.registry.register(mac, info)
-            onLog("✓ CIM_ID: $deviceName [$stationUuid] $model v$version")
+            onLog("✓ CIM_ID aceptado: $deviceName [$stationUuid] $model v$version")
         }
     }
 

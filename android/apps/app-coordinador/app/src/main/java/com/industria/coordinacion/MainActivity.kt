@@ -5,77 +5,41 @@ package com.industria.coordinacion
 import android.Manifest
 import kotlinx.coroutines.withTimeout
 import android.os.Build
-import kotlinx.coroutines.withTimeout
 import android.os.Bundle
-import kotlinx.coroutines.withTimeout
 import android.util.Log
-import kotlinx.coroutines.withTimeout
 import androidx.activity.ComponentActivity
-import kotlinx.coroutines.withTimeout
 import androidx.activity.compose.rememberLauncherForActivityResult
-import kotlinx.coroutines.withTimeout
 import androidx.activity.compose.setContent
-import kotlinx.coroutines.withTimeout
 import androidx.activity.result.ActivityResultLauncher
-import kotlinx.coroutines.withTimeout
 import androidx.activity.result.contract.ActivityResultContracts
-import kotlinx.coroutines.withTimeout
 import androidx.compose.runtime.rememberCoroutineScope
-import kotlinx.coroutines.withTimeout
 import androidx.compose.foundation.*
-import kotlinx.coroutines.withTimeout
 import android.util.Base64
-import kotlinx.coroutines.withTimeout
 import androidx.compose.foundation.layout.*
-import kotlinx.coroutines.withTimeout
 import androidx.compose.foundation.lazy.grid.GridCells
-import kotlinx.coroutines.withTimeout
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import kotlinx.coroutines.withTimeout
 import androidx.compose.foundation.lazy.grid.items
-import kotlinx.coroutines.withTimeout
 import androidx.compose.material.icons.Icons
-import kotlinx.coroutines.withTimeout
 import androidx.compose.material.icons.filled.*
-import kotlinx.coroutines.withTimeout
 import androidx.compose.material3.*
-import kotlinx.coroutines.withTimeout
 import androidx.compose.runtime.*
-import kotlinx.coroutines.withTimeout
 import androidx.compose.ui.Alignment
-import kotlinx.coroutines.withTimeout
 import androidx.compose.ui.Modifier
-import kotlinx.coroutines.withTimeout
 import androidx.compose.ui.graphics.Color
-import kotlinx.coroutines.withTimeout
 import androidx.compose.ui.graphics.vector.ImageVector
-import kotlinx.coroutines.withTimeout
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.withTimeout
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.withTimeout
 import androidx.compose.ui.text.font.FontWeight
-import kotlinx.coroutines.withTimeout
 import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.withTimeout
 import androidx.lifecycle.viewmodel.compose.viewModel
-import kotlinx.coroutines.withTimeout
 import com.industria.coordinacion.ui.*
-import kotlinx.coroutines.withTimeout
 import com.sistema.distribuido.network.*
-import kotlinx.coroutines.withTimeout
 import com.sistema.distribuido.network.PermissionDecision
-import kotlinx.coroutines.withTimeout
 import com.sistema.distribuido.network.protocol.AppType
-import kotlinx.coroutines.withTimeout
 import com.sistema.distribuido.network.protocol.CimProtocol
-import kotlinx.coroutines.withTimeout
 import com.sistema.distribuido.network.prefecto.*
-import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeout
 
 class MainActivity : ComponentActivity() {
     private var bluetoothManager: BluetoothHardwareManager? = null
@@ -137,7 +101,7 @@ class MainActivity : ComponentActivity() {
                         Log.d("TcpServer", "TCP mensaje no CIM de $ip: $data")
                     }
                 } catch (e: Exception) {
-            Log.e("CIM", "Error: ${e.message}", e) {
+            Log.e("CIM", "Error: ${e.message}", e)
                     Log.w("TcpServer", "Error procesando mensaje de $ip", e)
                 }
             }
@@ -171,7 +135,7 @@ class MainActivity : ComponentActivity() {
                             currentGcodeFile = filename
                             vm.sendLaserLoadFile(filename, b64)
                         } catch (e: Exception) {
-            Log.e("CIM", "Error: ${e.message}", e) {
+            Log.e("CIM", "Error: ${e.message}", e)
                             vm.log("✗ Error leyendo archivo G-code: ${e.message}")
                         }
                     }
@@ -209,7 +173,7 @@ class MainActivity : ComponentActivity() {
                             }
                             vm.log("✓ CSV guardado en archivos internos: $filename")
                         } catch (e: Exception) {
-            Log.e("CIM", "Error: ${e.message}", e) {
+            Log.e("CIM", "Error: ${e.message}", e)
                             vm.log("✗ Error guardando CSV: ${e.message}")
                         }
                     }
@@ -249,7 +213,7 @@ class MainActivity : ComponentActivity() {
                                 }
                                 vm.log("✓ CSV guardado en archivos internos: $filename")
                             } catch (e: Exception) {
-            Log.e("CIM", "Error: ${e.message}", e) {
+            Log.e("CIM", "Error: ${e.message}", e)
                                 vm.log("✗ Error guardando CSV: ${e.message}")
                             }
                         }
@@ -314,7 +278,7 @@ class MainActivity : ComponentActivity() {
             )
             GlobalDeviceRegistry.registry.register(mac, deviceInfo)
         } catch (e: Exception) {
-            Log.e("CIM", "Error: ${e.message}", e) {
+            Log.e("CIM", "Error: ${e.message}", e)
             Log.w("TcpServer", "No se pudo registrar dispositivo TCP: ${e.message}", e)
         }
 
@@ -336,7 +300,7 @@ class MainActivity : ComponentActivity() {
         val decision = try {
             GlobalPermissionManager.getInstance().requestPermission(mac, appType, stationName)
         } catch (e: Exception) {
-            Log.e("CIM", "Error: ${e.message}", e) {
+            Log.e("CIM", "Error: ${e.message}", e)
             Log.w("TcpServer", "Error solicitando permiso para $mac: ${e.message}", e)
             PermissionDecision.TIMEOUT
         }
@@ -387,7 +351,7 @@ class MainActivity : ComponentActivity() {
             )
             GlobalDeviceRegistry.registry.register(mac, deviceInfo)
         } catch (e: Exception) {
-            Log.e("CIM", "Error: ${e.message}", e) {
+            Log.e("CIM", "Error: ${e.message}", e)
             Log.w("TcpServer", "No se pudo registrar dispositivo TCP: ${e.message}", e)
         }
 
@@ -401,7 +365,7 @@ class MainActivity : ComponentActivity() {
         val decision = try {
             GlobalPermissionManager.getInstance().requestPermission(mac, appType, stationName)
         } catch (e: Exception) {
-            Log.e("CIM", "Error: ${e.message}", e) {
+            Log.e("CIM", "Error: ${e.message}", e)
             Log.w("TcpServer", "Error solicitando permiso para $mac: ${e.message}", e)
             PermissionDecision.TIMEOUT
         }

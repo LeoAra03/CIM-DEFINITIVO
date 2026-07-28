@@ -1,5 +1,7 @@
 package com.sistema.distribuido.network
 
+import android.util.Log
+
 import android.Manifest
 import android.annotation.SuppressLint
 import androidx.annotation.RequiresPermission
@@ -117,7 +119,7 @@ class BluetoothSppManager(
                     sendToDevice(mac, identify)
                     onLog("→ SENT IDENTIFY via SPP to $mac")
                 } catch (e: Exception) {
-            Log.e("CIM", "Error: ${e.message}", e) {
+            Log.e("CIM", "Error: ${e.message}", e)
                     onLog("⚠ Error enviando IDENTIFY SPP a $mac: ${e.message}")
                 }
             }

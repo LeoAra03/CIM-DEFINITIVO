@@ -3,45 +3,13 @@ package com.example.test.ui
 import androidx.compose.ui.test.junit4.createComposeRule
 import org.junit.Assert.*
 import org.junit.Before
-import org.junit.Assert.*
 import org.junit.After
-import org.junit.Assert.*
 import androidx.compose.ui.test.onNodeWithText
-import org.junit.Assert.*
-import org.junit.Before
-import org.junit.Assert.*
-import org.junit.After
-import org.junit.Assert.*
 import androidx.compose.ui.test.performClick
-import org.junit.Assert.*
-import org.junit.Before
-import org.junit.Assert.*
-import org.junit.After
-import org.junit.Assert.*
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import org.junit.Assert.*
-import org.junit.Before
-import org.junit.Assert.*
-import org.junit.After
-import org.junit.Assert.*
 import org.junit.Rule
-import org.junit.Assert.*
-import org.junit.Before
-import org.junit.Assert.*
-import org.junit.After
-import org.junit.Assert.*
 import org.junit.Test
-import org.junit.Assert.*
-import org.junit.Before
-import org.junit.Assert.*
-import org.junit.After
-import org.junit.Assert.*
 import org.junit.runner.RunWith
-import org.junit.Assert.*
-import org.junit.Before
-import org.junit.Assert.*
-import org.junit.After
-import org.junit.Assert.*
 
 /**
  * UI Tests para CoordinadorMasterScreen usando Espresso + Compose

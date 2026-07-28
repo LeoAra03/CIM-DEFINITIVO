@@ -1,5 +1,7 @@
 package com.sistema.distribuido.network
 
+import android.util.Log
+
 import com.sistema.distribuido.network.protocol.CimProtocol
 import java.util.concurrent.ConcurrentHashMap
 

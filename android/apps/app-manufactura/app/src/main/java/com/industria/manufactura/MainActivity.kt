@@ -1,6 +1,8 @@
 // FIX: Constantes extraídas
 package com.industria.manufactura
 
+import android.util.Log
+
 import android.Manifest
 import android.os.Build
 import android.os.Bundle
@@ -115,7 +117,7 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                         }
                         addLog("✓ G-code recibido: $filename (${bytes.size} bytes)")
                     } catch (e: Exception) {
-            Log.e("CIM", "Error: ${e.message}", e) {
+            Log.e("CIM", "Error: ${e.message}", e)
                         addLog("✗ Error guardando G-code: ${e.message ?: "desconocido"}")
                     }
                 } else {
@@ -134,7 +136,7 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                         }
                         addLog("✓ G-code recibido (legacy): $filename (${bytes.size} bytes)")
                     } catch (e: Exception) {
-            Log.e("CIM", "Error: ${e.message}", e) {
+            Log.e("CIM", "Error: ${e.message}", e)
                         addLog("✗ Error guardando G-code legacy: ${e.message ?: "desconocido"}")
                     }
                 } else {
@@ -177,7 +179,7 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                     val sent = stationClient.sendEventSafe(payload)
                     if (sent) addLog("IMG: archivo '$filename' cargado y enviado") else addLog("IMG: fallo al enviar archivo '$filename'")
                 } catch (e: Exception) {
-            Log.e("CIM", "Error: ${e.message}", e) {
+            Log.e("CIM", "Error: ${e.message}", e)
                     addLog("IMG: error leyendo archivo: ${e.message ?: "desconocido"}")
                 }
             }
@@ -296,7 +298,7 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                                     try {
                                         gcodeLauncher.launch(arrayOf("*/*"))
                                     } catch (e: Exception) {
-            Log.e("CIM", "Error: ${e.message}", e) {
+            Log.e("CIM", "Error: ${e.message}", e)
                                         addLog("IMG: error abriendo selector de archivos: ${e.message ?: "desconocido"}")
                                     }
                                 })
@@ -331,7 +333,7 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                                                     addLog("VISIÓN: ArUco #$id generado (${size}x${size}px)")
                                                 }
                                             } catch (e: Exception) {
-            Log.e("CIM", "Error: ${e.message}", e) {
+            Log.e("CIM", "Error: ${e.message}", e)
                                                 addLog("ERROR: ${e.message ?: "desconocido"}")
                                             } finally {
                                                 isGeneratingAruco = false

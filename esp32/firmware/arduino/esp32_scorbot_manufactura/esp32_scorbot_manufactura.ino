@@ -4,6 +4,7 @@
  */
 #define DEVICE_NAME "CIM_SCORBOT_MAN"
 #define STATION_TYPE "ROBOT_ARM"
+#define CIM_HAS_SCORBOT
 #include <BluetoothSerial.h>
 #include "cim_ble_firmware.h"
 

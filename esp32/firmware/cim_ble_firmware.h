@@ -72,9 +72,15 @@ static void sendBleResponse(const String& payload) {
 }
 
 static void forwardToScorbot(const String& cmd) {
+#ifdef CIM_HAS_SCORBOT
   Serial2.println(cmd);
   Serial.print(">>> SCORBOT: ");
   Serial.println(cmd);
+#else
+  // Storage and quality boards must never drive unconfigured UART pins.
+  Serial.print(">>> SCORBOT COMMAND REJECTED (no robot UART): ");
+  Serial.println(cmd);
+#endif
 }
 
 static String extractPayload(const String& data) {
@@ -154,13 +160,20 @@ static void handleCommand(String raw) {
   }
 
   if (data.startsWith("PLC:")) {
-    if (data.indexOf("START") >= 0) {
+#ifdef CIM_IS_PLC
+    if (data == "PLC:START") {
       digitalWrite(PIN_RELAY, HIGH);
       sendBleResponse("PLC:RUNNING");
-    } else if (data.indexOf("STOP") >= 0) {
+    } else if (data == "PLC:STOP") {
       digitalWrite(PIN_RELAY, LOW);
       sendBleResponse("PLC:STOPPED");
+    } else {
+      sendBleResponse("ERR:UNSUPPORTED_PLC_COMMAND");
     }
+#else
+    // Never drive the conveyor relay from a non-PLC station.
+    sendBleResponse("ERR:PLC_COMMAND_ON_NON_PLC");
+#endif
     return;
   }
 
@@ -190,6 +203,11 @@ class CimBleRxCallbacks : public BLECharacteristicCallbacks {
     String value = pCharacteristic->getValue();
     if (value.length() == 0) return;
     rxBuffer += value;
+    if (rxBuffer.length() > 512) {
+      rxBuffer = "";
+      sendBleResponse("ERR:FRAME_TOO_LARGE");
+      return;
+    }
     int nl;
     while ((nl = rxBuffer.indexOf('\n')) >= 0) {
       String line = rxBuffer.substring(0, nl);
@@ -207,7 +225,7 @@ static void cimBleSetup() {
   pinMode(PIN_RELAY, OUTPUT);
   digitalWrite(PIN_RELAY, LOW);
   pinMode(PIN_SENSOR, INPUT);
-#else
+#elif defined(CIM_HAS_SCORBOT)
   Serial2.begin(9600, SERIAL_8N1, PIN_SCORBOT_RX, PIN_SCORBOT_TX);
 #endif
 
@@ -252,7 +270,7 @@ static void cimBleLoop() {
     sendBleResponse("SENSOR:TRIPPED");
     lastSensor = millis();
   }
-#else
+#elif defined(CIM_HAS_SCORBOT)
   while (Serial2.available()) {
     String line = Serial2.readStringUntil('\n');
     line.trim();

@@ -1,4 +1,3 @@
-// FIX Lote 9: Edge case handling
 /**
  * CameraPreviewWithVision
  * @author CIM Team

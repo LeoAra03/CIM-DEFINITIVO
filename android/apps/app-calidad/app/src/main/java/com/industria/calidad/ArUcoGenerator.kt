@@ -1,4 +1,3 @@
-// FIX Lote 9: Edge case handling
 /**
  * ArUcoGenerator
  * @author CIM Team

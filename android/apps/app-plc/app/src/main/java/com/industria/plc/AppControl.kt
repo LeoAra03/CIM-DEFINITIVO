@@ -1,4 +1,3 @@
-// FIX Lote 9: Edge case handling
 /**
  * AppControl
  * @author CIM Team

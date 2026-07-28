@@ -1,4 +1,3 @@
-// FIX Lote 9: Edge case handling
 /**
  * GCodeTranslator
  * @author CIM Team

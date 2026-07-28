@@ -216,6 +216,7 @@ class CoordinatorViewModel : ViewModel() {
                     broker.sendCommand(msg)
                 }
             } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
                 addLog("✗ Error QC $program: ${e.message}")
             }
         }
@@ -247,6 +248,7 @@ class CoordinatorViewModel : ViewModel() {
                     broker.sendCommand(msg)
                 }
             } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
                 addLog("✗ Error detener QC $program: ${e.message}")
             }
         }
@@ -277,6 +279,7 @@ class CoordinatorViewModel : ViewModel() {
                 )
             )
         } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
             addLog("⚠ Error actualizar devices: ${e.message}")
         }
     }
@@ -326,6 +329,7 @@ class CoordinatorViewModel : ViewModel() {
                 sendExecuteCommand(AppType.ALMACEN, "PLANTA_START")
                 sendExecuteCommand(AppType.CALIDAD, "PLANTA_START")
             } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
                 addLog("✗ Error inicio planta completa: ${e.message}")
             }
         }
@@ -342,6 +346,7 @@ class CoordinatorViewModel : ViewModel() {
                 sendExecuteCommand(AppType.PLC, "CALIBRATE_GLOBAL")
                 sendExecuteCommand(AppType.CALIDAD, "CALIBRATE_GLOBAL")
             } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
                 addLog("✗ Error calibración global: ${e.message}")
             }
         }
@@ -357,6 +362,7 @@ class CoordinatorViewModel : ViewModel() {
                 }
                 addLog("✖ E-STOP activado: se frenan rutinas Scorbot y pallets Omron")
             } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
                 addLog("✗ Error E-STOP: ${e.message}")
             }
         }
@@ -381,6 +387,7 @@ class CoordinatorViewModel : ViewModel() {
                     addLog("✗ Modo AUTO desactivado: autorizaciones manuales habilitadas")
                 }
             } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
                 addLog("✗ Error cambiando modo AUTO: ${e.message}")
             }
         }
@@ -416,6 +423,7 @@ class CoordinatorViewModel : ViewModel() {
                     broker.sendCommand(msg)
                 }
             } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
                 addLog("✗ Error enviando comando $command: ${e.message}")
             }
         }
@@ -441,6 +449,7 @@ class CoordinatorViewModel : ViewModel() {
                     broker.sendCommand(msg)
                 }
             } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
                 addLog("✗ Error Cinta: ${e.message}")
             }
         }
@@ -464,6 +473,7 @@ class CoordinatorViewModel : ViewModel() {
                     broker.sendCommand(msg)
                 }
             } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
                 addLog("✗ Error: ${e.message}")
             }
         }
@@ -477,6 +487,7 @@ class CoordinatorViewModel : ViewModel() {
                 _uiState.value = _uiState.value.copy(cintaState = newCintaState)
                 addLog("✓ Cinta conectada")
             } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
                 addLog("✗ Error conexión Cinta: ${e.message}")
             }
         }
@@ -489,6 +500,7 @@ class CoordinatorViewModel : ViewModel() {
                 _uiState.value = _uiState.value.copy(cintaState = newCintaState)
                 addLog("✗ Cinta desconectada")
             } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
                 addLog("✗ Error desconexión: ${e.message}")
             }
         }
@@ -500,6 +512,7 @@ class CoordinatorViewModel : ViewModel() {
                 addLog("⟳ Reseteando Cinta...")
                 addLog("✓ Cinta reseteada")
             } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
                 addLog("✗ Error reset: ${e.message}")
             }
         }
@@ -529,6 +542,7 @@ class CoordinatorViewModel : ViewModel() {
                 sendExecuteCommand(AppType.MANUFACTURA, "ARUCO_GENERATE:$seed")
                 addLog("✓ Solicitud ArUco enviada")
             } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
                 addLog("✗ Error ArUco: ${e.message}")
             }
         }
@@ -542,6 +556,7 @@ class CoordinatorViewModel : ViewModel() {
                 sendExecuteCommand(AppType.MANUFACTURA, payload)
                 addLog("✓ Enviado evento ArUco detectado")
             } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
                 addLog("✗ Error enviando ArUco detectado: ${e.message}")
             }
         }
@@ -566,6 +581,7 @@ class CoordinatorViewModel : ViewModel() {
                 )
                 addLog("✓ Tracking activo")
             } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
                 addLog("✗ Error Tracking: ${e.message}")
             }
         }
@@ -579,6 +595,7 @@ class CoordinatorViewModel : ViewModel() {
                 )
                 addLog("✗ Tracking detenido")
             } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
                 addLog("✗ Error: ${e.message}")
             }
         }
@@ -599,6 +616,7 @@ class CoordinatorViewModel : ViewModel() {
                 _uiState.value = _uiState.value.copy(networkState = newNetworkState)
                 addLog("✓ TCP Server activo")
             } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
                 addLog("✗ Error TCP: ${e.message}")
             }
         }
@@ -611,6 +629,7 @@ class CoordinatorViewModel : ViewModel() {
                 _uiState.value = _uiState.value.copy(networkState = newNetworkState)
                 addLog("✗ TCP Server detenido")
             } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
                 addLog("✗ Error: ${e.message}")
             }
         }
@@ -633,6 +652,7 @@ class CoordinatorViewModel : ViewModel() {
                     broker.sendCommand(msg)
                 }
             } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
                 addLog("✗ Error: ${e.message}")
             }
         }
@@ -651,6 +671,7 @@ class CoordinatorViewModel : ViewModel() {
                 updateDeviceList()
                 addLog("✓ Bluetooth actualizado")
             } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
                 addLog("✗ Error Bluetooth: ${e.message}")
             } finally {
                 _uiState.value = _uiState.value.copy(
@@ -671,6 +692,7 @@ class CoordinatorViewModel : ViewModel() {
                 addLog("✓ Tracking exportado como CSV")
                 addLog(csv)
             } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
                 addLog("✗ Error exportando CSV: ${e.message}")
             }
         }
@@ -725,6 +747,7 @@ class CoordinatorViewModel : ViewModel() {
                 }
                 addLog("✓ Script finalizado")
             } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
                 addLog("✗ Error ejecutando script: ${e.message}")
             }
         }
@@ -845,6 +868,7 @@ class CoordinatorViewModel : ViewModel() {
                 addLog("→ Notificación global enviada a estaciones conectadas")
 
             } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
                 addLog("✗ Error en ciclo completo: ${e.message}")
                 updateExecutiveStation("CINTA", ExecutiveStationStatus.WARNING, "Error en ciclo", "ERROR")
             }
@@ -869,6 +893,7 @@ class CoordinatorViewModel : ViewModel() {
                     broker.sendCommand(msg)
                 }
             } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
                 addLog("✗ Error Storage: ${e.message}")
             }
         }
@@ -881,6 +906,7 @@ class CoordinatorViewModel : ViewModel() {
                 GlobalPermissionManager.getInstance().approve(mac, rememberDecision = rememberDecision)
                 addLog("✓ Autorizado: $mac")
             } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
                 addLog("✗ Error autorizar: ${e.message}")
             }
         }
@@ -893,6 +919,7 @@ class CoordinatorViewModel : ViewModel() {
                 GlobalDeviceRegistry.registry.disconnect(mac)
                 addLog("✗ Rechazado y desconectado: $mac")
             } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
                 addLog("✗ Error rechazar: ${e.message}")
             }
         }
@@ -905,6 +932,7 @@ class CoordinatorViewModel : ViewModel() {
                 GlobalDeviceRegistry.registry.disconnect(mac)
                 addLog("✗ Desconectado: $mac")
             } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
                 addLog("✗ Error desconectar: ${e.message}")
             }
         }
@@ -926,6 +954,7 @@ class CoordinatorViewModel : ViewModel() {
                 commandBroker?.sendCommand(msg)
                 addLog("→ Forzando IDENTIFY a $mac")
             } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
                 addLog("✗ Error forzando IDENTIFY: ${e.message}")
             }
         }
@@ -959,6 +988,7 @@ class CoordinatorViewModel : ViewModel() {
                     }
                 }
             } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
                 addLog("✗ Error reconectando: ${e.message}")
                 _uiState.value = _uiState.value.copy(
                     networkState = _uiState.value.networkState.copy(

@@ -117,6 +117,7 @@ class BluetoothSppManager(
                     sendToDevice(mac, identify)
                     onLog("→ SENT IDENTIFY via SPP to $mac")
                 } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
                     onLog("⚠ Error enviando IDENTIFY SPP a $mac: ${e.message}")
                 }
             }

@@ -137,6 +137,7 @@ class MainActivity : ComponentActivity() {
                         Log.d("TcpServer", "TCP mensaje no CIM de $ip: $data")
                     }
                 } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
                     Log.w("TcpServer", "Error procesando mensaje de $ip", e)
                 }
             }
@@ -170,6 +171,7 @@ class MainActivity : ComponentActivity() {
                             currentGcodeFile = filename
                             vm.sendLaserLoadFile(filename, b64)
                         } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
                             vm.log("✗ Error leyendo archivo G-code: ${e.message}")
                         }
                     }
@@ -207,6 +209,7 @@ class MainActivity : ComponentActivity() {
                             }
                             vm.log("✓ CSV guardado en archivos internos: $filename")
                         } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
                             vm.log("✗ Error guardando CSV: ${e.message}")
                         }
                     }
@@ -246,6 +249,7 @@ class MainActivity : ComponentActivity() {
                                 }
                                 vm.log("✓ CSV guardado en archivos internos: $filename")
                             } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
                                 vm.log("✗ Error guardando CSV: ${e.message}")
                             }
                         }
@@ -310,6 +314,7 @@ class MainActivity : ComponentActivity() {
             )
             GlobalDeviceRegistry.registry.register(mac, deviceInfo)
         } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
             Log.w("TcpServer", "No se pudo registrar dispositivo TCP: ${e.message}", e)
         }
 
@@ -331,6 +336,7 @@ class MainActivity : ComponentActivity() {
         val decision = try {
             GlobalPermissionManager.getInstance().requestPermission(mac, appType, stationName)
         } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
             Log.w("TcpServer", "Error solicitando permiso para $mac: ${e.message}", e)
             PermissionDecision.TIMEOUT
         }
@@ -381,6 +387,7 @@ class MainActivity : ComponentActivity() {
             )
             GlobalDeviceRegistry.registry.register(mac, deviceInfo)
         } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
             Log.w("TcpServer", "No se pudo registrar dispositivo TCP: ${e.message}", e)
         }
 
@@ -394,6 +401,7 @@ class MainActivity : ComponentActivity() {
         val decision = try {
             GlobalPermissionManager.getInstance().requestPermission(mac, appType, stationName)
         } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
             Log.w("TcpServer", "Error solicitando permiso para $mac: ${e.message}", e)
             PermissionDecision.TIMEOUT
         }

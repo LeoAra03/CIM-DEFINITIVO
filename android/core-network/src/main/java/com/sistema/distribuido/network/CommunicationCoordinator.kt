@@ -131,6 +131,7 @@ class CommunicationCoordinator(
                 }
             }
         } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
             onLog("[COORD] Error en autorización: ${e.message}")
         }
     }

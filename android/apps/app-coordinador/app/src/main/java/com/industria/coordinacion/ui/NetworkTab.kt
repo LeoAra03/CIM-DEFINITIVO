@@ -34,6 +34,12 @@ data class ConnectedDevice(
     val occupant: String? = null
 )
 
+data class BlockedDeviceState(
+    val mac: String,
+    val reason: String,
+    val blockedAt: Long
+)
+
 data class NetworkTabState(
     val isServerRunning: Boolean = false,
     val connectedDevices: List<ConnectedDevice> = emptyList(),
@@ -47,7 +53,8 @@ data class NetworkTabState(
     val isScanning: Boolean = false,
     val isBluetoothReconnecting: Boolean = false,
     val reconnectingMac: String? = null,
-    val isAutoModeEnabled: Boolean = false
+    val isAutoModeEnabled: Boolean = false,
+    val blockedDevices: List<BlockedDeviceState> = emptyList()
 )
 
 @Composable
@@ -63,6 +70,7 @@ fun NetworkTab(
     onToggleAutoMode: (Boolean) -> Unit,
     onForceIdentify: (mac: String) -> Unit,
     onReconnectDevice: (mac: String) -> Unit,
+    onUnbanDevice: (mac: String) -> Unit,
     enabled: Boolean = true,
     modifier: Modifier = Modifier
 ) {
@@ -196,6 +204,34 @@ fun NetworkTab(
                 )
                 Spacer(Modifier.height(8.dp))
                 Text("Último mensaje: ${state.lastMessage}", color = IndustrialTheme.TextoSecundario, fontSize = 12.sp)
+            }
+        }
+
+        if (state.blockedDevices.isNotEmpty()) {
+            item {
+                IndustrialCard("Dispositivos Bloqueados (${state.blockedDevices.size})", Icons.Default.Block, headerColor = IndustrialTheme.Error) {
+                    Text(
+                        "Estos nodos se rechazan antes de solicitar autorización.",
+                        color = IndustrialTheme.TextoSecundario,
+                        fontSize = 11.sp
+                    )
+                    state.blockedDevices.forEach { blocked ->
+                        Spacer(Modifier.height(8.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Column(Modifier.weight(1f)) {
+                                Text(blocked.mac, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                Text(blocked.reason, color = IndustrialTheme.TextoSecundario, fontSize = 10.sp)
+                            }
+                            IndustrialActionButton(
+                                texto = "Desbloquear",
+                                icono = Icons.Default.LockOpen,
+                                modifier = Modifier.height(34.dp),
+                                enabled = enabled,
+                                onClick = { onUnbanDevice(blocked.mac) }
+                            )
+                        }
+                    }
+                }
             }
         }
 

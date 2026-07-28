@@ -275,13 +275,17 @@ class CoordinatorViewModel : ViewModel() {
             }
             val activeBluetooth = connectedDevices.count { it.isConnected }
             val bestRssi = connectedDevices.maxOfOrNull { it.rssi }
+            val blockedDevices = GlobalPermissionManager.getInstance().getBlockedDevices().map { blocked ->
+                BlockedDeviceState(blocked.mac, blocked.reason, blocked.blockedAt)
+            }
 
             _uiState.value = _uiState.value.copy(
                 networkState = _uiState.value.networkState.copy(
                     connectedDevices = connectedDevices,
                     totalConnected = connectedDevices.size,
                     bluetoothSummary = "Bluetooth: $activeBluetooth conectados · Mejor RSSI: ${bestRssi ?: 0} dBm",
-                    isAutoModeEnabled = _uiState.value.isAutoModeEnabled
+                    isAutoModeEnabled = _uiState.value.isAutoModeEnabled,
+                    blockedDevices = blockedDevices
                 )
             )
         } catch (e: Exception) {
@@ -969,6 +973,19 @@ class CoordinatorViewModel : ViewModel() {
             } catch (e: Exception) {
             Log.e("CIM", "Error: ${e.message}", e)
                 addLog("✗ Error rechazar: ${e.message}")
+            }
+        }
+    }
+
+    fun unbanDevice(mac: String) {
+        viewModelScope.launch {
+            try {
+                GlobalPermissionManager.getInstance().unban(mac)
+                updateDeviceList()
+                addLog("✓ Dispositivo desbloqueado: $mac; requiere autorización nueva")
+            } catch (e: Exception) {
+                Log.e("Coordinator", "Error desbloqueando dispositivo", e)
+                addLog("✗ Error desbloqueando $mac: ${e.message}")
             }
         }
     }

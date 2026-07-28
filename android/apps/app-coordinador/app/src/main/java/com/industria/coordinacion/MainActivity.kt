@@ -581,7 +581,7 @@ fun CoordinatorMasterScreen(
                         enabled = isOperationalReady
                     )
                     4 -> TrackingTab(state.trackingState, { vm.startTracking() }, { vm.stopTracking() }, onExportCsv, enabled = isOperationalReady)
-                    5 -> NetworkTab(state.networkState, onStartServer, onStopServer, { vm.authorizeDevice(it) }, { vm.rejectDevice(it) }, { vm.disconnectDevice(it) }, { vm.sendNetworkMessage(it) }, onRefreshBluetooth, onToggleAutoMode, { vm.forceIdentify(it) }, { vm.reconnectDevice(it) }, enabled = isOperationalReady)
+                    5 -> NetworkTab(state.networkState, onStartServer, onStopServer, { vm.authorizeDevice(it) }, { vm.rejectDevice(it) }, { vm.disconnectDevice(it) }, { vm.sendNetworkMessage(it) }, onRefreshBluetooth, onToggleAutoMode, { vm.forceIdentify(it) }, { vm.reconnectDevice(it) }, { vm.unbanDevice(it) }, enabled = isOperationalReady)
                     6 -> StorageTab({ vm.sendStorageCommand(it) }, enabled = isOperationalReady)
                 }
             }

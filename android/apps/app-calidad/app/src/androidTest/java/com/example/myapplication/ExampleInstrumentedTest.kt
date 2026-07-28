@@ -1,13 +1,25 @@
 package com.example.myapplication
 import android.util.Log
+import org.junit.Before
+import org.junit.After
 
 import androidx.test.platform.app.InstrumentationRegistry
+import org.junit.Before
+import org.junit.After
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import org.junit.Before
+import org.junit.After
 
 import org.junit.Test
+import org.junit.Before
+import org.junit.After
 import org.junit.runner.RunWith
+import org.junit.Before
+import org.junit.After
 
 import org.junit.Assert.*
+import org.junit.Before
+import org.junit.After
 
 /**
  * Instrumented test, which will execute on an Android device.

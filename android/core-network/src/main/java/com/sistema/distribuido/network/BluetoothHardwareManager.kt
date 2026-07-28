@@ -359,7 +359,7 @@ class BluetoothHardwareManager(
                 characteristic: BluetoothGattCharacteristic,
                 value: ByteArray
             ) {
-                handleIncomingData(gatt, String(value, Charsets.UTF_8).trim())
+                handleIncomingData(gatt, String(value, Charsets.UTF_8))
             }
 
             @Deprecated("Deprecated in API 33")
@@ -367,7 +367,7 @@ class BluetoothHardwareManager(
             override fun onCharacteristicChanged(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
                 @Suppress("DEPRECATION")
                 val value = characteristic.value ?: return
-                handleIncomingData(gatt, String(value, Charsets.UTF_8).trim())
+                handleIncomingData(gatt, String(value, Charsets.UTF_8))
             }
         }
     }

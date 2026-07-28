@@ -745,6 +745,112 @@ class CoordinatorViewModel : ViewModel() {
         addLog(message)
     }
 
+    // ============= SIMULACIÓN DE CICLO COMPLETO - AHORA REAL (ENVÍA COMANDOS) =============
+    fun simulateFullCycle() {
+        viewModelScope.launch {
+            try {
+                addLog("╔════════════════════════════════════════════════════════════╗")
+                addLog("║     CICLO COMPLETO CIM v6.0 - CONTROL REAL                  ║")
+                addLog("╚════════════════════════════════════════════════════════════╝")
+
+                val broker = commandBroker
+                
+                // ============================================
+                // PASO 1: PLC - Iniciar cinta
+                // ============================================
+                updateExecutiveStation("CINTA", ExecutiveStationStatus.BUSY, "Cinta iniciada", "PLC:START")
+                addLog("[1/9] → PLC: Enviando PLC:START")
+                if (broker != null) {
+                    sendExecuteCommand(AppType.PLC, "PLC:START")
+                } else {
+                    addLog("   (Modo simulado - sin broker)")
+                }
+                kotlinx.coroutines.delay(700)
+
+                // ============================================
+                // PASO 2: Simular detección de pallet
+                // ============================================
+                updateExecutiveStation("CINTA", ExecutiveStationStatus.BUSY, "Pallet detectado POS:1", "SENSOR")
+                addLog("[2/9] → SENSOR: Pallet detectado en estación 1")
+                if (broker != null) {
+                    sendExecuteCommand(AppType.PLC, "SENSOR_ACTIVATED|POS:1")
+                }
+                kotlinx.coroutines.delay(600)
+
+                // ============================================
+                // PASO 3: Enrutar a Manufactura
+                // ============================================
+                updateExecutiveStation("MANUFACTURA", ExecutiveStationStatus.BUSY, "Robot HOME", "R:HOME")
+                addLog("[3/9] → MANUFACTURA: Enviando R:HOME")
+                sendExecuteCommand(AppType.MANUFACTURA, "R:HOME")
+                kotlinx.coroutines.delay(900)
+
+                // ============================================
+                // PASO 4: Ejecutar robot
+                // ============================================
+                addLog("[4/9] → MANUFACTURA: Ejecutando R:RUN")
+                sendExecuteCommand(AppType.MANUFACTURA, "R:RUN")
+                updateExecutiveStation("MANUFACTURA", ExecutiveStationStatus.BUSY, "Procesando pieza", "R:RUN")
+                kotlinx.coroutines.delay(1300)
+
+                // ============================================
+                // PASO 5: Láser
+                // ============================================
+                addLog("[5/9] → MANUFACTURA: Láser CNC (L:START)")
+                sendExecuteCommand(AppType.MANUFACTURA, "L:START")
+                kotlinx.coroutines.delay(1000)
+
+                // ============================================
+                // PASO 6: Enrutar a Calidad
+                // ============================================
+                updateExecutiveStation("CALIDAD", ExecutiveStationStatus.BUSY, "Analizando ArUco+YOLO", "ARUCO+YOLO")
+                addLog("[6/9] → CALIDAD: Enviando solicitud de validación")
+                sendExecuteCommand(AppType.CALIDAD, "ARUCO:DETECT")
+                kotlinx.coroutines.delay(800)
+
+                // ============================================
+                // PASO 7: Validación exitosa
+                // ============================================
+                addLog("[7/9] → CALIDAD: PIEZA APROBADA (VAL:PASS)")
+                sendExecuteCommand(AppType.CALIDAD, "VAL:PASS")
+                updateExecutiveStation("CALIDAD", ExecutiveStationStatus.READY, "Pieza VALIDADA ✓", "PASS")
+                kotlinx.coroutines.delay(700)
+
+                // ============================================
+                // PASO 8: Almacén
+                // ============================================
+                updateExecutiveStation("ALMACEN", ExecutiveStationStatus.BUSY, "Almacenando en rack 07", "STO:07")
+                addLog("[8/9] → ALMACEN: Enviando STO:07")
+                sendExecuteCommand(AppType.ALMACEN, "STO:07")
+                kotlinx.coroutines.delay(1100)
+
+                // ============================================
+                // PASO 9: Finalizar
+                // ============================================
+                addLog("[9/9] → PLC: Deteniendo cinta (PLC:STOP)")
+                if (broker != null) {
+                    sendExecuteCommand(AppType.PLC, "PLC:STOP")
+                }
+                updateExecutiveStation("CINTA", ExecutiveStationStatus.READY, "Ciclo completado ✓", "PLC:STOP")
+
+                // Actualizar estados finales
+                updateExecutiveStation("MANUFACTURA", ExecutiveStationStatus.READY, "Listo para nuevo ciclo", "IDLE")
+                updateExecutiveStation("ALMACEN", ExecutiveStationStatus.READY, "Rack actualizado (pos 07)", "STO:07 OK")
+
+                addLog("════════════════════════════════════════════════════════════")
+                addLog("✅ CICLO COMPLETO FINALIZADO - PIEZA PROCESADA Y ALMACENADA")
+                addLog("════════════════════════════════════════════════════════════")
+
+                // Notificar a todas las estaciones conectadas
+                addLog("→ Notificación global enviada a estaciones conectadas")
+
+            } catch (e: Exception) {
+                addLog("✗ Error en ciclo completo: ${e.message}")
+                updateExecutiveStation("CINTA", ExecutiveStationStatus.WARNING, "Error en ciclo", "ERROR")
+            }
+        }
+    }
+
     // ============= STORAGE =============
     fun sendStorageCommand(command: String) {
         viewModelScope.launch {

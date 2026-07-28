@@ -479,6 +479,15 @@ fun CoordinatorMasterScreen(
                                     Spacer(Modifier.width(8.dp))
                                     Text("E-STOP", fontWeight = FontWeight.Bold)
                                 }
+                                Button(
+                                    onClick = { vm.simulateFullCycle() },
+                                    colors = ButtonDefaults.buttonColors(containerColor = IndustrialTheme.Primario),
+                                    modifier = Modifier.weight(1f).height(52.dp)
+                                ) {
+                                    Icon(Icons.Default.PlayArrow, contentDescription = null)
+                                    Spacer(Modifier.width(8.dp))
+                                    Text("SIMULAR CICLO", fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                                }
                                 OutlinedButton(
                                     onClick = { showGlobalActions = true },
                                     modifier = Modifier.weight(1f).height(52.dp)

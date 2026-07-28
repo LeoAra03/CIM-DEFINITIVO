@@ -40,7 +40,7 @@ cd config
 
 Las APK debug se exportan en `config/output-apks/`.
 
-Consulta [la instalación rápida](docs/quickstart/INSTALACION_RAPIDA.md) y los resultados de CI en la pestaña **Actions** del repositorio.
+Consulta [la guía de inicio](docs/quickstart/README.md) y los resultados de CI en la pestaña **Actions** del repositorio.
 
 ## Convenciones importantes
 

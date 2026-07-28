@@ -23,7 +23,7 @@ import java.util.concurrent.Executors
 fun CameraPreviewWithVision(
     isDetecting: Boolean,
     visionMode: IndustrialVisionAnalyzer.VisionMode,
-    onArucoFound: (List<IndustrialVisionAnalyzer.ArUcoResult>) -> Unit,
+    onArucoFound: (List<IndustrialVisionAnalyzer.ArucoResult>) -> Unit,
     onQrFound: (String) -> Unit,
     onYoloFound: (List<IndustrialVisionAnalyzer.YoloResult>) -> Unit,
     modifier: Modifier = Modifier
@@ -74,7 +74,7 @@ private fun startCamera(
     previewView: PreviewView,
     cameraExecutor: ExecutorService,
     visionMode: IndustrialVisionAnalyzer.VisionMode,
-    onArucoFound: (List<IndustrialVisionAnalyzer.ArUcoResult>) -> Unit,
+    onArucoFound: (List<IndustrialVisionAnalyzer.ArucoResult>) -> Unit,
     onQrFound: (String) -> Unit,
     onYoloFound: (List<IndustrialVisionAnalyzer.YoloResult>) -> Unit
 ) {

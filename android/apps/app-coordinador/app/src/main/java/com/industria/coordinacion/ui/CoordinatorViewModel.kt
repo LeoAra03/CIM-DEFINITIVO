@@ -917,9 +917,10 @@ class CoordinatorViewModel : ViewModel() {
     fun rejectDevice(mac: String) {
         viewModelScope.launch {
             try {
-                GlobalPermissionManager.getInstance().reject(mac, rememberDecision = true)
+                GlobalPermissionManager.getInstance().ban(mac, "Rechazado desde Coordinador")
+                commandBroker?.disconnectBleDevice(mac)
                 GlobalDeviceRegistry.registry.disconnect(mac)
-                addLog("✗ Rechazado y desconectado: $mac")
+                addLog("🚫 Bloqueado y desconectado: $mac")
             } catch (e: Exception) {
             Log.e("CIM", "Error: ${e.message}", e)
                 addLog("✗ Error rechazar: ${e.message}")

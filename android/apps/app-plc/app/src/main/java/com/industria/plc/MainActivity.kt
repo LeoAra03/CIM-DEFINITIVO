@@ -75,6 +75,12 @@ fun PLCApp(commCoordinator: CommunicationCoordinator) {
     val isAuthorized by remember { derivedStateOf { authorizationState == CimProtocol.AUTH_STATE_VALIDATED } }
     var independentMode by remember { mutableStateOf(false) }
     var ipCoordinator by remember { mutableStateOf("192.168.1.100") }
+    val discoveredHubIp = rememberHubIp(context)
+    LaunchedEffect(discoveredHubIp.value) {
+        discoveredHubIp.value?.let { ip ->
+            if (ip != ipCoordinator) ipCoordinator = ip
+        }
+    }
     var selectedTab by remember { mutableStateOf(0) }
     val palletPresent = remember { mutableStateMapOf<Int, Boolean>() }
     val holdStations = remember { mutableStateMapOf<Int, Boolean>() }

@@ -54,7 +54,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { }
             LaunchedEffect(Unit) {
-                val p = mutableListOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.INTERNET)
+                val p = mutableListOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.INTERNET, Manifest.permission.CAMERA)
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     p.addAll(listOf(Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT))
                 }
@@ -65,6 +65,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
     val context = LocalContext.current
@@ -79,9 +80,19 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
     val isAuthorized by remember { derivedStateOf { authorizationState == CimProtocol.AUTH_STATE_VALIDATED } }
     var independentMode by remember { mutableStateOf(false) }
     var ipCoordinator by remember { mutableStateOf("192.168.1.100") }
+    val discoveredHubIp = rememberHubIp(context)
+    LaunchedEffect(discoveredHubIp.value) {
+        discoveredHubIp.value?.let { ip ->
+            if (ip != ipCoordinator) ipCoordinator = ip
+        }
+    }
+    var selectedTab by remember { mutableStateOf(0) }
     var laserPower by remember { mutableStateOf("80") }
     var laserSpeed by remember { mutableStateOf("1200") }
-    var selectedTab by remember { mutableStateOf(0) }
+    val pendingArucoGenerate = remember { mutableStateOf<String?>(null) }
+    val isOperationalReady by remember {
+        derivedStateOf { isConnectedBt && (isAuthorized || independentMode) }
+    }
 
     fun addLog(msg: String) {
         val time = java.text.SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
@@ -105,6 +116,11 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
     fun handleIncomingCoordinatorCommand(command: String) {
         addLog("← COORDINADOR: $command")
         when {
+            command.startsWith("ARUCO_GENERATE:") -> {
+                val payload = command.removePrefix("ARUCO_GENERATE:")
+                pendingArucoGenerate.value = payload
+                addLog("✓ Solicitud ArUco recibida: $payload")
+            }
             command.startsWith("LASER_LOAD:") -> {
                 val parts = command.split(":", limit = 3)
                 if (parts.size == 3) {
@@ -191,7 +207,14 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
     IndustrialScaffold(
         titulo = "Manufactura Pro v6.0", 
         subtitulo = "ESTACIÓN DE MECANIZADO INTEGRADA",
-        floatingActionButton = { BluetoothConnectionFAB() }
+        floatingActionButton = { BluetoothConnectionFAB() },
+        navigationIcon = {
+            Box(Modifier.testModeSecretGesture(context) { enabled ->
+                addLog(if (enabled) "MODO INGENIERÍA ACTIVADO" else "MODO INGENIERÍA DESACTIVADO")
+            }.padding(8.dp)) {
+                Icon(Icons.Default.PrecisionManufacturing, null, tint = IndustrialTheme.Primario)
+            }
+        }
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
             ScrollableTabRow(selectedTabIndex = selectedTab, containerColor = Color.Black, contentColor = IndustrialTheme.Primario, edgePadding = 16.dp, divider = {}) {
@@ -206,8 +229,8 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                     0 -> {
                         IndustrialCard("Control Scorbot", Icons.Default.PrecisionManufacturing) {
                             Row(Modifier.fillMaxWidth(), Arrangement.spacedBy(8.dp)) {
-                                IndustrialActionButton("HOME", Icons.Default.Home, Modifier.weight(1f), enabled = isConnectedBt && (isAuthorized || independentMode), onClick = { sendAuthorizedHardwareCommand("R:HOME", "CMD: HOME") })
-                                IndustrialActionButton("READY", Icons.Default.Check, Modifier.weight(1f), enabled = isConnectedBt && (isAuthorized || independentMode), onClick = { sendAuthorizedHardwareCommand("R:READY", "CMD: READY") })
+                                IndustrialActionButton("HOME", Icons.Default.Home, Modifier.weight(1f), enabled = isOperationalReady, onClick = { sendAuthorizedHardwareCommand("R:HOME", "CMD: HOME") })
+                                IndustrialActionButton("READY", Icons.Default.Check, Modifier.weight(1f), enabled = isOperationalReady, onClick = { sendAuthorizedHardwareCommand("R:READY", "CMD: READY") })
                             }
                             Spacer(Modifier.height(12.dp))
                             Text("MOVIMIENTO MANUAL (JOGGING)", color = IndustrialTheme.TextoSecundario, fontSize = 10.sp)
@@ -215,15 +238,15 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                                 Row(Modifier.fillMaxWidth().padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                     val axisName = if(axis == 0) "X" else "Y"
                                     Text(axisName, modifier = Modifier.width(20.dp), color = Color.White, fontWeight = FontWeight.Bold)
-                                    IndustrialActionButton("-", Icons.Default.Remove, Modifier.weight(1f).height(36.dp), enabled = isConnectedBt && (isAuthorized || independentMode), onClick = { sendAuthorizedHardwareCommand("R:MOVE:$axisName:-10", "CMD: MOVE $axisName -10") })
-                                    IndustrialActionButton("+", Icons.Default.Add, Modifier.weight(1f).height(36.dp), enabled = isConnectedBt && (isAuthorized || independentMode), onClick = { sendAuthorizedHardwareCommand("R:MOVE:$axisName:+10", "CMD: MOVE $axisName +10") })
+                                    IndustrialActionButton("-", Icons.Default.Remove, Modifier.weight(1f).height(36.dp), enabled = isOperationalReady, onClick = { sendAuthorizedHardwareCommand("R:MOVE:$axisName:-10", "CMD: MOVE $axisName -10") })
+                                    IndustrialActionButton("+", Icons.Default.Add, Modifier.weight(1f).height(36.dp), enabled = isOperationalReady, onClick = { sendAuthorizedHardwareCommand("R:MOVE:$axisName:+10", "CMD: MOVE $axisName +10") })
                                 }
                             }
                             Spacer(Modifier.height(12.dp))
-                            IndustrialActionButton("GUARDAR PUNTO", Icons.Default.Save, colorFondo = IndustrialTheme.Exito, enabled = isConnectedBt && (isAuthorized || independentMode), onClick = { sendAuthorizedHardwareCommand("R:SAVE", "CMD: SAVE") })
+                            IndustrialActionButton("GUARDAR PUNTO", Icons.Default.Save, colorFondo = IndustrialTheme.Exito, enabled = isOperationalReady, onClick = { sendAuthorizedHardwareCommand("R:SAVE", "CMD: SAVE") })
                         }
                         ScorbotRunConsole(
-                            enabled = isConnectedBt && (isAuthorized || independentMode),
+                            enabled = isOperationalReady,
                             presets = listOf("ARU" to "ARU", "ARU1" to "ARU1", "ARU2" to "ARU2", "ARU3" to "ARU3", "ARU4" to "ARU4"),
                             initialProgram = "ARU",
                             manualLabel = "Programa (ej: ARU, MYPROG)",
@@ -233,9 +256,9 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                     }
                     1 -> {
                         IndustrialCard("Grabado Láser CNC", Icons.Default.FlashOn, headerColor = IndustrialTheme.Advertencia) {
-                            IndustrialActionButton("INICIAR GRABADO", Icons.Default.PlayArrow, colorFondo = IndustrialTheme.Exito, enabled = isConnectedBt && (isAuthorized || independentMode), onClick = { sendAuthorizedHardwareCommand("L:START", "CMD: L:START") })
+                            IndustrialActionButton("INICIAR GRABADO", Icons.Default.PlayArrow, colorFondo = IndustrialTheme.Exito, enabled = isOperationalReady, onClick = { sendAuthorizedHardwareCommand("L:START", "CMD: L:START") })
                             Spacer(Modifier.height(8.dp))
-                            IndustrialActionButton("STOP EMERGENCIA", Icons.Default.Stop, colorFondo = IndustrialTheme.Error, enabled = isConnectedBt && (isAuthorized || independentMode), onClick = { sendAuthorizedHardwareCommand("L:STOP", "CMD: L:STOP") })
+                            IndustrialActionButton("STOP EMERGENCIA", Icons.Default.Stop, colorFondo = IndustrialTheme.Error, enabled = isOperationalReady, onClick = { sendAuthorizedHardwareCommand("L:STOP", "CMD: L:STOP") })
                             Spacer(Modifier.height(16.dp))
                             Text("PARÁMETROS", color = IndustrialTheme.TextoSecundario, fontSize = 10.sp)
                             IndustrialTextField(
@@ -253,7 +276,7 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                                 texto = "APLICAR PARÁMETROS",
                                 icono = Icons.Default.Settings,
                                 colorFondo = IndustrialTheme.Primario,
-                                enabled = isConnectedBt && (isAuthorized || independentMode),
+                                enabled = isOperationalReady,
                                 onClick = {
                                     val powerValue = laserPower.toIntOrNull() ?: 80
                                     val speedValue = laserSpeed.toIntOrNull() ?: 1200
@@ -265,25 +288,54 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                     }
                     2 -> {
                         var showArucoGenerator by remember { mutableStateOf(false) }
-                        var arucoGenId by remember { mutableStateOf("1") }
-                        var arucoGenSize by remember { mutableStateOf("250") }
+                        var arucoGenId by remember { mutableStateOf("0") }
+                        var arucoGenSizeMm by remember { mutableStateOf("100") }
+                        var selectedDictionary by remember { mutableStateOf(ArucoDictionary.DICT_4X4_50) }
+                        var dictExpanded by remember { mutableStateOf(false) }
                         var generatedArucoBitmap by remember { mutableStateOf<android.graphics.Bitmap?>(null) }
                         var isGeneratingAruco by remember { mutableStateOf(false) }
 
+                        LaunchedEffect(pendingArucoGenerate.value) {
+                            val payload = pendingArucoGenerate.value ?: return@LaunchedEffect
+                            pendingArucoGenerate.value = null
+                            showArucoGenerator = true
+                            var id = 0
+                            var sizeMm = 100
+                            var dict = ArucoDictionary.DICT_4X4_50
+                            payload.split("|").forEach { part ->
+                                when {
+                                    part.startsWith("ID:") -> id = part.removePrefix("ID:").toIntOrNull() ?: id
+                                    part.startsWith("SIZE:") -> sizeMm = part.removePrefix("SIZE:").toIntOrNull() ?: sizeMm
+                                    part.startsWith("DICT:") -> dict = ArucoDictionary.fromName(part.removePrefix("DICT:"))
+                                    part.toIntOrNull() != null -> id = part.toInt()
+                                }
+                            }
+                            arucoGenId = id.toString()
+                            arucoGenSizeMm = sizeMm.toString()
+                            selectedDictionary = dict
+                            isGeneratingAruco = true
+                            try {
+                                generatedArucoBitmap = IndustrialVisionAnalyzer.generateArucoMarkerMm(id, sizeMm, dict)
+                                addLog("VISIÓN: ArUco #$id generado desde coordinador (${dict.label}, ${sizeMm}mm)")
+                            } finally {
+                                isGeneratingAruco = false
+                            }
+                        }
+
                         IndustrialCard("Procesamiento de Imagen", Icons.Default.Image) {
                             if (!showArucoGenerator) {
-                                // VISTA NORMAL: CÁMARA
                                 Box(Modifier.fillMaxWidth().height(150.dp).background(Color.DarkGray).border(1.dp, Color.Gray), contentAlignment = androidx.compose.ui.Alignment.Center) {
                                     Text("VISTA PREVIA G-CODE", color = Color.Gray, fontSize = 12.sp)
                                 }
                                 Spacer(Modifier.height(12.dp))
                                 CameraPreviewWithVision(
-                                    isDetecting = isConnectedBt && (isAuthorized || independentMode),
+                                    isDetecting = isOperationalReady,
+                                    arucoDictionary = selectedDictionary,
                                     onArucoFound = { results ->
                                         if (results.isNotEmpty()) {
-                                            addLog("VISIÓN: Detectado ArUco #${results[0].id}")
+                                            addLog("VISIÓN: Detectado ArUco #${results[0].id} (${selectedDictionary.label})")
                                             scope.launch {
-                                                stationClient.sendEventSafe("ARUCO_DETECTED:${results[0].id}")
+                                                stationClient.sendEventSafe("ARUCO_DETECTED:${results[0].id}|DICT:${selectedDictionary.name}")
                                             }
                                         }
                                     },
@@ -291,6 +343,25 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                                         addLog("VISIÓN: QR Detectado -> $qr")
                                     }
                                 )
+                                Spacer(Modifier.height(12.dp))
+                                Text("Diccionario detección", color = IndustrialTheme.TextoSecundario, fontSize = 10.sp)
+                                ExposedDropdownMenuBox(expanded = dictExpanded, onExpandedChange = { dictExpanded = it }) {
+                                    OutlinedTextField(
+                                        value = selectedDictionary.label,
+                                        onValueChange = {},
+                                        readOnly = true,
+                                        modifier = Modifier.menuAnchor().fillMaxWidth(),
+                                        label = { Text("Diccionario ArUco") }
+                                    )
+                                    ExposedDropdownMenu(expanded = dictExpanded, onDismissRequest = { dictExpanded = false }) {
+                                        ArucoDictionary.entries.filter { it.label.startsWith("4x4") || it.label.startsWith("5x5") }.forEach { dict ->
+                                            DropdownMenuItem(
+                                                text = { Text(dict.label) },
+                                                onClick = { selectedDictionary = dict; dictExpanded = false }
+                                            )
+                                        }
+                                    }
+                                }
                                 Spacer(Modifier.height(12.dp))
                                 IndustrialActionButton("GENERAR ArUco PARA GRABAR", Icons.Default.AutoFixHigh, colorFondo = IndustrialTheme.Secundario, onClick = { showArucoGenerator = true })
                                 Spacer(Modifier.height(8.dp))
@@ -303,19 +374,36 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                                     }
                                 })
                             } else {
-                                // VISTA GENERADOR: ArUco
                                 Text("Generador de ArUco para Láser", color = IndustrialTheme.Primario, fontWeight = FontWeight.Bold)
+                                Spacer(Modifier.height(8.dp))
+                                ExposedDropdownMenuBox(expanded = dictExpanded, onExpandedChange = { dictExpanded = it }) {
+                                    OutlinedTextField(
+                                        value = selectedDictionary.label,
+                                        onValueChange = {},
+                                        readOnly = true,
+                                        modifier = Modifier.menuAnchor().fillMaxWidth(),
+                                        label = { Text("Diccionario") }
+                                    )
+                                    ExposedDropdownMenu(expanded = dictExpanded, onDismissRequest = { dictExpanded = false }) {
+                                        ArucoDictionary.entries.forEach { dict ->
+                                            DropdownMenuItem(
+                                                text = { Text(dict.label) },
+                                                onClick = { selectedDictionary = dict; dictExpanded = false }
+                                            )
+                                        }
+                                    }
+                                }
                                 Spacer(Modifier.height(8.dp))
                                 IndustrialTextField(
                                     valor = arucoGenId,
-                                    onValueChange = { arucoGenId = it.take(2) },
-                                    label = "ID Marcador (0-49)"
+                                    onValueChange = { arucoGenId = it.filter { c -> c.isDigit() }.take(4) },
+                                    label = "ID Marcador (0-${selectedDictionary.maxId})"
                                 )
                                 Spacer(Modifier.height(8.dp))
                                 IndustrialTextField(
-                                    valor = arucoGenSize,
-                                    onValueChange = { arucoGenSize = it.take(4) },
-                                    label = "Tamaño (PX, 200-500)"
+                                    valor = arucoGenSizeMm,
+                                    onValueChange = { arucoGenSizeMm = it.filter { c -> c.isDigit() }.take(4) },
+                                    label = "Tamaño físico (mm, ej: 100)"
                                 )
                                 Spacer(Modifier.height(12.dp))
                                 IndustrialActionButton(
@@ -326,11 +414,11 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                                         scope.launch {
                                             isGeneratingAruco = true
                                             try {
-                                                val id = arucoGenId.toIntOrNull() ?: 1
-                                                val size = arucoGenSize.toIntOrNull() ?: 250
-                                                generatedArucoBitmap = IndustrialVisionAnalyzer.generateArucoMarker(id, size)
+                                                val id = arucoGenId.toIntOrNull() ?: 0
+                                                val sizeMm = arucoGenSizeMm.toIntOrNull() ?: 100
+                                                generatedArucoBitmap = IndustrialVisionAnalyzer.generateArucoMarkerMm(id, sizeMm, selectedDictionary)
                                                 if (generatedArucoBitmap != null) {
-                                                    addLog("VISIÓN: ArUco #$id generado (${size}x${size}px)")
+                                                    addLog("VISIÓN: ArUco #$id generado (${selectedDictionary.label}, ${sizeMm}mm)")
                                                 }
                                             } catch (e: Exception) {
             Log.e("CIM", "Error: ${e.message}", e)
@@ -365,11 +453,22 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                                         icono = Icons.Default.FlashOn,
                                         colorFondo = IndustrialTheme.Advertencia,
                                         onClick = {
+                                            val bitmap = generatedArucoBitmap ?: return@IndustrialActionButton
+                                            val id = arucoGenId.toIntOrNull() ?: 0
+                                            val b64 = IndustrialVisionAnalyzer.bitmapToPngBase64(bitmap)
+                                            val filename = "aruco_${selectedDictionary.name}_${id}.png"
                                             sendAuthorizedHardwareCommand(
-                                                "L:ARUCO:${arucoGenId}",
-                                                "LÁSER: Grabando ArUco #${arucoGenId}"
+                                                "L:ARUCO:${id}|DICT:${selectedDictionary.name}|SIZE:${arucoGenSizeMm}",
+                                                "LÁSER: Grabando ArUco #$id"
                                             )
-                                            addLog("LÁSER: Enviando patrón ArUco ${arucoGenId} a grabar")
+                                            scope.launch {
+                                                val payload = "LASER_LOAD:$filename:$b64"
+                                                if (isConnectedNet) {
+                                                    stationClient.sendEventSafe(payload)
+                                                }
+                                                context.openFileOutput(filename, Context.MODE_PRIVATE).use { it.write(android.util.Base64.decode(b64, Base64.NO_WRAP)) }
+                                                addLog("LÁSER: Patrón ArUco #$id enviado (${filename})")
+                                            }
                                             showArucoGenerator = false
                                         }
                                     )
@@ -387,7 +486,10 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                     }
                     3 -> {
                         IndustrialCard("Red Industrial", Icons.Default.Lan, headerColor = IndustrialTheme.Secundario) {
-                            IndustrialTextField(valor = ipCoordinator, onValueChange = { ipCoordinator = it }, label = "IP Coordinador")
+                            IndustrialTextField(valor = ipCoordinator, onValueChange = { ipCoordinator = it }, label = "IP Coordinador (NSD auto)")
+                            if (discoveredHubIp.value != null) {
+                                IndustrialStatusRow("NSD Hub", discoveredHubIp.value!!, true)
+                            }
                             IndustrialStatusRow("Estado Red", if(isConnectedNet) "SINCRO OK" else "STANDBY", isConnectedNet)
                             IndustrialStatusRow("Autorización", authorizationState, isAuthorized)
                             Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -396,37 +498,6 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                             }
                             IndustrialStatusRow("Modo Autónomo", if(independentMode) "ACTIVO" else "DESACTIVADO", independentMode)
                             IndustrialActionButton(texto = "UNIR AL HUB", icono = Icons.Default.Router, onClick = { stationClient.connect() })
-                        }
-                    }
-                }
-
-                if (true) { // Substitución de BuildConfig.DEBUG por true para simplicidad o usar false
-                    IndustrialCard("Hardware debug", Icons.Default.DeveloperMode, headerColor = Color.Magenta) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            IndustrialActionButton(
-                                texto = "SIM ACK",
-                                icono = Icons.Default.Check,
-                                modifier = Modifier.weight(1f),
-                                colorFondo = Color.DarkGray,
-                                onClick = {
-                                    scope.launch {
-                                        val sent = stationClient.sendEventSafe("SIM_ACK")
-                                        addLog(if (sent) "SIM_ESP32: ACK enviado" else "SIM_ESP32: ACK fallido")
-                                    }
-                                }
-                            )
-                            IndustrialActionButton(
-                                texto = "SIM FINISH",
-                                icono = Icons.Default.Flag,
-                                modifier = Modifier.weight(1f),
-                                colorFondo = Color.DarkGray,
-                                onClick = {
-                                    scope.launch {
-                                        val sent = stationClient.sendEventSafe("SIM_FINISH")
-                                        addLog(if (sent) "SIM_ESP32: FINISH enviado" else "SIM_ESP32: FINISH fallido")
-                                    }
-                                }
-                            )
                         }
                     }
                 }

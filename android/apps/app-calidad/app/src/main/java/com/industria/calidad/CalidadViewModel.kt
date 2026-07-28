@@ -12,6 +12,7 @@ import android.graphics.Bitmap
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.sistema.distribuido.network.BluetoothHardwareManager
+import com.sistema.distribuido.network.ArucoDictionary
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -37,12 +38,16 @@ class CalidadViewModel @Inject constructor(
     private val _gcodeCommands = MutableStateFlow<List<String>>(emptyList())
     val gcodeCommands: StateFlow<List<String>> = _gcodeCommands.asStateFlow()
 
-    fun generateArUco(markerId: Int = 7, size: Int = 48) {
-        val bitmap = ArUcoGenerator.buildBitmap(size = size, markerId = markerId)
+    fun generateArUco(markerId: Int = 7, sizeMm: Int = 100, dictionary: ArucoDictionary = ArucoDictionary.DICT_4X4_50) {
+        val bitmap = ArUcoGenerator.buildBitmapMm(sizeMm, markerId, dictionary)
+        if (bitmap == null) {
+            _status.value = "Error generando ArUco"
+            return
+        }
         _arucoBitmap.value = bitmap
         _gcodeCommands.value = GCodeTranslator.translate(bitmap)
         _progress.value = 0f
-        _status.value = "ArUco generado"
+        _status.value = "ArUco #$markerId generado (${dictionary.label})"
     }
 
     fun sendLaserJob() = viewModelScope.launch {

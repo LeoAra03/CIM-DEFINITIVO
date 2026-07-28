@@ -17,7 +17,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalContext
 import com.sistema.distribuido.network.GlobalBluetoothManager
+import com.sistema.distribuido.network.ArucoDictionary
 import com.sistema.distribuido.network.IndustrialVisionAnalyzer
+import com.sistema.distribuido.network.YoloTfliteDetector
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -168,6 +170,7 @@ fun BluetoothConnectionFAB() {
 fun CameraPreviewWithVision(
     isDetecting: Boolean,
     visionMode: IndustrialVisionAnalyzer.VisionMode = IndustrialVisionAnalyzer.VisionMode.ARUCO,
+    arucoDictionary: ArucoDictionary = ArucoDictionary.DEFAULT,
     onArucoFound: (List<IndustrialVisionAnalyzer.ArucoResult>) -> Unit,
     onQrFound: (String) -> Unit,
     onYoloFound: (List<IndustrialVisionAnalyzer.YoloResult>) -> Unit = {},
@@ -178,9 +181,13 @@ fun CameraPreviewWithVision(
     val previewView = remember { androidx.camera.view.PreviewView(context) }
     val executor = remember { java.util.concurrent.Executors.newSingleThreadExecutor() }
 
-    val analyzer = remember(isDetecting, visionMode, onArucoFound, onQrFound, onYoloFound) {
+    val yoloDetector = remember { YoloTfliteDetector(context) }
+
+    val analyzer = remember(isDetecting, visionMode, arucoDictionary, onArucoFound, onQrFound, onYoloFound) {
         IndustrialVisionAnalyzer(
             visionMode = visionMode,
+            arucoDictionary = arucoDictionary,
+            yoloDetector = yoloDetector,
             onArucoDetected = onArucoFound,
             onQrDetected = onQrFound,
             onYoloDetected = onYoloFound

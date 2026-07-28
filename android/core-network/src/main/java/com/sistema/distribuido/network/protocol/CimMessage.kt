@@ -86,6 +86,9 @@ data class CimMessage(
     fun toTransportString(): String {
         return "$id|$timestamp|$sourceMac|$sourceApp|$destMac|$destApp|$commandType|$priority|$sessionId|${payloadEscaped()}"
     }
+
+    /** Transporte v2.0 con envoltorio CRC32 */
+    fun toSecureTransportString(): String = CimTransportCodec.wrap(toTransportString())
     
     /**
      * Escapa caracteres especiales en payload.
@@ -150,6 +153,26 @@ data class CimMessage(
          */
         fun fromTransportString(data: String): CimMessage? {
             return try {
+                val raw = CimTransportCodec.tryUnwrap(data)
+                parseTransportPayload(raw)
+            } catch (e: Exception) {
+                null
+            }
+        }
+
+        fun fromSecureTransportString(data: String): CimMessage? {
+            return try {
+                parseTransportPayload(CimTransportCodec.unwrap(data))
+            } catch (_: Exception) {
+                null
+            }
+        }
+
+        private fun parseTransportPayload(data: String): CimMessage? {
+            return try {
+                val binary = CimBinaryCodec.unwrapBase64Wire(data)
+                if (binary != null) return binary
+
                 val parts = splitUnescaped(data, '|', limit = 10)
                 if (parts.size < 9) return null
 

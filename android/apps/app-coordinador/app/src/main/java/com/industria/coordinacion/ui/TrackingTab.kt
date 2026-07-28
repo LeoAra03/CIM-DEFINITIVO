@@ -32,6 +32,7 @@ fun TrackingTab(
     onStartTracking: () -> Unit,
     onStopTracking: () -> Unit,
     onExportCsv: () -> Unit,
+    enabled: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     val isTracking = state.isTracking
@@ -57,7 +58,7 @@ fun TrackingTab(
                         texto = "Start Scan", 
                         icono = Icons.Default.PlayArrow, 
                         modifier = Modifier.weight(1f),
-                        enabled = !isTracking,
+                        enabled = enabled && !isTracking,
                         onClick = onStartTracking
                     )
                     IndustrialActionButton(
@@ -65,7 +66,7 @@ fun TrackingTab(
                         icono = Icons.Default.Stop, 
                         modifier = Modifier.weight(1f),
                         colorFondo = IndustrialTheme.Error,
-                        enabled = isTracking,
+                        enabled = enabled && isTracking,
                         onClick = onStopTracking
                     )
                 }
@@ -100,7 +101,7 @@ fun TrackingTab(
         }
 
         item {
-            IndustrialActionButton(texto = "Exportar Reporte CSV", icono = Icons.Default.FileDownload, colorFondo = Color.DarkGray, onClick = onExportCsv)
+            IndustrialActionButton(texto = "Exportar Reporte CSV", icono = Icons.Default.FileDownload, colorFondo = Color.DarkGray, enabled = enabled, onClick = onExportCsv)
         }
     }
 }

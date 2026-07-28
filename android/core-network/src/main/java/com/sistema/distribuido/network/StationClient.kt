@@ -204,7 +204,7 @@ class StationClient(
             stationName = stationName,
             password = password,
             stationUuid = stationUuid
-        ).toTransportString()
+        ).let { if (CimProtocol.USE_CRC_V2) it.toSecureTransportString() else it.toTransportString() }
         sendSecure(handshake)
         onLog?.invoke(CimProtocol.formatLog("StationClient", "Handshake CIM enviado", true))
     }
@@ -220,7 +220,7 @@ class StationClient(
             stationName = stationName,
             password = password,
             stationUuid = stationUuid
-        ).toTransportString()
+        ).let { if (CimProtocol.USE_CRC_V2) it.toSecureTransportString() else it.toTransportString() }
 
         while (scope.isActive && handshakeAttempts < 5) {
             try {

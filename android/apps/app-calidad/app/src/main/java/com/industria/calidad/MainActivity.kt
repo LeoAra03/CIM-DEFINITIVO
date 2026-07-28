@@ -77,12 +77,21 @@ fun CalidadApp(commCoordinator: CommunicationCoordinator) {
     val bt = GlobalBluetoothManager.getInstance()
     val connectionStates by bt.connectionStates.collectAsState()
     val isConnectedBt by remember { derivedStateOf { connectionStates.values.any { it } } }
+    val isOperationalReady by remember {
+        derivedStateOf { isConnectedBt && (isAuthorized || independentMode) }
+    }
 
     var isConnectedNet by remember { mutableStateOf(false) }
     var authorizationState by remember { mutableStateOf(CimProtocol.AUTH_STATE_DISCONNECTED) }
     val isAuthorized by remember { derivedStateOf { authorizationState == CimProtocol.AUTH_STATE_VALIDATED } }
     var independentMode by remember { mutableStateOf(false) }
     var ipCoordinator by remember { mutableStateOf("192.168.1.100") }
+    val discoveredHubIp = rememberHubIp(context)
+    LaunchedEffect(discoveredHubIp.value) {
+        discoveredHubIp.value?.let { ip ->
+            if (ip != ipCoordinator) ipCoordinator = ip
+        }
+    }
     var selectedTab by remember { mutableStateOf(0) }
     var approvedCount by remember { mutableStateOf(1240) }
     var rejectedCount by remember { mutableStateOf(68) }
@@ -242,12 +251,12 @@ fun CalidadApp(commCoordinator: CommunicationCoordinator) {
                             Spacer(Modifier.height(12.dp))
                             Row(Modifier.fillMaxWidth(), Arrangement.spacedBy(8.dp)) {
                                 IndustrialActionButton("Generar ArUco", Icons.Default.AutoAwesome, modifier = Modifier.weight(1f), enabled = true, onClick = { viewModel.generateArUco() })
-                                IndustrialActionButton("Grabar", Icons.Default.PlayArrow, modifier = Modifier.weight(1f), colorFondo = IndustrialTheme.Secundario, enabled = isConnectedBt && (isAuthorized || independentMode), onClick = { viewModel.sendLaserJob() })
+                                IndustrialActionButton("Grabar", Icons.Default.PlayArrow, modifier = Modifier.weight(1f), colorFondo = IndustrialTheme.Secundario, enabled = isOperationalReady, onClick = { viewModel.sendLaserJob() })
                             }
                             Spacer(Modifier.height(8.dp))
-                            IndustrialActionButton("Capturar y Validar", Icons.Default.Camera, enabled = isConnectedBt && (isAuthorized || independentMode), onClick = { sendAuthorizedHardwareCommand("CAM:SNAP", "CMD: TRIGGER SCAN") })
+                            IndustrialActionButton("Capturar y Validar", Icons.Default.Camera, enabled = isOperationalReady, onClick = { sendAuthorizedHardwareCommand("CAM:SNAP", "CMD: TRIGGER SCAN") })
                             Spacer(Modifier.height(8.dp))
-                            IndustrialActionButton("Ejecutar YOLO", Icons.Default.Search, enabled = isConnectedBt && (isAuthorized || independentMode), colorFondo = IndustrialTheme.Secundario, onClick = {
+                            IndustrialActionButton("Ejecutar YOLO", Icons.Default.Search, enabled = isOperationalReady, colorFondo = IndustrialTheme.Secundario, onClick = {
                                 scope.launch {
                                     yoloModeEnabled = true
                                     sendAuthorizedHardwareCommand("CAM:YOLO", "CMD: YOLO SCAN")
@@ -257,11 +266,11 @@ fun CalidadApp(commCoordinator: CommunicationCoordinator) {
                             })
                             Spacer(Modifier.height(8.dp))
                             Row(Modifier.fillMaxWidth(), Arrangement.spacedBy(8.dp)) {
-                                IndustrialActionButton("PASS", Icons.Default.CheckCircle, modifier = Modifier.weight(1f), colorFondo = IndustrialTheme.Exito, enabled = isConnectedBt && (isAuthorized || independentMode), onClick = {
+                                IndustrialActionButton("PASS", Icons.Default.CheckCircle, modifier = Modifier.weight(1f), colorFondo = IndustrialTheme.Exito, enabled = isOperationalReady, onClick = {
                                     approvedCount += 1
                                     sendAuthorizedHardwareCommand("VAL:PASS", "RESULT: APPROVED")
                                 })
-                                IndustrialActionButton("FAIL", Icons.Default.Cancel, modifier = Modifier.weight(1f), colorFondo = IndustrialTheme.Error, enabled = isConnectedBt && (isAuthorized || independentMode), onClick = {
+                                IndustrialActionButton("FAIL", Icons.Default.Cancel, modifier = Modifier.weight(1f), colorFondo = IndustrialTheme.Error, enabled = isOperationalReady, onClick = {
                                     rejectedCount += 1
                                     sendAuthorizedHardwareCommand("VAL:FAIL", "RESULT: REJECTED")
                                     sendAuthorizedHardwareCommand("R:DISCARD", "CMD: DISCARD FAILED PIECE")
@@ -280,21 +289,21 @@ fun CalidadApp(commCoordinator: CommunicationCoordinator) {
                     1 -> {
                         IndustrialCard("Control Scorbot", Icons.Default.PrecisionManufacturing) {
                             Row(Modifier.fillMaxWidth(), Arrangement.spacedBy(8.dp)) {
-                                IndustrialActionButton("HOME", Icons.Default.Home, Modifier.weight(1f), enabled = isConnectedBt && (isAuthorized || independentMode), onClick = { sendAuthorizedHardwareCommand("R:HOME", "CMD: HOME") })
-                                IndustrialActionButton("READY", Icons.Default.Check, Modifier.weight(1f), enabled = isConnectedBt && (isAuthorized || independentMode), onClick = { sendAuthorizedHardwareCommand("R:READY", "CMD: READY") })
+                                IndustrialActionButton("HOME", Icons.Default.Home, Modifier.weight(1f), enabled = isOperationalReady, onClick = { sendAuthorizedHardwareCommand("R:HOME", "CMD: HOME") })
+                                IndustrialActionButton("READY", Icons.Default.Check, Modifier.weight(1f), enabled = isOperationalReady, onClick = { sendAuthorizedHardwareCommand("R:READY", "CMD: READY") })
                             }
                             Spacer(Modifier.height(12.dp))
                             Text("MOVIMIENTO MANUAL", color = IndustrialTheme.TextoSecundario, fontSize = 10.sp)
                             Row(Modifier.fillMaxWidth().padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                IndustrialActionButton("X-", Icons.Default.KeyboardArrowLeft, Modifier.weight(1f).height(44.dp), enabled = isConnectedBt && (isAuthorized || independentMode), onClick = { sendAuthorizedHardwareCommand("R:MOVE:X:-10", "CMD: MOVE X -10") })
-                                IndustrialActionButton("X+", Icons.Default.KeyboardArrowRight, Modifier.weight(1f).height(44.dp), enabled = isConnectedBt && (isAuthorized || independentMode), onClick = { sendAuthorizedHardwareCommand("R:MOVE:X:+10", "CMD: MOVE X +10") })
+                                IndustrialActionButton("X-", Icons.Default.KeyboardArrowLeft, Modifier.weight(1f).height(44.dp), enabled = isOperationalReady, onClick = { sendAuthorizedHardwareCommand("R:MOVE:X:-10", "CMD: MOVE X -10") })
+                                IndustrialActionButton("X+", Icons.Default.KeyboardArrowRight, Modifier.weight(1f).height(44.dp), enabled = isOperationalReady, onClick = { sendAuthorizedHardwareCommand("R:MOVE:X:+10", "CMD: MOVE X +10") })
                             }
                             Row(Modifier.fillMaxWidth().padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                IndustrialActionButton("Y-", Icons.Default.KeyboardArrowDown, Modifier.weight(1f).height(44.dp), enabled = isConnectedBt && (isAuthorized || independentMode), onClick = { sendAuthorizedHardwareCommand("R:MOVE:Y:-10", "CMD: MOVE Y -10") })
-                                IndustrialActionButton("Y+", Icons.Default.KeyboardArrowUp, Modifier.weight(1f).height(44.dp), enabled = isConnectedBt && (isAuthorized || independentMode), onClick = { sendAuthorizedHardwareCommand("R:MOVE:Y:+10", "CMD: MOVE Y +10") })
+                                IndustrialActionButton("Y-", Icons.Default.KeyboardArrowDown, Modifier.weight(1f).height(44.dp), enabled = isOperationalReady, onClick = { sendAuthorizedHardwareCommand("R:MOVE:Y:-10", "CMD: MOVE Y -10") })
+                                IndustrialActionButton("Y+", Icons.Default.KeyboardArrowUp, Modifier.weight(1f).height(44.dp), enabled = isOperationalReady, onClick = { sendAuthorizedHardwareCommand("R:MOVE:Y:+10", "CMD: MOVE Y +10") })
                             }
                             Spacer(Modifier.height(12.dp))
-                            IndustrialActionButton("DESCARTAR PIEZA", Icons.Default.DeleteForever, colorFondo = IndustrialTheme.Error, enabled = isConnectedBt && (isAuthorized || independentMode), onClick = {
+                            IndustrialActionButton("DESCARTAR PIEZA", Icons.Default.DeleteForever, colorFondo = IndustrialTheme.Error, enabled = isOperationalReady, onClick = {
                                 sendAuthorizedHardwareCommand("R:DISCARD", "CMD: DISCARD FAILED PIECE")
                             })
                         }
@@ -329,12 +338,6 @@ fun CalidadApp(commCoordinator: CommunicationCoordinator) {
                             IndustrialStatusRow("Modo Autónomo", if(independentMode) "ACTIVO" else "DESACTIVADO", independentMode)
                             IndustrialActionButton(texto = if(isConnectedNet) "OPERATIVO" else "VINCULAR", icono = Icons.Default.Router, colorFondo = if(isConnectedNet) IndustrialTheme.Exito else IndustrialTheme.Primario, onClick = { stationClient.connect() })
                         }
-                    }
-                }
-
-                if (true) {
-                    IndustrialCard("Debug de Calidad", Icons.Default.DeveloperMode, headerColor = Color.Magenta) {
-                        IndustrialActionButton(texto = "Simular Captura Exitosa", icono = Icons.Default.PhotoCamera, colorFondo = Color.DarkGray, onClick = { addLog("SIM_ESP32: CAM_SNAP_OK | DATA SENT") })
                     }
                 }
 

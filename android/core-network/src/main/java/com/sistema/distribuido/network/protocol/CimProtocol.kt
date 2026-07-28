@@ -7,6 +7,9 @@ package com.sistema.distribuido.network.protocol
 object CimProtocol {
     // Configuración de Servidor
     const val WIFI_PORT = 8888
+    const val NSD_SERVICE_TYPE = "_cim-hub._tcp."
+    const val USE_CRC_V2 = true
+    const val USE_TLS = false
     val SPP_UUID: java.util.UUID = java.util.UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
 
     // Password Dinámica (Editable desde el Maestro)

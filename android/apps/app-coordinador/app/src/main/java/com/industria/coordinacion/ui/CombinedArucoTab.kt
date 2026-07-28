@@ -16,6 +16,7 @@ fun CombinedArucoTab(
     onGenerateAruco: (String) -> Unit = {},
     onUseWithLaser: (String) -> Unit = {},
     onArucoDetected: (DetectedArUco) -> Unit = {},
+    enabled: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     var selectedSubTab by remember { mutableStateOf(0) }
@@ -45,10 +46,10 @@ fun CombinedArucoTab(
         // Contenido del sub-tab
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
             when (selectedSubTab) {
-                0 -> ArucoGeneratorTab(onGenerateAruco, onUseWithLaser)
+                0 -> ArucoGeneratorTab(onGenerateAruco, onUseWithLaser, enabled = enabled)
                 1 -> ArUcoDetectionTab(onArucoDetected = { aruco ->
                     onArucoDetected(aruco)
-                })
+                }, enabled = enabled)
             }
         }
     }

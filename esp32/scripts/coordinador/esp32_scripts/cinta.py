@@ -1,4 +1,4 @@
-import tkinter as tk  # hace import de tkinter para GUI
+import tkinter as tk
 from tkinter import ttk, messagebox  # hace import de widgets ttk y messagebox
 import serial  # hace import de pyserial para comunicación por COM
 import time  # hace import para pausas y timeouts
@@ -15,6 +15,25 @@ BYTESIZE = serial.SEVENBITS  # hace configurar tamaño de byte
 PARITY = serial.PARITY_EVEN  # hace configurar paridad
 STOPBITS = serial.STOPBITS_TWO  # hace configurar bits de parada
 READ_INTERVAL_MS = 200  # hace intervalo de lectura en ms
+
+# --- Estructura de Comandos (Refactorizado) ---
+DELIVER_COMMANDS = {
+    (1, 1): "@00WD000900015B*", (1, 2): "@00WD0010000153*", (1, 3): "@00WD0011000152*", (1, 5): "@00WD0013000150*", (1, 6): "@00WD0014000157*",
+    (2, 1): "@00WD0009000258*", (2, 2): "@00WD0010000250*", (2, 3): "@00WD0011000251*", (2, 5): "@00WD0013000253*", (2, 6): "@00WD0014000254*",
+    (3, 1): "@00WD0009000359*", (3, 2): "@00WD0010000351*", (3, 3): "@00WD0011000350*", (3, 5): "@00WD0013000352*", (3, 6): "@00WD0014000355*",
+    (5, 1): "@00WD000900055F*", (5, 2): "@00WD0010000557*", (5, 3): "@00WD0011000556*", (5, 5): "@00WD0013000554*", (5, 6): "@00WD0014000553*",
+    (6, 1): "@00WD000900065C*", (6, 2): "@00WD0010000654*", (6, 3): "@00WD0011000655*", (6, 5): "@00WD0013000657*", (6, 6): "@00WD0014000650*",
+}
+
+FREE_STATION_COMMANDS = {
+    1: "@00WD004800015E*", 2: "@00WD004900015F*", 3: "@00WD0050000157*",
+    5: "@00WD0052000155*", 6: "@00WD0053000154*",
+}
+
+FREE_PALLET_COMMANDS = {
+    1: "@00WD000900995A*", 2: "@00WD0010009952*", 3: "@00WD0011009953*",
+    5: "@00WD0013009951*", 6: "@00WD0014009956*",
+}
 
 
 ser = None  # hace referencia al objeto serial.Serial
@@ -114,60 +133,12 @@ def send_deliver(estacion, pallet):
     if not is_serial_open or ser is None:
         messagebox.showerror("Error", "Puerto serial no conectado")
         return
-    # hace seleccionar el comando correcto según estación/pallet
-    if estacion == 1 and pallet == 1:
-        cmd = "@00WD000900015B*"
-    elif estacion == 1 and pallet == 2:
-        cmd = "@00WD0010000153*"
-    elif estacion == 1 and pallet == 3:
-        cmd = "@00WD0011000152*"
-    elif estacion == 1 and pallet == 5:
-        cmd = "@00WD0013000150*"
-    elif estacion == 1 and pallet == 6:
-        cmd = "@00WD0014000157*"
-    elif estacion == 2 and pallet == 1:
-        cmd = "@00WD0009000258*"
-    elif estacion == 2 and pallet == 2:
-        cmd = "@00WD0010000250*"
-    elif estacion == 2 and pallet == 3:
-        cmd = "@00WD0011000251*"
-    elif estacion == 2 and pallet == 5:
-        cmd = "@00WD0013000253*"
-    elif estacion == 2 and pallet == 6:
-        cmd = "@00WD0014000254*"
-    elif estacion == 3 and pallet == 1:
-        cmd = "@00WD0009000359*"
-    elif estacion == 3 and pallet == 2:
-        cmd = "@00WD0010000351*"
-    elif estacion == 3 and pallet == 3:
-        cmd = "@00WD0011000350*"
-    elif estacion == 3 and pallet == 5:
-        cmd = "@00WD0013000352*"
-    elif estacion == 3 and pallet == 6:
-        cmd = "@00WD0014000355*"
-    elif estacion == 5 and pallet == 1:
-        cmd = "@00WD000900055F*"
-    elif estacion == 5 and pallet == 2:
-        cmd = "@00WD0010000557*"
-    elif estacion == 5 and pallet == 3:
-        cmd = "@00WD0011000556*"
-    elif estacion == 5 and pallet == 5:
-        cmd = "@00WD0013000554*"
-    elif estacion == 5 and pallet == 6:
-        cmd = "@00WD0014000553*"
-    elif estacion == 6 and pallet == 1:
-        cmd = "@00WD000900065C*"
-    elif estacion == 6 and pallet == 2:
-        cmd = "@00WD0010000654*"
-    elif estacion == 6 and pallet == 3:
-        cmd = "@00WD0011000655*"
-    elif estacion == 6 and pallet == 5:
-        cmd = "@00WD0013000657*"
-    elif estacion == 6 and pallet == 6:
-        cmd = "@00WD0014000650*"
-    else:
+
+    cmd = DELIVER_COMMANDS.get((estacion, pallet))
+    if not cmd:
         messagebox.showwarning("Atención", "Combinación estación/pallet no válida")
         return
+
     try:
         append_log("--> " + cmd)  # hace registrar el envío
         ser.write((cmd + "\r\n\r\n").encode())  # hace enviar comando al PLC
@@ -181,34 +152,17 @@ def send_free(estacion, pallet):
     if not is_serial_open or ser is None:
         messagebox.showerror("Error", "Puerto serial no conectado")
         return
-    # hace determinar comando para liberar la estación
-    if estacion == 1:
-        cmd1 = "@00WD004800015E*"
-    elif estacion == 2:
-        cmd1 = "@00WD004900015F*"
-    elif estacion == 3:
-        cmd1 = "@00WD0050000157*"
-    elif estacion == 5:
-        cmd1 = "@00WD0052000155*"
-    elif estacion == 6:
-        cmd1 = "@00WD0053000154*"
-    else:
+
+    cmd1 = FREE_STATION_COMMANDS.get(estacion)
+    if not cmd1:
         messagebox.showwarning("Atención", "Estación no válida")
         return
-    # hace determinar comando para confirmar salida del pallet
-    if pallet == 1:
-        cmd2 = "@00WD000900995A*"
-    elif pallet == 2:
-        cmd2 = "@00WD0010009952*"
-    elif pallet == 3:
-        cmd2 = "@00WD0011009953*"
-    elif pallet == 5:
-        cmd2 = "@00WD0013009951*"
-    elif pallet == 6:
-        cmd2 = "@00WD0014009956*"
-    else:
+
+    cmd2 = FREE_PALLET_COMMANDS.get(pallet)
+    if not cmd2:
         messagebox.showwarning("Atención", "Pallet no válido")
         return
+
     try:
         append_log("--> " + cmd1)  # hace registrar y enviar cmd1
         ser.write((cmd1 + "\r\n\r\n").encode())

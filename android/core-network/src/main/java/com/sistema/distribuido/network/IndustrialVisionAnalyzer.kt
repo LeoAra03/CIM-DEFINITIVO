@@ -17,9 +17,7 @@ import org.opencv.core.Mat
 import org.opencv.core.Point
 import org.opencv.imgproc.Imgproc
 import org.opencv.objdetect.ArucoDetector
-import org.opencv.objdetect.Dictionary
 import org.opencv.objdetect.Objdetect
-import java.nio.ByteBuffer
 
 /**
  * ANALIZADOR INDUSTRIAL: ArUco + QR
@@ -27,12 +25,14 @@ import java.nio.ByteBuffer
  */
 class IndustrialVisionAnalyzer(
     private val visionMode: VisionMode = VisionMode.ARUCO,
+    private val arucoDictionary: ArucoDictionary = ArucoDictionary.DEFAULT,
+    private val yoloDetector: YoloTfliteDetector? = null,
     private val onArucoDetected: (List<ArucoResult>) -> Unit,
     private val onQrDetected: (String) -> Unit,
     private val onYoloDetected: (List<YoloResult>) -> Unit = {}
 ) : ImageAnalysis.Analyzer {
 
-    data class ArucoResult(val id: Int, val corners: Mat, val center: Point)
+    data class ArucoResult(val id: Int, val corners: Mat, val center: Point, val dictionary: ArucoDictionary)
     data class YoloResult(val label: String, val confidence: Double, val box: Rect)
 
     sealed class VisionMode {
@@ -40,17 +40,17 @@ class IndustrialVisionAnalyzer(
         object YOLO : VisionMode()
     }
 
+    private val arucoDetector: ArucoDetector
+
     init {
         if (!OpenCVLoader.initDebug()) {
             Log.e("IndustrialVision", "✗ No se pudo inicializar OpenCV")
         } else {
             Log.d("IndustrialVision", "✓ OpenCV inicializado correctamente")
         }
+        arucoDetector = ArucoDetector(Objdetect.getPredefinedDictionary(arucoDictionary.opencvConstant))
     }
 
-    private val arucoDictionary = Objdetect.getPredefinedDictionary(Objdetect.DICT_4X4_50)
-    private val arucoDetector = ArucoDetector(arucoDictionary)
-    
     private val qrScanner = BarcodeScanning.getClient(
         BarcodeScannerOptions.Builder()
             .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
@@ -62,7 +62,7 @@ class IndustrialVisionAnalyzer(
     @androidx.annotation.OptIn(androidx.camera.core.ExperimentalGetImage::class)
     override fun analyze(imageProxy: ImageProxy) {
         val currentTime = System.currentTimeMillis()
-        if (currentTime - lastProcessTime < 200) { // ~5 FPS
+        if (currentTime - lastProcessTime < 200) {
             imageProxy.close()
             return
         }
@@ -70,7 +70,6 @@ class IndustrialVisionAnalyzer(
 
         val mediaImage = imageProxy.image
         if (mediaImage != null) {
-            // 1. Detección de QR (ML Kit)
             val inputImage = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
             qrScanner.process(inputImage)
                 .addOnSuccessListener { barcodes ->
@@ -79,15 +78,20 @@ class IndustrialVisionAnalyzer(
                     }
                 }
 
-            // 2. Detección de ArUco o YOLO (OpenCV)
             try {
-                // Convertir ImageProxy a Bitmap (usando el método nativo de CameraX 1.3+)
                 val bitmap = imageProxy.toBitmap()
                 val mat = Mat()
                 Utils.bitmapToMat(bitmap, mat)
 
                 if (visionMode == VisionMode.YOLO) {
-                    val yoloResults = detectYolo(mat)
+                    val yoloResults = if (yoloDetector?.isReady() == true) {
+                        val bitmap = imageProxy.toBitmap()
+                        yoloDetector.detect(bitmap).map {
+                            YoloResult(it.label, it.confidence.toDouble(), it.box)
+                        }
+                    } else {
+                        detectYolo(mat)
+                    }
                     if (yoloResults.isNotEmpty()) {
                         onYoloDetected(yoloResults)
                     }
@@ -110,11 +114,8 @@ class IndustrialVisionAnalyzer(
                             val id = idArray[0].toInt()
 
                             val cornerMat = corners[i]
-
-                            // Calcular centro
                             var sumX = 0.0
                             var sumY = 0.0
-                            // cornerMat es 1x4 CV_32FC2
                             for (j in 0 until 4) {
                                 val ptArray = DoubleArray(2)
                                 cornerMat.get(0, j, ptArray)
@@ -122,8 +123,7 @@ class IndustrialVisionAnalyzer(
                                 sumY += ptArray[1]
                             }
                             val center = Point(sumX / 4.0, sumY / 4.0)
-
-                            results.add(ArucoResult(id, cornerMat, center))
+                            results.add(ArucoResult(id, cornerMat, center, arucoDictionary))
                         }
                         onArucoDetected(results)
                     }
@@ -177,40 +177,68 @@ class IndustrialVisionAnalyzer(
     }
 
     companion object {
+        private var openCvReady = false
+
+        private fun ensureOpenCv(): Boolean {
+            if (!openCvReady) {
+                openCvReady = OpenCVLoader.initDebug()
+            }
+            return openCvReady
+        }
+
         /**
-         * Genera una imagen ArUco real usando OpenCV
-         * @param markerId ID del marcador (0-99 para DICT_4X4_50)
-         * @param sizePixels Tamaño de la imagen en píxeles (recomendado 250-500)
-         * @return Bitmap con el marcador ArUco generado
+         * Genera un marcador ArUco con diccionario configurable.
+         * @param markerId ID del marcador (validado según diccionario)
+         * @param sizePixels Tamaño en píxeles (recomendado 250-500)
+         * @param dictionary Diccionario ArUco (default DICT_4X4_50)
          */
-        fun generateArucoMarker(markerId: Int, sizePixels: Int = 250): Bitmap? {
+        fun generateArucoMarker(
+            markerId: Int,
+            sizePixels: Int = 250,
+            dictionary: ArucoDictionary = ArucoDictionary.DEFAULT
+        ): Bitmap? {
             return try {
-                if (!OpenCVLoader.initDebug()) {
+                if (!ensureOpenCv()) {
                     Log.e("ArucoGenerator", "OpenCV no inicializado")
                     return null
                 }
 
-                // Crear diccionario y generar marcador
-                val dictionary = Objdetect.getPredefinedDictionary(Objdetect.DICT_4X4_50)
+                val validId = dictionary.clampId(markerId)
+                val pixelSize = sizePixels.coerceIn(100, 2000)
+                val dict = Objdetect.getPredefinedDictionary(dictionary.opencvConstant)
                 val markerImage = Mat()
-                
-                // Validar que el ID esté dentro del rango válido para DICT_4X4_50 (0-49)
-                val validId = if (markerId > 49) 49 else markerId
-                
-                Objdetect.generateImageMarker(dictionary, validId, sizePixels, markerImage, 1)
 
-                // Convertir Mat a Bitmap
-                val bitmap = Bitmap.createBitmap(sizePixels, sizePixels, Bitmap.Config.ARGB_8888)
+                Objdetect.generateImageMarker(dict, validId, pixelSize, markerImage, 1)
+
+                val bitmap = Bitmap.createBitmap(pixelSize, pixelSize, Bitmap.Config.ARGB_8888)
                 Utils.matToBitmap(markerImage, bitmap)
-                
+
                 markerImage.release()
-                Log.d("ArucoGenerator", "✓ Marcador $validId generado ($sizePixels x $sizePixels)")
-                
+                Log.d("ArucoGenerator", "✓ Marcador $validId (${dictionary.label}) ${pixelSize}x${pixelSize}px")
+
                 bitmap
             } catch (e: Exception) {
                 Log.e("ArucoGenerator", "Error generando ArUco: ${e.message}")
                 null
             }
+        }
+
+        /** Genera marcador a partir de tamaño físico en mm. */
+        fun generateArucoMarkerMm(
+            markerId: Int,
+            sizeMm: Int,
+            dictionary: ArucoDictionary = ArucoDictionary.DEFAULT,
+            dpi: Int = 96
+        ): Bitmap? {
+            val pixels = dictionary.mmToPixels(sizeMm, dpi)
+            return generateArucoMarker(markerId, pixels, dictionary)
+        }
+
+        /** Convierte Bitmap ArUco a PNG base64 para envío al láser/coordinador. */
+        fun bitmapToPngBase64(bitmap: Bitmap): String {
+            val stream = java.io.ByteArrayOutputStream()
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+            return android.util.Base64.encodeToString(stream.toByteArray(), android.util.Base64.NO_WRAP)
         }
     }
 }

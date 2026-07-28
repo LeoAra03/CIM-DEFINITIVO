@@ -34,3 +34,6 @@ project(":app-manufactura").projectDir = file("../android/apps/app-manufactura/a
 
 include(":app-almacen")
 project(":app-almacen").projectDir = file("../android/apps/app-almacen/app")
+
+include(":wear-coordinador")
+project(":wear-coordinador").projectDir = file("../android/apps/wear-coordinador/app")

@@ -1,6 +1,6 @@
 import socket
 import time
-import sys
+import argparse
 
 """
 SISTEMA DE CONTROL MAESTRO ESP32 - CIM V2.0
@@ -48,19 +48,24 @@ class ESP32Controller:
         return self.send_command("STOP*")
 
 if __name__ == "__main__":
-    # Ejemplo de ejecución
-    if len(sys.argv) < 3:
-        print("Uso: python esp32_master_controller.py <IP_ESP32> <COMANDO/PALLET_ID>")
-        sys.exit(1)
+    parser = argparse.ArgumentParser(
+        description="SISTEMA DE CONTROL MAESTRO ESP32 - CIM V2.0",
+        formatter_class=argparse.RawTextHelpFormatter
+    )
+    parser.add_argument("ip", help="La dirección IP del ESP32 de destino.")
+    parser.add_argument("action", help="La acción a realizar:\n"
+                                     "- Un ID de pallet (ej. '1', '2') para ejecutar DELIVER.\n"
+                                     "- 'STOP' para una parada de emergencia.\n"
+                                     "- Cualquier otro string como un comando directo.")
+    parser.add_argument("-p", "--port", type=int, default=80, help="El puerto del ESP32 (default: 80).")
+    
+    args = parser.parse_args()
 
-    ip_target = sys.argv[1]
-    action = sys.argv[2]
+    controller = ESP32Controller(args.ip, args.port)
 
-    controller = ESP32Controller(ip_target)
-
-    if action.isdigit():
-        controller.deliver_pallet(action)
-    elif action == "STOP":
+    if args.action.isdigit():
+        controller.deliver_pallet(args.action)
+    elif args.action.upper() == "STOP":
         controller.emergency_stop()
     else:
-        controller.send_command(action)
+        controller.send_command(args.action)

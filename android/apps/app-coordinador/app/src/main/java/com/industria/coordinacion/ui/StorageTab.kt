@@ -21,6 +21,7 @@ import com.sistema.distribuido.network.prefecto.IndustrialStatusRow
 @Composable
 fun StorageTab(
     onStorageCommand: (String) -> Unit,
+    enabled: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -29,7 +30,7 @@ fun StorageTab(
     ) {
         item {
             IndustrialCard("Gestión Central de Almacén", Icons.Default.Inventory) {
-                IndustrialActionButton(texto = "Reseteo General Racks", icono = Icons.Default.RestartAlt, colorFondo = IndustrialTheme.Error, onClick = { onStorageCommand("RESET_ALL") })
+                IndustrialActionButton(texto = "Reseteo General Racks", icono = Icons.Default.RestartAlt, colorFondo = IndustrialTheme.Error, enabled = enabled, onClick = { onStorageCommand("RESET_ALL") })
                 Spacer(Modifier.height(8.dp))
                 IndustrialStatusRow("Capacidad Total", "18/18 POSICIONES", true)
             }
@@ -49,8 +50,8 @@ fun StorageTab(
                         val pos2 = rowIdx * 6 + colGroupIdx * 2 + 2
                         
                         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            StorageUnit(id = pos1, onCommand = onStorageCommand)
-                            StorageUnit(id = pos2, onCommand = onStorageCommand)
+                            StorageUnit(id = pos1, onCommand = onStorageCommand, enabled = enabled)
+                            StorageUnit(id = pos2, onCommand = onStorageCommand, enabled = enabled)
                         }
                     }
                 }
@@ -79,7 +80,7 @@ fun StorageTab(
 }
 
 @Composable
-private fun StorageUnit(id: Int, onCommand: (String) -> Unit) {
+private fun StorageUnit(id: Int, onCommand: (String) -> Unit, enabled: Boolean) {
     var expanded by remember { mutableStateOf(false) }
     
     Box(
@@ -88,7 +89,7 @@ private fun StorageUnit(id: Int, onCommand: (String) -> Unit) {
             .height(60.dp)
             .background(IndustrialTheme.Tarjeta, androidx.compose.foundation.shape.RoundedCornerShape(8.dp))
             .border(1.dp, IndustrialTheme.Borde, androidx.compose.foundation.shape.RoundedCornerShape(8.dp))
-            .clickable { expanded = !expanded },
+            .clickable(enabled = enabled) { expanded = !expanded },
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -101,9 +102,9 @@ private fun StorageUnit(id: Int, onCommand: (String) -> Unit) {
                 Card(colors = CardDefaults.cardColors(containerColor = IndustrialTheme.Tarjeta)) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Text("ACCIONES POSICIÓN $id", color = Color.White, fontWeight = FontWeight.Bold)
-                        IndustrialActionButton(texto = "Almacenar (STO)", icono = Icons.Default.AddBox, onClick = { onCommand("STO:$id"); expanded = false })
-                        IndustrialActionButton(texto = "Liberar (FREE)", icono = Icons.Default.Output, colorFondo = IndustrialTheme.Advertencia, onClick = { onCommand("FREE:$id"); expanded = false })
-                        IndustrialActionButton(texto = "Verificar (CHK)", icono = Icons.Default.Search, colorFondo = IndustrialTheme.Secundario, onClick = { onCommand("CHK:$id"); expanded = false })
+                        IndustrialActionButton(texto = "Almacenar (STO)", icono = Icons.Default.AddBox, enabled = enabled, onClick = { onCommand("STO:$id"); expanded = false })
+                        IndustrialActionButton(texto = "Liberar (FREE)", icono = Icons.Default.Output, colorFondo = IndustrialTheme.Advertencia, enabled = enabled, onClick = { onCommand("FREE:$id"); expanded = false })
+                        IndustrialActionButton(texto = "Verificar (CHK)", icono = Icons.Default.Search, colorFondo = IndustrialTheme.Secundario, enabled = enabled, onClick = { onCommand("CHK:$id"); expanded = false })
                     }
                 }
             }

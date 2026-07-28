@@ -45,6 +45,7 @@ class MainActivity : ComponentActivity() {
     private var bluetoothManager: BluetoothHardwareManager? = null
     private var sppManager: BluetoothSppManager? = null
     private var tcpServer: TcpServer? = null
+    private var nsdPublisher: CimNsdPublisher? = null
     private lateinit var permissionLauncher: ActivityResultLauncher<Array<String>>
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -87,6 +88,8 @@ class MainActivity : ComponentActivity() {
             } catch (_: Exception) {}
         })
         tcpServer = TcpServer(8888)
+        nsdPublisher = CimNsdPublisher(this)
+        TlsSocketHelper.enabled = CimProtocol.USE_TLS
         tcpServer?.onMessageReceived = { ip, data ->
             lifecycleScope.launch(Dispatchers.IO) {
                 try {
@@ -147,11 +150,13 @@ class MainActivity : ComponentActivity() {
             Surface(Modifier.fillMaxSize()) {
                 val startServerAction: () -> Unit = {
                     tcpServer?.start()
+                    nsdPublisher?.start { msg -> vm.log(msg) }
                     sppManager?.startServer()
                     lifecycleScope.launch { vm.startTcpServer() }
                 }
                 val stopServerAction: () -> Unit = {
                     tcpServer?.stop()
+                    nsdPublisher?.stop()
                     sppManager?.stopServer()
                     lifecycleScope.launch { vm.stopTcpServer() }
                 }
@@ -405,6 +410,11 @@ fun CoordinatorMasterScreen(
     var selectedTabIndex by remember { mutableStateOf(state.currentTabIndex) }
     val scope = rememberCoroutineScope()
     var showAutomation by remember { mutableStateOf(false) }
+    val isOperationalReady by remember {
+        derivedStateOf {
+            state.networkState.isServerRunning && state.networkState.totalConnected > 0 && state.networkState.pendingRequestCount == 0
+        }
+    }
 
     val tabs = listOf(
         TabItem("EXEC", Icons.Default.Dashboard, 0),
@@ -423,7 +433,7 @@ fun CoordinatorMasterScreen(
         titulo = "CIM HUB v6.0",
         subtitulo = "SISTEMA DE COORDINACIÓN GLOBAL",
         actions = {
-            IconButton(onClick = { showAutomation = true }) {
+            IconButton(onClick = { showAutomation = true }, enabled = isOperationalReady) {
                 Icon(Icons.Default.Terminal, "Consola de automatización", tint = IndustrialTheme.Primario)
             }
         },
@@ -484,7 +494,8 @@ fun CoordinatorMasterScreen(
                                 Button(
                                     onClick = { vm.triggerEmergencyStop() },
                                     colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
-                                    modifier = Modifier.weight(1f).height(52.dp)
+                                    modifier = Modifier.weight(1f).height(52.dp),
+                                    enabled = isOperationalReady
                                 ) {
                                     Icon(Icons.Default.Warning, contentDescription = null)
                                     Spacer(Modifier.width(8.dp))
@@ -501,7 +512,8 @@ fun CoordinatorMasterScreen(
                                 }
                                 OutlinedButton(
                                     onClick = { showGlobalActions = true },
-                                    modifier = Modifier.weight(1f).height(52.dp)
+                                    modifier = Modifier.weight(1f).height(52.dp),
+                                    enabled = isOperationalReady
                                 ) {
                                     Icon(Icons.Default.Settings, contentDescription = null)
                                     Spacer(Modifier.width(8.dp))
@@ -552,23 +564,25 @@ fun CoordinatorMasterScreen(
                             }
                         }
                     }
-                    1 -> SystemTab(state.cintaState, { f, t -> vm.sendCintaCommand(f, t) }, { f, t -> vm.sendFreeCommand(f, t) }, { scope.launch { vm.connectCinta() } }, { vm.disconnectCinta() }, { vm.resetCinta() })
+                    1 -> SystemTab(state.cintaState, { f, t -> vm.sendCintaCommand(f, t) }, { f, t -> vm.sendFreeCommand(f, t) }, { scope.launch { vm.connectCinta() } }, { vm.disconnectCinta() }, { vm.resetCinta() }, enabled = isOperationalReady)
                     2 -> RobotLaserTab(
                         { vm.sendRobotCommand(it) },
                         { command -> if (command == "LASER_LOAD") onLaserLoad() else vm.sendLaserCommand(command) },
                         state.qcState,
                         { vm.startQcProgram(it) },
                         { vm.stopQcProgram(it) },
-                        currentGcodeFile
+                        currentGcodeFile,
+                        enabled = isOperationalReady
                     )
                     3 -> CombinedArucoTab(
                         { vm.generateAruco(it) },
                         { vm.sendLaserCommand(it) },
-                        { vm.handleArucoDetected(it) }
+                        { vm.handleArucoDetected(it) },
+                        enabled = isOperationalReady
                     )
-                    4 -> TrackingTab(state.trackingState, { vm.startTracking() }, { vm.stopTracking() }, onExportCsv)
-                    5 -> NetworkTab(state.networkState, onStartServer, onStopServer, { vm.authorizeDevice(it) }, { vm.rejectDevice(it) }, { vm.disconnectDevice(it) }, { vm.sendNetworkMessage(it) }, onRefreshBluetooth, onToggleAutoMode, { vm.forceIdentify(it) }, { vm.reconnectDevice(it) })
-                    6 -> StorageTab({ vm.sendStorageCommand(it) })
+                    4 -> TrackingTab(state.trackingState, { vm.startTracking() }, { vm.stopTracking() }, onExportCsv, enabled = isOperationalReady)
+                    5 -> NetworkTab(state.networkState, onStartServer, onStopServer, { vm.authorizeDevice(it) }, { vm.rejectDevice(it) }, { vm.disconnectDevice(it) }, { vm.sendNetworkMessage(it) }, onRefreshBluetooth, onToggleAutoMode, { vm.forceIdentify(it) }, { vm.reconnectDevice(it) }, enabled = isOperationalReady)
+                    6 -> StorageTab({ vm.sendStorageCommand(it) }, enabled = isOperationalReady)
                 }
             }
             
@@ -591,7 +605,8 @@ fun CoordinatorMasterScreen(
                         showGlobalActions = false
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = IndustrialTheme.Primario)
+                    colors = ButtonDefaults.buttonColors(containerColor = IndustrialTheme.Primario),
+                    enabled = isOperationalReady
                 ) {
                     Text("INICIAR PLANTA COMPLETA")
                 }
@@ -600,7 +615,8 @@ fun CoordinatorMasterScreen(
                         vm.calibrateGlobal()
                         showGlobalActions = false
                     },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = isOperationalReady
                 ) {
                     Text("CALIBRACIÓN GLOBAL")
                 }

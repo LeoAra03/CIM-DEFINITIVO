@@ -32,6 +32,7 @@ fun SystemTab(
     onConnectCinta: () -> Unit,
     onDisconnectCinta: () -> Unit,
     onResetCinta: () -> Unit,
+    enabled: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -45,14 +46,14 @@ fun SystemTab(
                     IndustrialActionButton(
                         texto = "Conectar", 
                         icono = Icons.Default.Bluetooth, 
-                        enabled = !state.isConnected,
+                            enabled = enabled && !state.isConnected,
                         modifier = Modifier.weight(1f),
                         onClick = onConnectCinta
                     )
                     IndustrialActionButton(
                         texto = "Cerrar", 
                         icono = Icons.Default.Close, 
-                        enabled = state.isConnected,
+                            enabled = enabled && state.isConnected,
                         colorFondo = IndustrialTheme.Error,
                         modifier = Modifier.weight(1f),
                         onClick = onDisconnectCinta
@@ -63,6 +64,7 @@ fun SystemTab(
                     texto = "Reset Sistema", 
                     icono = Icons.Default.Refresh, 
                     colorFondo = IndustrialTheme.Advertencia,
+                    enabled = enabled,
                     onClick = onResetCinta
                 )
             }
@@ -84,7 +86,7 @@ fun SystemTab(
                                 .height(36.dp)
                                 .background(if(state.isConnected) IndustrialTheme.Primario.copy(alpha = 0.1f) else Color.DarkGray.copy(alpha = 0.1f), androidx.compose.foundation.shape.RoundedCornerShape(4.dp))
                                 .border(1.dp, if(state.isConnected) IndustrialTheme.Primario.copy(alpha = 0.3f) else Color.Transparent, androidx.compose.foundation.shape.RoundedCornerShape(4.dp))
-                                .clickable(enabled = state.isConnected) { onDeliverCommand(from, to) },
+                                .clickable(enabled = enabled && state.isConnected) { onDeliverCommand(from, to) },
                             contentAlignment = Alignment.Center
                         ) {
                             Text("$from>$to", fontSize = 8.sp, color = if(state.isConnected) IndustrialTheme.Primario else Color.Gray, fontWeight = FontWeight.Bold)
@@ -110,7 +112,7 @@ fun SystemTab(
                             icono = Icons.Default.LockOpen,
                             modifier = Modifier.weight(1f).height(40.dp),
                             colorFondo = IndustrialTheme.Advertencia.copy(alpha = 0.8f),
-                            enabled = state.isConnected,
+                            enabled = enabled && state.isConnected,
                             onClick = { onFreeCommand(from, to) }
                         )
                     }

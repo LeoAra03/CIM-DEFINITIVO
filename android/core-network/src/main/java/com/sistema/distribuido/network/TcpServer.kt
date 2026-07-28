@@ -9,6 +9,7 @@ import com.sistema.distribuido.network.AuthorizationManager
 import com.sistema.distribuido.network.protocol.AppType
 import com.sistema.distribuido.network.protocol.CimMessage
 import com.sistema.distribuido.network.protocol.CimProtocol
+import com.sistema.distribuido.network.protocol.CimTransportCodec
 
 class TcpServer(private val port: Int, private val collisionPolicy: CollisionPolicy = CollisionPolicy.PREFER_NEW) {
     private var serverSocket: ServerSocket? = null
@@ -191,10 +192,16 @@ class TcpServer(private val port: Int, private val collisionPolicy: CollisionPol
             clients.values.forEach { socket ->
                 try {
                     val writer = PrintWriter(BufferedWriter(OutputStreamWriter(socket.getOutputStream())), true)
-                    writer.println(msg)
+                    writer.println(wrapOutgoing(msg))
                 } catch (e: Exception) {}
             }
         }
+    }
+
+    private fun wrapOutgoing(message: String): String {
+        return if (CimProtocol.USE_CRC_V2 && !message.startsWith(CimTransportCodec.PREFIX)) {
+            CimTransportCodec.wrap(message)
+        } else message
     }
 
     private fun broadcastClientList() {
@@ -236,7 +243,7 @@ class TcpServer(private val port: Int, private val collisionPolicy: CollisionPol
             clients[connId]?.let { socket ->
                 try {
                     val writer = PrintWriter(BufferedWriter(OutputStreamWriter(socket.getOutputStream())), true)
-                    writer.println(msg)
+                    writer.println(wrapOutgoing(msg))
                     return true
                 } catch (e: Exception) {
                     try { Log.e("TcpServer", "Error enviando a $connId: ${e.message}", e) } catch (_: Exception) {}

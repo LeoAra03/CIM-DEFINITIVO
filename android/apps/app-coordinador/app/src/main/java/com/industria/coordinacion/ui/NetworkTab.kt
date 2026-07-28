@@ -266,8 +266,10 @@ fun NetworkTab(
                             Column(Modifier.weight(1f)) {
                                 Text(device.name, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                                 Text(device.mac, color = Color.Gray, fontSize = 10.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
+                                val stationUuidText = device.stationUuid.ifBlank { "no informado" }
+                                val versionText = device.version.ifBlank { "?" }
                                 Text(
-                                    "UUID: ${device.stationUuid.ifBlank { "no informado"} · v${device.version.ifBlank { "?" }}",
+                                    "UUID: $stationUuidText · v$versionText",
                                     color = IndustrialTheme.TextoSecundario,
                                     fontSize = 10.sp
                                 )

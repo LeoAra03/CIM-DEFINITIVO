@@ -21,11 +21,23 @@
 #define STATION_TYPE "ROBOT_ARM"
 #endif
 
+#ifndef STATION_UUID
+#define STATION_UUID "CIM-ST-MAN-X2"
+#endif
+
+#define FIRMWARE_VERSION "1.0.0"
+#define HARDWARE_MODEL "Wemos D1 R32"
+
 // Definir CIM_IS_PLC antes del include en firmware PLC
 #ifdef CIM_IS_PLC
   static const char* const kStationType = "PLC_CONTROLLER";
+  static const char* const kCapabilities = "BLE_NUS,RELAY,PROXIMITY_SENSOR";
+#elif defined(CIM_HAS_SCORBOT)
+  static const char* const kStationType = STATION_TYPE;
+  static const char* const kCapabilities = "BLE_NUS,UART_SCORBOT,ARUCO_LASER";
 #else
   static const char* const kStationType = STATION_TYPE;
+  static const char* const kCapabilities = "BLE_NUS";
 #endif
 
 #define SERVICE_UUID           "6E400001-B5A3-F393-E0A9-E50E24DCCA9E"
@@ -100,7 +112,8 @@ static void handleCommand(String raw) {
   Serial.println(data);
 
   if (data.indexOf("IDENTIFY") >= 0) {
-    sendBleResponse("IDENTIFIED|" + String(kStationType) + "|1.0");
+    sendBleResponse("CIM_ID|" + String(DEVICE_NAME) + "|" + String(STATION_UUID) + "|" +
+                    String(kStationType) + "|" + HARDWARE_MODEL + "|" + FIRMWARE_VERSION + "|" + kCapabilities);
     blinkLed(2);
     return;
   }

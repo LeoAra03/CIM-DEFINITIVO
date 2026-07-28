@@ -24,6 +24,8 @@ data class DeviceInfo(
     var mac: String = "",
     var appType: AppType = AppType.UNKNOWN,
     val stationUuid: String = "",
+    val hardwareModel: String = "",
+    val capabilities: String = "",
     var rssi: Int = 0,
     @Volatile var lastSeen: Long = System.currentTimeMillis(),
     @Volatile var authorized: Boolean = false,

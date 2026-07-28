@@ -20,6 +20,7 @@ import androidx.core.content.ContextCompat
 import com.sistema.distribuido.network.protocol.CimMessageBuilder
 import com.sistema.distribuido.network.protocol.CimMessage
 import com.sistema.distribuido.network.protocol.CommandType
+import com.sistema.distribuido.network.protocol.AppType
 import com.sistema.distribuido.network.protocol.CimProtocol
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
@@ -391,7 +392,49 @@ class BluetoothHardwareManager(
             val fullMessage = buffer.toString().trim()
             buffer.clear()
             onDataReceived?.invoke(mac, fullMessage)
+            handleFirmwareIdentity(gatt, mac, fullMessage)
             handleIdentifyHandshake(gatt, mac, fullMessage)
+        }
+    }
+
+    /** Registers a physical Wemos station after its CIM_ID firmware response. */
+    private fun handleFirmwareIdentity(gatt: BluetoothGatt, mac: String, fullMessage: String) {
+        val marker = "|RESP|CIM_ID|"
+        val payload = fullMessage.substringAfter(marker, missingDelimiterValue = "")
+        if (payload.isBlank()) return
+        val parts = payload.split("|")
+        if (parts.size < 6) {
+            onLog("⚠ CIM_ID incompleto desde $mac")
+            return
+        }
+        val deviceName = parts[0].take(80)
+        val stationUuid = parts[1].take(80)
+        val stationType = parts[2]
+        val model = parts[3].take(80)
+        val version = parts[4].take(40)
+        val capabilities = parts[5].take(240)
+        val appType = when (stationType) {
+            "PLC_CONTROLLER" -> AppType.PLC
+            "ROBOT_ARM" -> AppType.MANUFACTURA
+            "QUALITY_STATION" -> AppType.CALIDAD
+            "STORAGE_STATION" -> AppType.ALMACEN
+            else -> AppType.UNKNOWN
+        }
+        scope.launch {
+            val info = DeviceInfo(
+                ip = "",
+                nombre = deviceName,
+                tipo = DeviceType.UNKNOWN,
+                mac = mac,
+                appType = appType,
+                stationUuid = stationUuid,
+                hardwareModel = model,
+                capabilities = capabilities,
+                version = version,
+                isConnected = true
+            )
+            GlobalDeviceRegistry.registry.register(mac, info)
+            onLog("✓ CIM_ID: $deviceName [$stationUuid] $model v$version")
         }
     }
 

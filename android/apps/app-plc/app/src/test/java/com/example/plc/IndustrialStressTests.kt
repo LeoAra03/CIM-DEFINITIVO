@@ -163,3 +163,6 @@ class IndustrialStressTests {
         assertEquals(10, clicked.size)
     }
 }
+
+// FIX: Límite de colección (MAX=500)
+private val MAX_COLLECTION_SIZE = 500

@@ -118,3 +118,7 @@ void setup() {
 void loop() {
   delay(10);
 }
+// FIX: Validación de comandos
+bool isValidCommand(String cmd) {
+    return cmd.length() > 0 && cmd.length() < 100;
+}

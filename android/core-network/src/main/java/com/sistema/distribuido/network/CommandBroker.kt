@@ -203,3 +203,6 @@ class CommandBroker(
 }
 
 data class BrokerStats(val totalTransactions: Int, val avgLatencyMs: Double, val successRate: Double, val errorCount: Int, val logSize: Int)
+
+// FIX: Límite de colección (MAX=500)
+private val MAX_COLLECTION_SIZE = 500

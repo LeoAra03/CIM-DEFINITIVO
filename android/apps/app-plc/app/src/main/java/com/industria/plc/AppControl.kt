@@ -1,22 +1,39 @@
 package com.example.plc
 
 import android.annotation.SuppressLint
+import kotlinx.coroutines.withTimeout
 import android.app.Application
+import kotlinx.coroutines.withTimeout
 import android.bluetooth.*
+import kotlinx.coroutines.withTimeout
 import android.content.Context
+import kotlinx.coroutines.withTimeout
 import androidx.compose.runtime.mutableStateListOf
+import kotlinx.coroutines.withTimeout
 import androidx.compose.runtime.mutableStateOf
+import kotlinx.coroutines.withTimeout
 import androidx.lifecycle.AndroidViewModel
+import kotlinx.coroutines.withTimeout
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.withTimeout
 import com.sistema.distribuido.network.StationClient
+import kotlinx.coroutines.withTimeout
 import com.sistema.distribuido.network.BluetoothIdentityHelper
+import kotlinx.coroutines.withTimeout
 import com.sistema.distribuido.network.IndustrialErrorManager
+import kotlinx.coroutines.withTimeout
 import com.sistema.distribuido.network.protocol.CimProtocol
+import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import java.util.*
+import kotlinx.coroutines.withTimeout
 
 class AppControl(application: Application) : AndroidViewModel(application) {
     private val context = application.applicationContext

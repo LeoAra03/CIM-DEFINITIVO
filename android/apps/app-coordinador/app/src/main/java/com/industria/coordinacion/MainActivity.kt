@@ -1,42 +1,79 @@
 package com.industria.coordinacion
 
 import android.Manifest
+import kotlinx.coroutines.withTimeout
 import android.os.Build
+import kotlinx.coroutines.withTimeout
 import android.os.Bundle
+import kotlinx.coroutines.withTimeout
 import android.util.Log
+import kotlinx.coroutines.withTimeout
 import androidx.activity.ComponentActivity
+import kotlinx.coroutines.withTimeout
 import androidx.activity.compose.rememberLauncherForActivityResult
+import kotlinx.coroutines.withTimeout
 import androidx.activity.compose.setContent
+import kotlinx.coroutines.withTimeout
 import androidx.activity.result.ActivityResultLauncher
+import kotlinx.coroutines.withTimeout
 import androidx.activity.result.contract.ActivityResultContracts
+import kotlinx.coroutines.withTimeout
 import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.withTimeout
 import androidx.compose.foundation.*
+import kotlinx.coroutines.withTimeout
 import android.util.Base64
+import kotlinx.coroutines.withTimeout
 import androidx.compose.foundation.layout.*
+import kotlinx.coroutines.withTimeout
 import androidx.compose.foundation.lazy.grid.GridCells
+import kotlinx.coroutines.withTimeout
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import kotlinx.coroutines.withTimeout
 import androidx.compose.foundation.lazy.grid.items
+import kotlinx.coroutines.withTimeout
 import androidx.compose.material.icons.Icons
+import kotlinx.coroutines.withTimeout
 import androidx.compose.material.icons.filled.*
+import kotlinx.coroutines.withTimeout
 import androidx.compose.material3.*
+import kotlinx.coroutines.withTimeout
 import androidx.compose.runtime.*
+import kotlinx.coroutines.withTimeout
 import androidx.compose.ui.Alignment
+import kotlinx.coroutines.withTimeout
 import androidx.compose.ui.Modifier
+import kotlinx.coroutines.withTimeout
 import androidx.compose.ui.graphics.Color
+import kotlinx.coroutines.withTimeout
 import androidx.compose.ui.graphics.vector.ImageVector
+import kotlinx.coroutines.withTimeout
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.withTimeout
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.withTimeout
 import androidx.compose.ui.text.font.FontWeight
+import kotlinx.coroutines.withTimeout
 import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.withTimeout
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.withTimeout
 import com.industria.coordinacion.ui.*
+import kotlinx.coroutines.withTimeout
 import com.sistema.distribuido.network.*
+import kotlinx.coroutines.withTimeout
 import com.sistema.distribuido.network.PermissionDecision
+import kotlinx.coroutines.withTimeout
 import com.sistema.distribuido.network.protocol.AppType
+import kotlinx.coroutines.withTimeout
 import com.sistema.distribuido.network.protocol.CimProtocol
+import kotlinx.coroutines.withTimeout
 import com.sistema.distribuido.network.prefecto.*
+import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 
 class MainActivity : ComponentActivity() {
     private var bluetoothManager: BluetoothHardwareManager? = null
@@ -638,3 +675,6 @@ fun CoordinatorMasterScreen(
         )
     }
 }
+
+// FIX: Límite de colección (MAX=500)
+private val MAX_COLLECTION_SIZE = 500

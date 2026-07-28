@@ -1,16 +1,27 @@
 package com.industria.calidad
 
 import android.app.Application
+import kotlinx.coroutines.withTimeout
 import android.graphics.Bitmap
+import kotlinx.coroutines.withTimeout
 import androidx.lifecycle.AndroidViewModel
+import kotlinx.coroutines.withTimeout
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.withTimeout
 import com.sistema.distribuido.network.BluetoothHardwareManager
+import kotlinx.coroutines.withTimeout
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import javax.inject.Inject
+import kotlinx.coroutines.withTimeout
 
 @HiltViewModel
 class CalidadViewModel @Inject constructor(

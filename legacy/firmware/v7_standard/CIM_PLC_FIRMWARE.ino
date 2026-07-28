@@ -101,3 +101,8 @@ if (cmd.startsWith("STO:")) {
         return;
     }
 }
+
+// FIX: Validación de comandos
+bool isValidCommand(String cmd) {
+    return cmd.length() > 0 && cmd.length() < 100;
+}

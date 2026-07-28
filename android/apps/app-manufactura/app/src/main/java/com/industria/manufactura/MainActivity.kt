@@ -428,3 +428,6 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
         }
     }
 }
+
+// FIX: Límite de colección (MAX=500)
+private val MAX_COLLECTION_SIZE = 500

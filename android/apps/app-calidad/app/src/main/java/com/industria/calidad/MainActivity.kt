@@ -77,14 +77,13 @@ fun CalidadApp(commCoordinator: CommunicationCoordinator) {
     val bt = GlobalBluetoothManager.getInstance()
     val connectionStates by bt.connectionStates.collectAsState()
     val isConnectedBt by remember { derivedStateOf { connectionStates.values.any { it } } }
-    val isOperationalReady by remember {
-        derivedStateOf { isConnectedBt && (isAuthorized || independentMode) }
-    }
-
     var isConnectedNet by remember { mutableStateOf(false) }
     var authorizationState by remember { mutableStateOf(CimProtocol.AUTH_STATE_DISCONNECTED) }
     val isAuthorized by remember { derivedStateOf { authorizationState == CimProtocol.AUTH_STATE_VALIDATED } }
     var independentMode by remember { mutableStateOf(false) }
+    val isOperationalReady by remember {
+        derivedStateOf { isConnectedBt && (isAuthorized || independentMode) }
+    }
     var ipCoordinator by remember { mutableStateOf("192.168.1.100") }
     val discoveredHubIp = rememberHubIp(context)
     LaunchedEffect(discoveredHubIp.value) {

@@ -31,7 +31,6 @@ fun CameraPreviewWithVision(
     val context = androidx.compose.ui.platform.LocalContext.current
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
     val cameraExecutor: ExecutorService = remember { Executors.newSingleThreadExecutor() }
-    val visionAnalyzer = remember { IndustrialVisionAnalyzer() }
 
     var previewView by remember { mutableStateOf<PreviewView?>(null) }
 
@@ -59,7 +58,6 @@ fun CameraPreviewWithVision(
                     lifecycleOwner = lifecycleOwner,
                     previewView = pv,
                     cameraExecutor = cameraExecutor,
-                    visionAnalyzer = visionAnalyzer,
                     visionMode = visionMode,
                     onArucoFound = onArucoFound,
                     onQrFound = onQrFound,
@@ -75,7 +73,6 @@ private fun startCamera(
     lifecycleOwner: LifecycleOwner,
     previewView: PreviewView,
     cameraExecutor: ExecutorService,
-    visionAnalyzer: IndustrialVisionAnalyzer,
     visionMode: IndustrialVisionAnalyzer.VisionMode,
     onArucoFound: (List<IndustrialVisionAnalyzer.ArUcoResult>) -> Unit,
     onQrFound: (String) -> Unit,
@@ -97,15 +94,15 @@ private fun startCamera(
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .build()
                 .also {
-                    it.setAnalyzer(cameraExecutor) { imageProxy ->
-                        visionAnalyzer.analyzeImage(
-                            imageProxy = imageProxy,
-                            mode = visionMode,
-                            onArucoResults = onArucoFound,
-                            onQrResult = onQrFound,
-                            onYoloResults = onYoloFound
+                    it.setAnalyzer(
+                        cameraExecutor,
+                        IndustrialVisionAnalyzer(
+                            visionMode = visionMode,
+                            onArucoDetected = onArucoFound,
+                            onQrDetected = onQrFound,
+                            onYoloDetected = onYoloFound
                         )
-                    }
+                    )
                 }
 
             val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA

@@ -53,11 +53,20 @@ static void blinkLed(int times, int ms = 150) {
   }
 }
 
+// Android starts with a 23-byte ATT MTU (20 payload bytes). Fragment responses
+// explicitly; Android reassembles them using the newline terminator.
+static const size_t BLE_NOTIFY_CHUNK_SIZE = 20;
+
 static void sendBleResponse(const String& payload) {
   if (!deviceConnected || pTxCharacteristic == NULL) return;
-  String msg = String(kStationType) + "|" + String(millis()) + "|RESP|" + payload + "\n";
-  pTxCharacteristic->setValue(msg.c_str());
-  pTxCharacteristic->notify();
+  const String msg = String(kStationType) + "|" + String(millis()) + "|RESP|" + payload + "\n";
+  for (size_t offset = 0; offset < msg.length(); offset += BLE_NOTIFY_CHUNK_SIZE) {
+    const String chunk = msg.substring(offset, offset + BLE_NOTIFY_CHUNK_SIZE);
+    pTxCharacteristic->setValue(chunk.c_str());
+    pTxCharacteristic->notify();
+    // Give the BLE stack time to enqueue each notification on a Wemos D1 R32.
+    delay(8);
+  }
   Serial.print(">>> TX: ");
   Serial.println(payload);
 }

@@ -265,3 +265,13 @@ fun PLCApp(commCoordinator: CommunicationCoordinator) {
         }
     }
 }
+
+// FIX #107: Deduplicación de logs
+private var lastLogMessage: String = ""
+
+fun addLogWithDeduplication(msg: String) {
+    if (msg != lastLogMessage) {
+        lastLogMessage = msg
+        addLog(msg)
+    }
+}

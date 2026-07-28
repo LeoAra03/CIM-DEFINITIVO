@@ -40,3 +40,16 @@ class PlcStationManager(private val context: Context) {
         Log.d(TAG, "Cerrando PLC...")
     }
 }
+
+// FIX #82: Límite de logs para prevenir memory leak
+private val MAX_LOG_SIZE = 500
+
+private fun addLogWithLimit(logs: MutableList<String>, message: String) {
+    logs.add(message)
+    while (logs.size > MAX_LOG_SIZE) {
+        logs.removeAt(0)
+    }
+}
+
+// FIX #82: Límite de logs
+private val MAX_LOG_SIZE = 500

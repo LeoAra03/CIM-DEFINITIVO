@@ -105,3 +105,7 @@ tools/organize_workspace.ps1
 gradle-app.setting
 
 
+
+# --- Modelos y artefactos locales de ML ---
+*.pt
+*.tflite

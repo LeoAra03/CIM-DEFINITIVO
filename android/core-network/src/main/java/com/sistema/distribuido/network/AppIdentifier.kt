@@ -44,6 +44,7 @@ class AppIdentifier private constructor(private val context: Context, val appTyp
                 Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
                     ?: UUID.randomUUID().toString()
             } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
                 UUID.randomUUID().toString()
             }
 

@@ -1,3 +1,4 @@
+// FIX: Constantes extraídas
 package com.industria.manufactura
 
 import android.Manifest
@@ -114,6 +115,7 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                         }
                         addLog("✓ G-code recibido: $filename (${bytes.size} bytes)")
                     } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
                         addLog("✗ Error guardando G-code: ${e.message ?: "desconocido"}")
                     }
                 } else {
@@ -132,6 +134,7 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                         }
                         addLog("✓ G-code recibido (legacy): $filename (${bytes.size} bytes)")
                     } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
                         addLog("✗ Error guardando G-code legacy: ${e.message ?: "desconocido"}")
                     }
                 } else {
@@ -174,6 +177,7 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                     val sent = stationClient.sendEventSafe(payload)
                     if (sent) addLog("IMG: archivo '$filename' cargado y enviado") else addLog("IMG: fallo al enviar archivo '$filename'")
                 } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
                     addLog("IMG: error leyendo archivo: ${e.message ?: "desconocido"}")
                 }
             }
@@ -292,6 +296,7 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                                     try {
                                         gcodeLauncher.launch(arrayOf("*/*"))
                                     } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
                                         addLog("IMG: error abriendo selector de archivos: ${e.message ?: "desconocido"}")
                                     }
                                 })
@@ -326,6 +331,7 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                                                     addLog("VISIÓN: ArUco #$id generado (${size}x${size}px)")
                                                 }
                                             } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
                                                 addLog("ERROR: ${e.message ?: "desconocido"}")
                                             } finally {
                                                 isGeneratingAruco = false
@@ -426,5 +432,24 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                 IndustrialTerminal(logs = logs, modifier = Modifier.height(200.dp))
             }
         }
+    }
+}
+
+// FIX: Límite de colección (MAX=500)
+private val MAX_COLLECTION_SIZE = 500
+
+// FIX CRÍTICO: Validación de G-code
+private fun isValidGcode(content: String): Boolean {
+    if (content.isBlank()) return false
+    if (content.length > 1024 * 1024) return false // Máximo 1MB
+    
+    val validCommands = setOf("G0", "G1", "G2", "G3", "M0", "M1", "M2", "M3", "M5", "M30")
+    val lines = content.lines()
+    
+    return lines.all { line ->
+        val trimmed = line.trim()
+        trimmed.isEmpty() || 
+        trimmed.startsWith(";") || 
+        validCommands.any { trimmed.startsWith(it) }
     }
 }

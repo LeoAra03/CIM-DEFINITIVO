@@ -40,6 +40,7 @@ class DeviceCommandManager(private val onLog: (String) -> Unit) {
                     device?.estado = "BUSY"
                 }
             } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
                 onLog("ERR (Hardware) -> $deviceIp: ${e.message}")
                 DeviceRegistry.actualizarEstado(deviceIp, "ERROR")
             }

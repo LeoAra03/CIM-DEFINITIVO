@@ -1,8 +1,12 @@
 package com.example.test
 
 import org.junit.Test
+import org.junit.Before
+import org.junit.After
 
 import org.junit.Assert.*
+import org.junit.Before
+import org.junit.After
 
 /**
  * Example local unit test, which will execute on the development machine (host).

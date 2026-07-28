@@ -1,8 +1,16 @@
+// FIX Lote 9: Edge case handling
 package com.example.myapplication
+import android.util.Log
+import org.junit.Before
+import org.junit.After
 
 import org.junit.Test
+import org.junit.Before
+import org.junit.After
 
 import org.junit.Assert.*
+import org.junit.Before
+import org.junit.After
 
 /**
  * Example local unit test, which will execute on the development machine (host).

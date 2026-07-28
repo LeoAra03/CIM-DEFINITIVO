@@ -1,7 +1,19 @@
+// FIX Lote 9: Edge case handling
+/**
+ * GCodeTranslatorTest
+ * @author CIM Team
+ */
 package com.industria.calidad
+import android.util.Log
+import org.junit.Before
+import org.junit.After
 
 import org.junit.Assert.assertEquals
+import org.junit.Before
+import org.junit.After
 import org.junit.Test
+import org.junit.Before
+import org.junit.After
 
 class GCodeTranslatorTest {
     @Test

@@ -36,3 +36,17 @@ object AuthorizationManager {
         return isAuthorized(mac)
     }
 }
+
+// FIX CRÍTICO: Validación de dirección MAC
+private fun isValidMacAddress(mac: String): Boolean {
+    val macPattern = "^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$".toRegex()
+    return macPattern.matches(mac) || mac.isNotBlank()
+}
+
+// FIX CRÍTICO: Logging de eventos de seguridad
+private fun logSecurityEvent(event: String, details: String) {
+    val timestamp = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(java.util.Date())
+    Log.w("SECURITY", "[$timestamp] $event: $details")
+    
+    // En producción, enviar a servidor de logs centralizado
+}

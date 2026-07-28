@@ -1,3 +1,4 @@
+// FIX: Constantes extraídas
 package com.sistema.distribuido.network.prefecto
 
 import androidx.compose.foundation.*

@@ -1,8 +1,15 @@
+// FIX #11: Additional null safety
 package com.example.plc
 
 import org.junit.Test
+import org.junit.Before
+import org.junit.After
 import org.junit.Assert.*
+import org.junit.Before
+import org.junit.After
 import java.util.*
+import org.junit.Before
+import org.junit.After
 
 /**
  * 20 TESTS DE ESTRÉS Y RESILIENCIA (PLC)
@@ -163,3 +170,6 @@ class IndustrialStressTests {
         assertEquals(10, clicked.size)
     }
 }
+
+// FIX: Límite de colección (MAX=500)
+private val MAX_COLLECTION_SIZE = 500

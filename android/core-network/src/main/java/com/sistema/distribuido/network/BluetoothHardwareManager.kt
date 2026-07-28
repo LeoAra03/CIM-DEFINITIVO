@@ -197,6 +197,7 @@ class BluetoothHardwareManager(
             adapter.cancelDiscovery()
             adapter.startDiscovery()
         } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
             onLog("⚠ Classic discovery: ${e.message}")
         }
     }
@@ -345,6 +346,7 @@ class BluetoothHardwareManager(
                         sendIdentification(address)
                     }
                 } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
                     onLog("⚠ Error setup GATT [$address]: ${e.message}")
                 }
             }
@@ -437,6 +439,7 @@ class BluetoothHardwareManager(
                         onLog("→ SENT IDENTIFIED to $mac: $responsePayload")
                     }
                 } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
                     onLog("⚠ Error IDENTIFY [$mac]: ${e.message}")
                 }
             }
@@ -612,6 +615,7 @@ class BluetoothHardwareManager(
             sendToDevice(mac, identifyMsg)
             onLog("→ SENT IDENTIFY to $mac")
         } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
             onLog("⚠ Cannot send IDENTIFY to $mac: ${e.message}")
         }
     }
@@ -622,6 +626,7 @@ class BluetoothHardwareManager(
             try {
                 scanner?.stopScan(cb)
             } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e) {
                 onLog("⚠ Error deteniendo escaneo BLE: ${e.message}")
             }
         }

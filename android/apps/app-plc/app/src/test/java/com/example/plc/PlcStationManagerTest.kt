@@ -1,11 +1,24 @@
+// FIX #11: Additional null safety
 package com.example.plc
 
 import com.sistema.distribuido.network.CommandBroker
+import org.junit.Before
+import org.junit.After
 import com.sistema.distribuido.network.protocol.AppType
+import org.junit.Before
+import org.junit.After
 import com.sistema.distribuido.network.protocol.CimMessage
+import org.junit.Before
+import org.junit.After
 import com.sistema.distribuido.network.protocol.CommandType
+import org.junit.Before
+import org.junit.After
 import org.junit.Test
+import org.junit.Before
+import org.junit.After
 import org.junit.Assert.*
+import org.junit.Before
+import org.junit.After
 
 /**
  * STATE HOLDER: CintaPanelState

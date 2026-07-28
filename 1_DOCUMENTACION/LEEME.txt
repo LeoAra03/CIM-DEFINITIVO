@@ -1,0 +1,131 @@
+================================================================================
+                    CIM v6.0 - SISTEMA DE MANUFACTURA FLEXIBLE
+                         PAQUETE DE ENTREGA PORTABLE
+================================================================================
+
+FECHA: 2026-07-28
+VERSIÓN: 6.0 FINAL
+AUTOR: Leonardo Araya + Arena Agent
+
+================================================================================
+                              CONTENIDO DEL PAQUETE
+================================================================================
+
+CIM_V6_PAQUETE_ENTREGA/
+├── 1_DOCUMENTACION/
+│   ├── LEEME.txt                          ← Este archivo
+│   ├── GUIA_LABORATORIO_MANANA.md
+│   └── ENTREGA_FINAL_LEONARDO_ARAYA.pdf (placeholder)
+├── 2_APK_ANDROID/
+│   ├── app-coordinador.apk
+│   ├── app-plc.apk
+│   ├── app-manufactura.apk
+│   ├── app-calidad.apk
+│   └── app-almacen.apk
+├── 3_FIRMWARE_ESP32/
+│   ├── cim_scorbot_firmware.ino
+│   ├── cim_plc_firmware.ino
+│   ├── cim_calidad_firmware.ino
+│   └── Flashear-ESP32.ps1
+└── 4_SCRIPTS/
+    ├── Instalar-APKs.ps1
+    └── build_all_apps.ps1
+
+================================================================================
+                           INSTRUCCIONES DE INSTALACIÓN
+================================================================================
+
+1. INSTALACIÓN DE APKs (5 minutos)
+   - Ejecutar: 4_SCRIPTS/Instalar-APKs.ps1
+   - O copiar manualmente los .apk a cada teléfono Android
+
+2. FLASHEO DE ESP32 (10 minutos por dispositivo)
+   - Usar Arduino IDE o PlatformIO
+   - Ejecutar: 3_FIRMWARE_ESP32/Flashear-ESP32.ps1
+   - O subir manualmente los .ino
+
+3. CONFIGURACIÓN DE RED
+   - Todos los dispositivos en la misma red Wi-Fi
+   - Coordinador inicia el HUB (puerto 8888)
+   - Cada estación se vincula con la IP del coordinador
+
+================================================================================
+                           SECUENCIA DE PUESTA EN MARCHA
+================================================================================
+
+PASO 1: COORDINADOR
+- Instalar app-coordinador.apk
+- Abrir app → Pestaña NODOS → START HUB
+- Anotar la IP que aparece
+
+PASO 2: ESTACIONES (en cada teléfono)
+- Instalar app correspondiente
+- Pestaña SINCRO → escribir IP del coordinador → VINCULAR
+- Esperar diálogo de autorización en el HUB
+
+PASO 3: BLUETOOTH (opcional - modo simulado funciona sin él)
+- Cada estación → Bluetooth FAB → emparejar con ESP32 correspondiente
+- LED del ESP32 parpadea al conectarse
+
+PASO 4: MODO SIMULADO (recomendado para pruebas)
+- En cada app activar "Modo Autónomo"
+- O usar el botón "SIMULAR CICLO COMPLETO" en el Coordinador
+
+PASO 5: CICLO COMPLETO
+- PLC detecta pallet → Coordinador enruta
+- Manufactura procesa
+- Calidad valida (ArUco/YOLO simulado)
+- Almacén guarda en rack
+
+================================================================================
+                           MODO SIMULADO / TEST
+================================================================================
+
+El sistema soporta 100% de operación sin hardware físico:
+
+- Activar "Modo Autónomo" en cada estación
+- El coordinador tiene botón "SIMULAR CICLO COMPLETO"
+- TestModeManager simula respuestas de hardware
+- Todos los comandos se ejecutan localmente o vía red simulada
+
+================================================================================
+                           COMANDOS SOPORTADOS
+================================================================================
+
+PLC:
+  PLC:START, PLC:STOP, C:DELIVER|from|to, C:STOP|pos, C:FREE|pos
+
+MANUFACTURA:
+  R:HOME, R:MOVE, R:RUN, L:START, L:STOP, GCODE_LOAD
+
+CALIDAD:
+  VAL:PASS, VAL:FAIL, ARUCO:GEN, YOLO:DETECT
+
+ALMACEN:
+  STO:<pos>, R:RUN STORE <pos>, R:RUN RETRIEVE <pos>
+
+COORDINADOR:
+  ABORT (global), START_HUB, AUTHORIZE, REJECT
+
+================================================================================
+                           SOPORTE Y DEBUG
+================================================================================
+
+- Cada app tiene terminal de logs en tiempo real (50 líneas)
+- FAB Bluetooth para conexión rápida
+- Pestaña SINCRO para estado de red y modo autónomo
+- Todos los errores se registran y muestran
+
+================================================================================
+                           NOTAS IMPORTANTES
+================================================================================
+
+- Requiere Android 8.0+ (API 26+)
+- Permisos: Ubicación, Bluetooth, Cámara, Almacenamiento
+- Funciona en modo autónomo sin red
+- Comunicación híbrida: BLE + TCP/WiFi
+- Protocolo CIM v5.1 completamente implementado
+
+¡LISTO PARA DEMOSTRACIÓN EN 30 MINUTOS!
+
+================================================================================

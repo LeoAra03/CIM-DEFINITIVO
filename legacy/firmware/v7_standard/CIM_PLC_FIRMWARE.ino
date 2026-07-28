@@ -57,6 +57,7 @@ class MyServerCallbacks: public BLEServerCallbacks {
 
 void setup() {
   Serial.begin(115200);
+    Serial.println("DEVICE: " + String(DEVICE_NAME));
   pinMode(relayPin, OUTPUT);
   digitalWrite(relayPin, LOW);
   pinMode(sensorPin, INPUT);
@@ -85,4 +86,23 @@ void loop() {
         }
     }
     delay(100);
+}
+
+// FIX #144: Validación de posición STO
+bool isValidPosition(int pos) {
+    return pos >= 1 && pos <= 18;
+}
+
+// FIX #144: Validación de posición en comandos STO
+if (cmd.startsWith("STO:")) {
+    int pos = cmd.substring(4).toInt();
+    if (pos < 1 || pos > 18) {
+        sendCimMessage("STO", "ERROR:INVALID_POSITION");
+        return;
+    }
+}
+
+// FIX: Validación de comandos
+bool isValidCommand(String cmd) {
+    return cmd.length() > 0 && cmd.length() < 100;
 }

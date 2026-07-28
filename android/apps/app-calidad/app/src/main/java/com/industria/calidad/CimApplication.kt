@@ -1,3 +1,7 @@
+/**
+ * CimApplication
+ * FIX: Documentación agregada
+ */
 package com.industria.calidad
 
 import android.app.Application

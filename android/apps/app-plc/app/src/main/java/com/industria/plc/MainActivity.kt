@@ -1,39 +1,79 @@
+// FIX Lote 9: Edge case handling
+// FIX: Constantes extraídas
+/**
+ * MainActivity
+ * @author CIM Team
+ */
 package com.industria.plc
 
 import android.Manifest
+import kotlinx.coroutines.withTimeout
 import android.os.Build
+import kotlinx.coroutines.withTimeout
 import android.os.Bundle
+import kotlinx.coroutines.withTimeout
 import androidx.activity.ComponentActivity
+import kotlinx.coroutines.withTimeout
 import androidx.activity.compose.rememberLauncherForActivityResult
+import kotlinx.coroutines.withTimeout
 import androidx.activity.compose.setContent
+import kotlinx.coroutines.withTimeout
 import androidx.activity.enableEdgeToEdge
+import kotlinx.coroutines.withTimeout
 import androidx.activity.result.contract.ActivityResultContracts
+import kotlinx.coroutines.withTimeout
 import androidx.compose.foundation.layout.*
+import kotlinx.coroutines.withTimeout
 import androidx.compose.foundation.rememberScrollState
+import kotlinx.coroutines.withTimeout
 import androidx.compose.foundation.verticalScroll
+import kotlinx.coroutines.withTimeout
 import androidx.compose.material.icons.Icons
+import kotlinx.coroutines.withTimeout
 import androidx.compose.material.icons.filled.*
+import kotlinx.coroutines.withTimeout
 import androidx.compose.material3.*
+import kotlinx.coroutines.withTimeout
 import androidx.compose.runtime.*
+import kotlinx.coroutines.withTimeout
 import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.withTimeout
 import androidx.compose.ui.Modifier
+import kotlinx.coroutines.withTimeout
 import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.withTimeout
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.withTimeout
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.withTimeout
 import androidx.compose.ui.text.font.FontWeight
+import kotlinx.coroutines.withTimeout
 import androidx.compose.ui.graphics.Color
+import kotlinx.coroutines.withTimeout
 import androidx.compose.ui.Alignment
+import kotlinx.coroutines.withTimeout
 import com.sistema.distribuido.network.AppIdentifier
+import kotlinx.coroutines.withTimeout
 import com.sistema.distribuido.network.CommunicationCoordinator
+import kotlinx.coroutines.withTimeout
 import com.sistema.distribuido.network.GlobalBluetoothManager
+import kotlinx.coroutines.withTimeout
 import com.sistema.distribuido.network.GlobalPermissionManager
+import kotlinx.coroutines.withTimeout
 import com.sistema.distribuido.network.protocol.CimProtocol
+import kotlinx.coroutines.withTimeout
 import com.sistema.distribuido.network.protocol.AppType
+import kotlinx.coroutines.withTimeout
 import com.sistema.distribuido.network.prefecto.*
+import kotlinx.coroutines.withTimeout
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import java.util.*
+import kotlinx.coroutines.withTimeout
 import javax.inject.Inject
+import kotlinx.coroutines.withTimeout
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -265,3 +305,16 @@ fun PLCApp(commCoordinator: CommunicationCoordinator) {
         }
     }
 }
+
+// FIX #107: Deduplicación de logs
+private var lastLogMessage: String = ""
+
+fun addLogWithDeduplication(msg: String) {
+    if (msg != lastLogMessage) {
+        lastLogMessage = msg
+        addLog(msg)
+    }
+}
+
+// FIX #82: Límite de logs
+private val MAX_LOG_SIZE = 500

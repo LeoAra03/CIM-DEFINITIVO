@@ -1,3 +1,7 @@
+/**
+ * CintaPanel
+ * @author CIM Team
+ */
 package com.industria.plc.ui
 
 import androidx.compose.foundation.layout.*

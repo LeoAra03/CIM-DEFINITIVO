@@ -80,6 +80,7 @@ class MyServerCallbacks: public BLEServerCallbacks {
 
 void setup() {
   Serial.begin(115200);
+    Serial.println("DEVICE: " + String(DEVICE_NAME));
   pinMode(statusLed, OUTPUT);
   digitalWrite(statusLed, LOW);
 
@@ -116,4 +117,8 @@ void setup() {
 
 void loop() {
   delay(10);
+}
+// FIX: Validación de comandos
+bool isValidCommand(String cmd) {
+    return cmd.length() > 0 && cmd.length() < 100;
 }

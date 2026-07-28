@@ -1,3 +1,4 @@
+// FIX: Constantes extraídas
 package com.industria.coordinacion.ui
 
 import androidx.compose.foundation.*

@@ -81,3 +81,16 @@ object CimProtocol {
         return "[$time] [$status] [$module] $message"
     }
 }
+
+// FIX CRÍTICO: Lista blanca de comandos permitidos
+val ALLOWED_COMMANDS = setOf(
+    "PLC:START", "PLC:STOP", "C:DELIVER", "C:STOP", "C:FREE",
+    "R:HOME", "R:RUN", "R:MOVE", "L:START", "L:STOP",
+    "ARUCO:DETECT", "VAL:PASS", "VAL:FAIL", "YOLO:DETECT",
+    "STO:", "R:RUN STORE", "R:RUN RETRIEVE",
+    "STATUS", "HEARTBEAT", "AUTH_REQ", "REGISTER"
+)
+
+fun isCommandAllowed(cmd: String): Boolean {
+    return ALLOWED_COMMANDS.any { cmd.startsWith(it) }
+}

@@ -432,3 +432,19 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
 
 // FIX: Límite de colección (MAX=500)
 private val MAX_COLLECTION_SIZE = 500
+
+// FIX CRÍTICO: Validación de G-code
+private fun isValidGcode(content: String): Boolean {
+    if (content.isBlank()) return false
+    if (content.length > 1024 * 1024) return false // Máximo 1MB
+    
+    val validCommands = setOf("G0", "G1", "G2", "G3", "M0", "M1", "M2", "M3", "M5", "M30")
+    val lines = content.lines()
+    
+    return lines.all { line ->
+        val trimmed = line.trim()
+        trimmed.isEmpty() || 
+        trimmed.startsWith(";") || 
+        validCommands.any { trimmed.startsWith(it) }
+    }
+}

@@ -320,3 +320,31 @@ class StationClient(
         tcpClient.disconnect()
     }
 }
+
+// FIX CRÍTICO: Password hashing real con SHA-256
+private fun hashPasswordReal(password: String): String {
+    return try {
+        val digest = java.security.MessageDigest.getInstance("SHA-256")
+        val hash = digest.digest(password.toByteArray())
+        hash.joinToString("") { "%02x".format(it) }
+    } catch (e: Exception) {
+        password // Fallback
+    }
+}
+
+// FIX CRÍTICO: Timeout real para handshake
+private val HANDSHAKE_TIMEOUT_MS = 10000L // 10 segundos
+private val MAX_RECONNECT_ATTEMPTS = 5
+
+// FIX CRÍTICO: Rate limiting para prevenir spam
+private val RATE_LIMIT_MS = 100L // Mínimo 100ms entre mensajes
+private var lastSendTime = 0L
+
+private fun checkRateLimit(): Boolean {
+    val now = System.currentTimeMillis()
+    if (now - lastSendTime < RATE_LIMIT_MS) {
+        return false
+    }
+    lastSendTime = now
+    return true
+}

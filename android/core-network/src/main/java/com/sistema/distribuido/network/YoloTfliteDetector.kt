@@ -21,14 +21,45 @@ class YoloTfliteDetector(context: Context) {
     data class Detection(val label: String, val confidence: Float, val box: Rect)
 
     private var interpreter: Interpreter? = null
-    private val inputSize = 320
-    private val labels = listOf("pieza", "pallet", "defecto", "aruco_obj")
+    private var inputSize = 640
+    private var outputChannels = 0
+    private var outputAnchors = 0
+    private var outputDim1 = 0
+    private var outputDim2 = 0
+    private var channelsFirst = true
+
+    // Exact class order extracted from assets/models/bestMH.pt (YOLO11s checkpoint).
+    // Keep this list in sync with the validated TFLite export manifest.
+    private val labels = listOf(
+        "caballo_hembra", "caballo_macho",
+        "craneo_hembra", "craneo_macho",
+        "hacha_hembra", "hacha_macho",
+        "lomoToro_hembra", "lomoToro_macho",
+        "tuerca_macho"
+    )
 
     init {
         try {
             val model = loadModelFile(context, MODEL_ASSET)
             interpreter = Interpreter(model, Interpreter.Options().apply { numThreads = 4 })
-            Log.i(TAG, "✓ YOLO TFLite cargado: $MODEL_ASSET")
+            val inputShape = requireNotNull(interpreter).getInputTensor(0).shape()
+            val outputShape = requireNotNull(interpreter).getOutputTensor(0).shape()
+            require(inputShape.size == 4 && inputShape[1] == inputShape[2]) {
+                "Entrada YOLO no compatible: ${inputShape.contentToString()}"
+            }
+            require(outputShape.size == 3) {
+                "Salida YOLO no compatible: ${outputShape.contentToString()}"
+            }
+            inputSize = inputShape[1]
+            outputDim1 = outputShape[1]
+            outputDim2 = outputShape[2]
+            channelsFirst = outputDim1 == labels.size + 4
+            outputChannels = if (channelsFirst) outputDim1 else outputDim2
+            outputAnchors = if (channelsFirst) outputDim2 else outputDim1
+            require(outputChannels == labels.size + 4) {
+                "Modelo tiene ${outputChannels - 4} clases; se esperaban ${labels.size}"
+            }
+            Log.i(TAG, "✓ YOLO TFLite cargado: $MODEL_ASSET (${labels.size} clases, ${inputSize}px)")
         } catch (e: Exception) {
             Log.w(TAG, "YOLO TFLite no disponible (${e.message}) — usar fallback OpenCV")
         }
@@ -38,11 +69,19 @@ class YoloTfliteDetector(context: Context) {
 
     fun detect(bitmap: Bitmap, threshold: Float = 0.45f): List<Detection> {
         val model = interpreter ?: return emptyList()
+        if (outputChannels <= 4 || outputAnchors <= 0) return emptyList()
         val input = preprocess(bitmap)
-        val output = Array(1) { Array(84) { FloatArray(8400) } } // YOLOv8 export típico
+        val output = Array(1) { Array(outputDim1) { FloatArray(outputDim2) } }
         try {
             model.run(input, output)
-            return parseOutput(output[0], bitmap.width, bitmap.height, threshold)
+            val normalized = if (channelsFirst) {
+                output[0]
+            } else {
+                Array(outputChannels) { channel ->
+                    FloatArray(outputAnchors) { anchor -> output[0][anchor][channel] }
+                }
+            }
+            return parseOutput(normalized, bitmap.width, bitmap.height, threshold)
         } catch (e: Exception) {
             Log.e(TAG, "Inferencia YOLO fallida: ${e.message}")
             return emptyList()
@@ -105,7 +144,7 @@ class YoloTfliteDetector(context: Context) {
 
     companion object {
         private const val TAG = "YoloTfliteDetector"
-        const val MODEL_ASSET = "yolov8n-int8.tflite"
+        const val MODEL_ASSET = "bestMH_float32_640.tflite"
 
         private fun loadModelFile(context: Context, assetName: String): MappedByteBuffer {
             context.assets.openFd(assetName).use { fd ->

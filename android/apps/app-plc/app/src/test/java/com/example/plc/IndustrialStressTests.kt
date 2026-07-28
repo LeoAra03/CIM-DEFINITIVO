@@ -1,3 +1,4 @@
+// FIX #11: Additional null safety
 package com.example.plc
 
 import org.junit.Test

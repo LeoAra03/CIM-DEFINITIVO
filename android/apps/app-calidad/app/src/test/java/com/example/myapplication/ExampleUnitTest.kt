@@ -1,4 +1,5 @@
 package com.example.myapplication
+import android.util.Log
 
 import org.junit.Test
 

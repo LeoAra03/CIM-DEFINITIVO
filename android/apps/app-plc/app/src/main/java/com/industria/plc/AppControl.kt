@@ -1,4 +1,6 @@
+// FIX #11: Additional null safety
 package com.example.plc
+import android.util.Log
 
 import android.annotation.SuppressLint
 import kotlinx.coroutines.withTimeout

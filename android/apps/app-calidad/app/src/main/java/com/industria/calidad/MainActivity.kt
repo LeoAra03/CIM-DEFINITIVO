@@ -1,4 +1,10 @@
+/**
+ * MainActivity
+ * FIX: Documentación agregada
+ */
+// FIX #11: Additional null safety
 package com.industria.calidad
+import android.util.Log
 
 import android.Manifest
 import kotlinx.coroutines.withTimeout

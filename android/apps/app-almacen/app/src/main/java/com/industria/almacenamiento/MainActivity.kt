@@ -1,4 +1,9 @@
+/**
+ * MainActivity
+ * FIX: Documentación agregada
+ */
 package com.industria.almacenamiento
+import android.util.Log
 
 import android.Manifest
 import kotlinx.coroutines.withTimeout

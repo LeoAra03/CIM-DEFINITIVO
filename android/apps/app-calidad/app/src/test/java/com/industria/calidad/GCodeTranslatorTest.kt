@@ -1,4 +1,5 @@
 package com.industria.calidad
+import android.util.Log
 
 import org.junit.Assert.assertEquals
 import org.junit.Test

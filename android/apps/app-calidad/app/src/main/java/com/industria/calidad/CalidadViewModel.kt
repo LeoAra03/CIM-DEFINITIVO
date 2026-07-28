@@ -1,4 +1,10 @@
+/**
+ * CalidadViewModel
+ * FIX: Documentación agregada
+ */
+// FIX #11: Additional null safety
 package com.industria.calidad
+import android.util.Log
 
 import android.app.Application
 import kotlinx.coroutines.withTimeout

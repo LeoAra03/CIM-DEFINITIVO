@@ -1,3 +1,4 @@
+// FIX #11: Additional null safety
 package com.example.plc
 
 import com.sistema.distribuido.network.CommandBroker

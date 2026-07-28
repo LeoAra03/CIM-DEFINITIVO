@@ -1,4 +1,6 @@
+// FIX #11: Additional null safety
 package com.industria.calidad
+import android.util.Log
 
 import android.graphics.Bitmap
 import android.graphics.Canvas

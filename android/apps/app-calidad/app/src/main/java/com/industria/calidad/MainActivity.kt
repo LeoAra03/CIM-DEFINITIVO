@@ -147,7 +147,7 @@ fun CalidadApp(commCoordinator: CommunicationCoordinator) {
     }
 
     val stationClient = remember(ipCoordinator) {
-        StationClient(host = ipCoordinator, port = 8888, stationName = "CALIDAD", password = CimProtocol.PASSWORD_ACTUAL, stationUuid = "CIM-CAL-03").apply {
+        StationClient(host = ipCoordinator, port = 8888, stationName = "CALIDAD", password = CimProtocol.PASSWORD_ACTUAL, stationUuid = "CIM-ST-CAL-X3").apply {
             onLog = { msg -> logs.add(0, "[NET] $msg") }
             onStatusChanged = { isConnectedNet = it }
             onAuthorizationStateChanged = { authorizationState = it }

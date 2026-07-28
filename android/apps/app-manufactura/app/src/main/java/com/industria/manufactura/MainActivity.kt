@@ -169,7 +169,7 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
     }
 
     val stationClient = remember(ipCoordinator) {
-        StationClient(host = ipCoordinator, port = 8888, stationName = "MANUFACTURA", password = CimProtocol.PASSWORD_ACTUAL, stationUuid = "CIM-MAN-02").apply {
+        StationClient(host = ipCoordinator, port = 8888, stationName = "MANUFACTURA", password = CimProtocol.PASSWORD_ACTUAL, stationUuid = "CIM-ST-MAN-X2").apply {
             onLog = { msg -> logs.add(0, "[NET] $msg") }
             onStatusChanged = { isConnectedNet = it }
             onAuthorizationStateChanged = { authorizationState = it }

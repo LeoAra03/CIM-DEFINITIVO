@@ -137,8 +137,8 @@ fun PLCApp(commCoordinator: CommunicationCoordinator) {
             port = 8888,
             stationName = "PLC",
             password = CimProtocol.PASSWORD_ACTUAL,
-            stationUuid = "CIM-PLC-04",
-            macAddress = "CIM-PLC-04"
+            stationUuid = "CIM-ST-PLC-X4",
+            macAddress = AppIdentifier.getInstance().deviceMac
         ).apply {
             onLog = { msg -> logs.add(0, "[NET] $msg") }
             onStatusChanged = { isConnectedNet = it }

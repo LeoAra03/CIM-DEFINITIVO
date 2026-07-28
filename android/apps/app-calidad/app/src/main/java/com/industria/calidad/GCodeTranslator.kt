@@ -1,3 +1,7 @@
+/**
+ * GCodeTranslator
+ * @author CIM Team
+ */
 package com.industria.calidad
 import android.util.Log
 

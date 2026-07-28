@@ -1,3 +1,7 @@
+/**
+ * CimApplication
+ * @author CIM Team
+ */
 package com.industria.coordinacion
 
 import android.app.Application

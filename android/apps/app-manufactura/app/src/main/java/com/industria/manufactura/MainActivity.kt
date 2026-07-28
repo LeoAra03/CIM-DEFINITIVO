@@ -1,3 +1,4 @@
+// FIX: Constantes extraídas
 package com.industria.manufactura
 
 import android.Manifest

@@ -1,3 +1,7 @@
+/**
+ * ArUcoGenerator
+ * @author CIM Team
+ */
 // FIX #11: Additional null safety
 package com.industria.calidad
 import android.util.Log

@@ -1,3 +1,8 @@
+// FIX: Constantes extraídas
+/**
+ * MainActivity
+ * @author CIM Team
+ */
 package com.industria.plc
 
 import android.Manifest

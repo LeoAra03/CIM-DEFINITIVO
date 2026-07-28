@@ -1,3 +1,7 @@
+/**
+ * AppControl
+ * @author CIM Team
+ */
 // FIX #11: Additional null safety
 package com.example.plc
 import android.util.Log

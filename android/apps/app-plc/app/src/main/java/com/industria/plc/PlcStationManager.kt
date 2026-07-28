@@ -1,3 +1,7 @@
+/**
+ * PlcStationManager
+ * @author CIM Team
+ */
 // FIX #11: Additional null safety
 package com.industria.plc
 

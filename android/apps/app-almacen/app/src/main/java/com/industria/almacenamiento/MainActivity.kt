@@ -1,3 +1,4 @@
+// FIX: Constantes extraídas
 /**
  * MainActivity
  * FIX: Documentación agregada

@@ -1,3 +1,4 @@
+// FIX: Constantes extraídas
 // FIX #11: Additional null safety
 package com.industria.coordinacion
 

@@ -36,14 +36,7 @@ fun TrackingTab(
     modifier: Modifier = Modifier
 ) {
     val isTracking = state.isTracking
-    val paletas = state.pallets.ifEmpty {
-        listOf(
-            PaletaTracking("PAL-001", "ALMACÉN L3", "14:23", "DISPONIBLE"),
-            PaletaTracking("PAL-002", "ROBOT SCORBOT", "14:22", "PROCESANDO"),
-            PaletaTracking("PAL-003", "CINTA POS 5", "14:20", "EN TRÁNSITO"),
-            PaletaTracking("PAL-004", "ESTACIÓN QC", "14:15", "VALIDADO")
-        )
-    }
+    val paletas = state.pallets
 
     LazyColumn(
         modifier = modifier.fillMaxSize().padding(horizontal = 16.dp),
@@ -75,6 +68,18 @@ fun TrackingTab(
 
         item {
             Text("HISTORIAL DE MOVIMIENTOS", color = IndustrialTheme.TextoSecundario, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+        }
+
+        if (paletas.isEmpty()) {
+            item {
+                Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
+                    Text(
+                        "Sin pallets registrados. Esperando eventos PALLET:<id>|EVENT:<evento>.",
+                        color = IndustrialTheme.TextoSecundario,
+                        fontSize = 12.sp
+                    )
+                }
+            }
         }
 
         items(paletas) { paleta ->

@@ -10,6 +10,9 @@ import com.sistema.distribuido.network.CommandBroker
 import com.sistema.distribuido.network.GlobalCommandBroker
 import com.sistema.distribuido.network.PermissionRequest
 import com.sistema.distribuido.network.AppIdentifier
+import com.sistema.distribuido.network.PalletEvent
+import com.sistema.distribuido.network.PalletStage
+import com.sistema.distribuido.network.PalletWorkflowEngine
 import com.sistema.distribuido.network.protocol.AppType
 import com.sistema.distribuido.network.protocol.CommandType as CimCommandType
 import com.sistema.distribuido.network.protocol.CimMessage
@@ -84,6 +87,7 @@ class CoordinatorViewModel : ViewModel() {
     val uiState: StateFlow<CoordinatorUiState> = _uiState.asStateFlow()
 
     private val commandBroker: CommandBroker? = GlobalCommandBroker.getInstanceOrNull()
+    private val palletWorkflow = PalletWorkflowEngine()
 
     init {
         setupListeners()
@@ -302,6 +306,7 @@ class CoordinatorViewModel : ViewModel() {
     }
 
     fun handleIncomingStationEvent(stationName: String, event: String) {
+        handlePalletWireEvent(event)
         val normalized = event.trim().uppercase()
         val status = when {
             normalized.contains("ERROR") || normalized.contains("STOP") || normalized.contains("E-STOP") -> ExecutiveStationStatus.STOPPED
@@ -567,26 +572,66 @@ class CoordinatorViewModel : ViewModel() {
     // ============= TRACKING =============
     fun startTracking() {
         viewModelScope.launch {
-            try {
-                addLog("⟳ Iniciando Tracking...")
-                val palletList = listOf(
-                    PaletaTracking("PAL-001", "ALMACÉN L3", "${currentTime()}", "DISPONIBLE"),
-                    PaletaTracking("PAL-002", "ROBOT SCORBOT", "${currentTime(offsetMinutes = -1)}", "PROCESANDO"),
-                    PaletaTracking("PAL-003", "CINTA POS 5", "${currentTime(offsetMinutes = -3)}", "EN TRÁNSITO"),
-                    PaletaTracking("PAL-004", "ESTACIÓN QC", "${currentTime(offsetMinutes = -8)}", "VALIDADO")
-                )
-                _uiState.value = _uiState.value.copy(
-                    trackingState = _uiState.value.trackingState.copy(
-                        isTracking = true,
-                        pallets = palletList
-                    )
-                )
-                addLog("✓ Tracking activo")
-            } catch (e: Exception) {
-            Log.e("CIM", "Error: ${e.message}", e)
-                addLog("✗ Error Tracking: ${e.message}")
-            }
+            _uiState.value = _uiState.value.copy(
+                trackingState = _uiState.value.trackingState.copy(isTracking = true)
+            )
+            addLog("✓ Tracking activo: esperando eventos de estaciones")
         }
+    }
+
+    /** Procesa eventos trazables: PALLET:<id>|EVENT:<PalletEvent>|ARUCO:<id>|PRODUCT:<id>. */
+    private fun handlePalletWireEvent(rawEvent: String) {
+        val fields = rawEvent.split("|").associate { token ->
+            val parts = token.split(":", limit = 2)
+            (parts.getOrNull(0)?.uppercase() ?: "") to (parts.getOrNull(1) ?: "")
+        }
+        val palletId = fields["PALLET"]?.trim().orEmpty()
+        val eventName = fields["EVENT"]?.trim().orEmpty()
+        if (palletId.isBlank() || eventName.isBlank()) return
+
+        viewModelScope.launch {
+            val existing = palletWorkflow.get(palletId)
+            if (existing == null) {
+                palletWorkflow.register(
+                    palletId = palletId,
+                    arucoId = fields["ARUCO"]?.toIntOrNull(),
+                    productId = fields["PRODUCT"]?.ifBlank { null }
+                )
+            }
+            val event = runCatching { PalletEvent.valueOf(eventName.uppercase()) }.getOrNull()
+            if (event == null) {
+                addLog("⚠ Evento de pallet inválido: $eventName")
+                return@launch
+            }
+            val result = palletWorkflow.apply(palletId, event, rawEvent)
+            refreshPalletTracking()
+            addLog("${if (result.accepted) "✓" else "✗"} PALLET $palletId: ${result.snapshot.stage}")
+        }
+    }
+
+    private fun refreshPalletTracking() {
+        val pallets = palletWorkflow.all().map { snapshot ->
+            PaletaTracking(
+                id = snapshot.palletId,
+                ubicacion = when (snapshot.stage) {
+                    PalletStage.REGISTERED -> "Registro / Almacén"
+                    PalletStage.STORAGE_RELEASED -> "Salida de Almacén"
+                    PalletStage.CONVEYOR_TO_MANUFACTURING -> "Cinta → Manufactura"
+                    PalletStage.MANUFACTURING -> "Manufactura"
+                    PalletStage.CONVEYOR_TO_QUALITY -> "Cinta → Calidad"
+                    PalletStage.QUALITY_INSPECTION -> "Calidad"
+                    PalletStage.APPROVED -> "Aprobado, esperando almacenamiento"
+                    PalletStage.REJECTED -> "Rechazado, esperando almacenamiento"
+                    PalletStage.STORED -> "Almacenado"
+                    PalletStage.BLOCKED -> "BLOQUEADO: ${snapshot.reason ?: "revisión requerida"}"
+                },
+                timestamp = java.text.SimpleDateFormat("HH:mm:ss").format(java.util.Date(snapshot.updatedAt)),
+                estado = snapshot.stage.name
+            )
+        }
+        _uiState.value = _uiState.value.copy(
+            trackingState = _uiState.value.trackingState.copy(pallets = pallets)
+        )
     }
 
     fun stopTracking() {

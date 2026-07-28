@@ -71,8 +71,8 @@ class PalletWorkflowEngine {
             PalletEvent.FAULT -> PalletStage.BLOCKED
             PalletEvent.RESET_AFTER_REVIEW -> if (current.stage == PalletStage.BLOCKED) PalletStage.REGISTERED else null
             PalletEvent.RELEASED_FROM_STORAGE -> current.stage.takeIf { it == PalletStage.REGISTERED }?.let { PalletStage.STORAGE_RELEASED }
-            PalletEvent.ARRIVED_MANUFACTURING -> current.stage.takeIf { it == PalletStage.STORAGE_RELEASED }?.let { PalletStage.CONVEYOR_TO_MANUFACTURING }
-            PalletEvent.MANUFACTURING_COMPLETED -> current.stage.takeIf { it == PalletStage.CONVEYOR_TO_MANUFACTURING }?.let { PalletStage.CONVEYOR_TO_QUALITY }
+            PalletEvent.ARRIVED_MANUFACTURING -> current.stage.takeIf { it == PalletStage.STORAGE_RELEASED }?.let { PalletStage.MANUFACTURING }
+            PalletEvent.MANUFACTURING_COMPLETED -> current.stage.takeIf { it == PalletStage.MANUFACTURING }?.let { PalletStage.CONVEYOR_TO_QUALITY }
             PalletEvent.ARRIVED_QUALITY -> current.stage.takeIf { it == PalletStage.CONVEYOR_TO_QUALITY }?.let { PalletStage.QUALITY_INSPECTION }
             PalletEvent.QUALITY_PASS -> current.stage.takeIf { it == PalletStage.QUALITY_INSPECTION }?.let { PalletStage.APPROVED }
             PalletEvent.QUALITY_FAIL -> current.stage.takeIf { it == PalletStage.QUALITY_INSPECTION }?.let { PalletStage.REJECTED }

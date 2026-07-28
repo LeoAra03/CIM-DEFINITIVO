@@ -275,3 +275,6 @@ fun addLogWithDeduplication(msg: String) {
         addLog(msg)
     }
 }
+
+// FIX #82: Límite de logs
+private val MAX_LOG_SIZE = 500

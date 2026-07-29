@@ -1,7 +1,6 @@
 package com.sistema.distribuido.network
 
 import android.util.Log
-import kotlin.system.measureTimeMillis
 
 /**
  * Monitor de Rendimiento Industrial.
@@ -16,17 +15,17 @@ object PerformanceProfiler {
      * Mide el tiempo de una operación y lo registra si excede el umbral.
      */
     inline fun <T> trace(name: String, block: () -> T): T {
-        var result: T
-        val time = measureTimeMillis {
-            result = block()
+        val start = System.currentTimeMillis()
+        try {
+            return block()
+        } finally {
+            val time = System.currentTimeMillis() - start
+            if (time > THRESHOLD_MS) {
+                safeWarn("⚠️ LATENCIA DETECTADA: $name tomó ${time}ms")
+            } else {
+                safeDebug("PROF: $name -> ${time}ms")
+            }
         }
-        
-        if (time > THRESHOLD_MS) {
-            Log.w(TAG, "⚠️ LATENCIA DETECTADA: $name tomó ${time}ms")
-        } else {
-            Log.d(TAG, "PROF: $name -> ${time}ms")
-        }
-        return result
     }
 
     /**
@@ -34,7 +33,31 @@ object PerformanceProfiler {
      */
     fun logExecution(name: String, time: Long) {
         if (time > THRESHOLD_MS) {
-            Log.e(TAG, "CRITICAL DELAY: $name ($time ms)")
+            safeError("CRITICAL DELAY: $name ($time ms)")
+        }
+    }
+
+    fun safeDebug(message: String) {
+        try {
+            Log.d(TAG, message)
+        } catch (_: Throwable) {
+            // android.util.Log is not available in plain JVM unit tests.
+        }
+    }
+
+    fun safeWarn(message: String) {
+        try {
+            Log.w(TAG, message)
+        } catch (_: Throwable) {
+            // android.util.Log is not available in plain JVM unit tests.
+        }
+    }
+
+    fun safeError(message: String) {
+        try {
+            Log.e(TAG, message)
+        } catch (_: Throwable) {
+            // android.util.Log is not available in plain JVM unit tests.
         }
     }
 }

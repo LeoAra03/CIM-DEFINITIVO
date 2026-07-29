@@ -120,6 +120,11 @@ def check_tools(root: Path) -> CheckResult:
 def check_docs(root: Path) -> CheckResult:
     expected = [
         "README.md",
+        "docs/README.md",
+        "docs/INDEX_REPOSITORIO.md",
+        "CONTRIBUTING.md",
+        "SECURITY.md",
+        "CHANGELOG.md",
         "docs/quickstart/README.md",
         "docs/deliverables/QUALITY_GATES.md",
         "docs/deliverables/INFORME_TECNICO_DE_AVANCE.md",
@@ -127,7 +132,6 @@ def check_docs(root: Path) -> CheckResult:
         "docs/deliverables/ENTREGA_PRE_HARDWARE_LEONARDO_ARAYA.pdf",
         "docs/deliverables/ENTREGA_PRE_HARDWARE_LEONARDO_ARAYA.md",
         "docs/deliverables/PROTOCOLO_PRUEBAS_HARDWARE.md",
-        "docs/INDEX_REPOSITORIO.md",
         "android/README.md",
         "esp32/firmware/README.md",
     ]

@@ -25,7 +25,7 @@
 
 ## Validaciones realizadas localmente
 
-- `python3 tools/validate_system_100.py --quiet`: **PASS 10/10 (100%)**.
+- `python3 tools/validate_system_100.py --quiet`: **PASS 12/12 (100%)**.
 - `python3 -m compileall -q tools`: sin errores de sintaxis Python.
 - `python3 tools/vision_safety_simulator.py --cases 1000`: 1.000 escenarios sin violar el contrato conservador de seguridad.
 - Búsqueda estática de rutas históricas en README/tools/deliverables: sin referencias activas.

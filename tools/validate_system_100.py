@@ -14,6 +14,7 @@ import json
 import py_compile
 import subprocess
 import sys
+import xml.etree.ElementTree as ET
 from dataclasses import dataclass, asdict
 from datetime import datetime, timezone
 from pathlib import Path
@@ -183,6 +184,87 @@ def check_no_versioned_apks(root: Path) -> CheckResult:
     return CheckResult("Sin binarios APK versionados", ok, detail)
 
 
+
+def check_android_manifest_security(root: Path) -> CheckResult:
+    namespace = "{http://schemas.android.com/apk/res/android}"
+    manifests = sorted((root / "android/apps").glob("*/app/src/main/AndroidManifest.xml"))
+    manifests += sorted((root / "android/apps/wear-coordinador/app/src/main").glob("AndroidManifest.xml"))
+    offenders: list[str] = []
+
+    for manifest in manifests:
+        try:
+            tree = ET.parse(manifest)
+        except ET.ParseError as exc:
+            offenders.append(f"{rel(root, manifest)} XML inválido: {exc}")
+            continue
+
+        app = tree.getroot().find("application")
+        if app is None:
+            offenders.append(f"{rel(root, manifest)} sin <application>")
+            continue
+
+        if app.attrib.get(namespace + "allowBackup") == "true":
+            offenders.append(f"{rel(root, manifest)} permite allowBackup=true")
+        if app.attrib.get(namespace + "usesCleartextTraffic") == "true":
+            offenders.append(f"{rel(root, manifest)} permite cleartext global")
+
+        for permission in tree.getroot().findall("uses-permission"):
+            name = permission.attrib.get(namespace + "name", "")
+            max_sdk = permission.attrib.get(namespace + "maxSdkVersion")
+            if name == "android.permission.WRITE_EXTERNAL_STORAGE" and max_sdk != "28":
+                offenders.append(f"{rel(root, manifest)} WRITE_EXTERNAL_STORAGE debe tener maxSdkVersion=28")
+            if name == "android.permission.READ_EXTERNAL_STORAGE" and max_sdk != "32":
+                offenders.append(f"{rel(root, manifest)} READ_EXTERNAL_STORAGE debe tener maxSdkVersion=32")
+            if name in {"android.permission.BLUETOOTH", "android.permission.BLUETOOTH_ADMIN"} and max_sdk != "30":
+                offenders.append(f"{rel(root, manifest)} {name.split('.')[-1]} debe tener maxSdkVersion=30")
+
+    ok = not offenders
+    detail = f"{len(manifests)} manifests sin backup/cleartext inseguro" if ok else "; ".join(offenders[:10])
+    return CheckResult("Manifiestos Android endurecidos", ok, detail)
+
+
+def check_no_active_security_placeholders(root: Path) -> CheckResult:
+    sensitive_tokens = (
+        "UBB_CIM_PRO_SECURE_2024",
+        "cimkeystorepass",
+        "release.keystore",
+        "usesCleartextTraffic=\"true\"",
+        "allowBackup=\"true\"",
+        "TODO:",
+    )
+    scan_roots = [
+        root / "README.md",
+        root / "android",
+        root / "config",
+        root / "tools",
+        root / "docs/deliverables",
+    ]
+    skip_parts = {".git", "archive", "build", "output-apks", "__pycache__"}
+    offenders: list[str] = []
+    this_file = Path(__file__).resolve()
+
+    for scan_root in scan_roots:
+        if scan_root.is_file():
+            candidates = [scan_root]
+        elif scan_root.is_dir():
+            candidates = [path for path in scan_root.rglob("*") if path.is_file()]
+        else:
+            continue
+
+        for file in candidates:
+            if file.resolve() == this_file or any(part in skip_parts for part in file.parts):
+                continue
+            if file.suffix.lower() in {".apk", ".jar", ".png", ".jpg", ".jpeg", ".webp", ".pdf", ".pt", ".tflite"}:
+                continue
+            text = file.read_text(encoding="utf-8", errors="ignore")
+            for token in sensitive_tokens:
+                if token in text:
+                    offenders.append(f"{rel(root, file)} contiene {token}")
+
+    ok = not offenders
+    detail = "sin secretos conocidos, TODO activos ni flags inseguros" if ok else "; ".join(offenders[:10])
+    return CheckResult("Sin secretos/placeholders de seguridad activos", ok, detail)
+
 def check_ci_workflow(root: Path) -> CheckResult:
     workflow = root / ".github/workflows/android-ci.yml"
     if not workflow.is_file():
@@ -218,6 +300,8 @@ def run_checks(root: Path) -> list[CheckResult]:
         check_python_syntax,
         check_no_stale_active_paths,
         check_no_versioned_apks,
+        check_android_manifest_security,
+        check_no_active_security_placeholders,
         check_ci_workflow,
     ]
     return [check(root) for check in checks]

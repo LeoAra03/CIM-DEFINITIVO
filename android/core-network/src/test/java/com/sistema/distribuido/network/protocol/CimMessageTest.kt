@@ -62,12 +62,27 @@ class CimMessageTest {
             sourceApp = AppType.CALIDAD,
             stationName = "CALIDAD",
             password = "SECRET",
-            stationUuid = "CIM-CAL-03"
+            stationUuid = "CIM-ST-CAL-X3"
         )
 
         assertEquals(CommandType.REQUIRE_PERMISSION, handshake.commandType)
-        assertTrue(handshake.payload.contains("CALIDAD|SECRET|AA:BB:CC:DD:EE:FF|CIM-CAL-03"))
+        assertTrue(handshake.payload.contains("CALIDAD|SECRET|AA:BB:CC:DD:EE:FF|CIM-ST-CAL-X3"))
         assertEquals(AppType.CALIDAD, handshake.sourceApp)
         assertEquals(AppType.COORDINADOR, handshake.destApp)
+    }
+
+    @Test
+    fun pairingSecretUsesHashForTransport() {
+        val wireSecret = CimProtocol.pairingSecretForTransport("token-local")
+        assertTrue(wireSecret.startsWith("sha256:"))
+        assertFalse(wireSecret.contains("token-local"))
+
+        CimProtocol.PASSWORD_ACTUAL = "token-local"
+        try {
+            assertTrue(CimProtocol.isPairingSecretValid(wireSecret))
+            assertFalse(CimProtocol.isPairingSecretValid("token-incorrecto"))
+        } finally {
+            CimProtocol.PASSWORD_ACTUAL = CimProtocol.DEFAULT_PAIRING_TOKEN
+        }
     }
 }

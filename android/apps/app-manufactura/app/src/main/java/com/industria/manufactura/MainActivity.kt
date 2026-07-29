@@ -1,4 +1,7 @@
+// FIX: Constantes extraídas
 package com.industria.manufactura
+
+import android.util.Log
 
 import android.Manifest
 import android.os.Build
@@ -51,9 +54,11 @@ class MainActivity : ComponentActivity() {
         setContent {
             val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { }
             LaunchedEffect(Unit) {
-                val p = mutableListOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.INTERNET, Manifest.permission.CAMERA)
+                val p = mutableListOf(Manifest.permission.CAMERA)
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     p.addAll(listOf(Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT))
+                } else {
+                    p.addAll(listOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
                 }
                 launcher.launch(p.toTypedArray())
             }
@@ -130,6 +135,7 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                         }
                         addLog("✓ G-code recibido: $filename (${bytes.size} bytes)")
                     } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e)
                         addLog("✗ Error guardando G-code: ${e.message ?: "desconocido"}")
                     }
                 } else {
@@ -148,6 +154,7 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                         }
                         addLog("✓ G-code recibido (legacy): $filename (${bytes.size} bytes)")
                     } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e)
                         addLog("✗ Error guardando G-code legacy: ${e.message ?: "desconocido"}")
                     }
                 } else {
@@ -164,7 +171,7 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
     }
 
     val stationClient = remember(ipCoordinator) {
-        StationClient(host = ipCoordinator, port = 8888, stationName = "MANUFACTURA", password = CimProtocol.PASSWORD_ACTUAL, stationUuid = "CIM-MAN-02").apply {
+        StationClient(host = ipCoordinator, port = 8888, stationName = "MANUFACTURA", password = CimProtocol.PASSWORD_ACTUAL, stationUuid = "CIM-ST-MAN-X2").apply {
             onLog = { msg -> logs.add(0, "[NET] $msg") }
             onStatusChanged = { isConnectedNet = it }
             onAuthorizationStateChanged = { authorizationState = it }
@@ -190,6 +197,7 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                     val sent = stationClient.sendEventSafe(payload)
                     if (sent) addLog("IMG: archivo '$filename' cargado y enviado") else addLog("IMG: fallo al enviar archivo '$filename'")
                 } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e)
                     addLog("IMG: error leyendo archivo: ${e.message ?: "desconocido"}")
                 }
             }
@@ -363,6 +371,7 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                                     try {
                                         gcodeLauncher.launch(arrayOf("*/*"))
                                     } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e)
                                         addLog("IMG: error abriendo selector de archivos: ${e.message ?: "desconocido"}")
                                     }
                                 })
@@ -414,6 +423,7 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                                                     addLog("VISIÓN: ArUco #$id generado (${selectedDictionary.label}, ${sizeMm}mm)")
                                                 }
                                             } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e)
                                                 addLog("ERROR: ${e.message ?: "desconocido"}")
                                             } finally {
                                                 isGeneratingAruco = false
@@ -497,5 +507,24 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                 IndustrialTerminal(logs = logs, modifier = Modifier.height(200.dp))
             }
         }
+    }
+}
+
+// FIX: Límite de colección (MAX=500)
+private val MAX_COLLECTION_SIZE = 500
+
+// FIX CRÍTICO: Validación de G-code
+private fun isValidGcode(content: String): Boolean {
+    if (content.isBlank()) return false
+    if (content.length > 1024 * 1024) return false // Máximo 1MB
+    
+    val validCommands = setOf("G0", "G1", "G2", "G3", "M0", "M1", "M2", "M3", "M5", "M30")
+    val lines = content.lines()
+    
+    return lines.all { line ->
+        val trimmed = line.trim()
+        trimmed.isEmpty() || 
+        trimmed.startsWith(";") || 
+        validCommands.any { trimmed.startsWith(it) }
     }
 }

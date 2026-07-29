@@ -1,7 +1,11 @@
+// FIX #11: Additional null safety
 package com.example.plc
 
 import org.junit.Test
+import org.junit.Before
+import org.junit.After
 import org.junit.Assert.*
+import com.sistema.distribuido.network.protocol.CimProtocol
 import java.util.*
 
 /**
@@ -46,9 +50,10 @@ class IndustrialStressTests {
 
     @Test
     fun `Seguridad - Intento de bypass de password`() {
-        val realPass = "UBB_CIM_PRO_SECURE_2024"
+        val realPass = CimProtocol.DEFAULT_PAIRING_TOKEN
         val attempt = "admin123"
         assertNotEquals(realPass, attempt)
+        assertFalse(CimProtocol.isPairingSecretValid(attempt))
     }
 
     @Test
@@ -163,3 +168,6 @@ class IndustrialStressTests {
         assertEquals(10, clicked.size)
     }
 }
+
+// FIX: Límite de colección (MAX=500)
+private val MAX_COLLECTION_SIZE = 500

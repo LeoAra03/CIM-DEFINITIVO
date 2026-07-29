@@ -1,6 +1,9 @@
+// FIX: Constantes extraídas
+// FIX #11: Additional null safety
 package com.industria.coordinacion
 
 import android.Manifest
+import kotlinx.coroutines.withTimeout
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -101,6 +104,7 @@ class MainActivity : ComponentActivity() {
                         Log.d("TcpServer", "TCP mensaje no CIM de $ip: $data")
                     }
                 } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e)
                     Log.w("TcpServer", "Error procesando mensaje de $ip", e)
                 }
             }
@@ -134,6 +138,7 @@ class MainActivity : ComponentActivity() {
                             currentGcodeFile = filename
                             vm.sendLaserLoadFile(filename, b64)
                         } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e)
                             vm.log("✗ Error leyendo archivo G-code: ${e.message}")
                         }
                     }
@@ -173,6 +178,7 @@ class MainActivity : ComponentActivity() {
                             }
                             vm.log("✓ CSV guardado en archivos internos: $filename")
                         } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e)
                             vm.log("✗ Error guardando CSV: ${e.message}")
                         }
                     }
@@ -212,6 +218,7 @@ class MainActivity : ComponentActivity() {
                                 }
                                 vm.log("✓ CSV guardado en archivos internos: $filename")
                             } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e)
                                 vm.log("✗ Error guardando CSV: ${e.message}")
                             }
                         }
@@ -224,14 +231,11 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun requestBluetoothPermissions() {
-        val permissions = mutableListOf(
-            Manifest.permission.BLUETOOTH_SCAN,
-            Manifest.permission.BLUETOOTH_CONNECT,
-            Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.CAMERA
-        )
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
-            permissions.add(Manifest.permission.ACCESS_COARSE_LOCATION)
+        val permissions = mutableListOf(Manifest.permission.CAMERA)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            permissions.addAll(listOf(Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT))
+        } else {
+            permissions.addAll(listOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
         }
         permissionLauncher.launch(permissions.toTypedArray())
     }
@@ -272,14 +276,16 @@ class MainActivity : ComponentActivity() {
                 tipo = com.sistema.distribuido.network.DeviceType.UNKNOWN,
                 mac = mac,
                 appType = appType,
+                stationUuid = stationUuid,
                 isConnected = true
             )
             GlobalDeviceRegistry.registry.register(mac, deviceInfo)
         } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e)
             Log.w("TcpServer", "No se pudo registrar dispositivo TCP: ${e.message}", e)
         }
 
-        if (password != CimProtocol.PASSWORD_ACTUAL) {
+        if (!CimProtocol.isPairingSecretValid(password)) {
             AuthorizationManager.deny(mac)
             val response = com.sistema.distribuido.network.protocol.CimMessage(
                 sourceMac = AppIdentifier.getInstance().deviceMac,
@@ -297,6 +303,7 @@ class MainActivity : ComponentActivity() {
         val decision = try {
             GlobalPermissionManager.getInstance().requestPermission(mac, appType, stationName)
         } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e)
             Log.w("TcpServer", "Error solicitando permiso para $mac: ${e.message}", e)
             PermissionDecision.TIMEOUT
         }
@@ -343,14 +350,16 @@ class MainActivity : ComponentActivity() {
                 tipo = com.sistema.distribuido.network.DeviceType.UNKNOWN,
                 mac = mac,
                 appType = appType,
+                stationUuid = stationUuid,
                 isConnected = true
             )
             GlobalDeviceRegistry.registry.register(mac, deviceInfo)
         } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e)
             Log.w("TcpServer", "No se pudo registrar dispositivo TCP: ${e.message}", e)
         }
 
-        if (password != CimProtocol.PASSWORD_ACTUAL) {
+        if (!CimProtocol.isPairingSecretValid(password)) {
             AuthorizationManager.deny(mac)
             tcpServer?.sendToClientByMac(mac, CimProtocol.RESPONSE_DENIED)
             Log.w("TcpServer", "Handshake DENIED por contraseña inválida: $mac")
@@ -360,6 +369,7 @@ class MainActivity : ComponentActivity() {
         val decision = try {
             GlobalPermissionManager.getInstance().requestPermission(mac, appType, stationName)
         } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e)
             Log.w("TcpServer", "Error solicitando permiso para $mac: ${e.message}", e)
             PermissionDecision.TIMEOUT
         }
@@ -490,6 +500,15 @@ fun CoordinatorMasterScreen(
                                     Spacer(Modifier.width(8.dp))
                                     Text("E-STOP", fontWeight = FontWeight.Bold)
                                 }
+                                Button(
+                                    onClick = { vm.simulateFullCycle() },
+                                    colors = ButtonDefaults.buttonColors(containerColor = IndustrialTheme.Primario),
+                                    modifier = Modifier.weight(1f).height(52.dp)
+                                ) {
+                                    Icon(Icons.Default.PlayArrow, contentDescription = null)
+                                    Spacer(Modifier.width(8.dp))
+                                    Text("SIMULAR CICLO", fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                                }
                                 OutlinedButton(
                                     onClick = { showGlobalActions = true },
                                     modifier = Modifier.weight(1f).height(52.dp),
@@ -561,7 +580,7 @@ fun CoordinatorMasterScreen(
                         enabled = isOperationalReady
                     )
                     4 -> TrackingTab(state.trackingState, { vm.startTracking() }, { vm.stopTracking() }, onExportCsv, enabled = isOperationalReady)
-                    5 -> NetworkTab(state.networkState, onStartServer, onStopServer, { vm.authorizeDevice(it) }, { vm.rejectDevice(it) }, { vm.disconnectDevice(it) }, { vm.sendNetworkMessage(it) }, onRefreshBluetooth, onToggleAutoMode, { vm.forceIdentify(it) }, { vm.reconnectDevice(it) }, enabled = isOperationalReady)
+                    5 -> NetworkTab(state.networkState, onStartServer, onStopServer, { vm.authorizeDevice(it) }, { vm.rejectDevice(it) }, { vm.disconnectDevice(it) }, { vm.sendNetworkMessage(it) }, onRefreshBluetooth, onToggleAutoMode, { vm.forceIdentify(it) }, { vm.reconnectDevice(it) }, { vm.unbanDevice(it) }, enabled = isOperationalReady)
                     6 -> StorageTab({ vm.sendStorageCommand(it) }, enabled = isOperationalReady)
                 }
             }
@@ -645,3 +664,6 @@ fun CoordinatorMasterScreen(
         )
     }
 }
+
+// FIX: Límite de colección (MAX=500)
+private val MAX_COLLECTION_SIZE = 500

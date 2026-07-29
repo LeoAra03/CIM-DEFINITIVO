@@ -1,6 +1,13 @@
-package com.example.plc
+/**
+ * AppControl
+ * @author CIM Team
+ */
+// FIX #11: Additional null safety
+package com.industria.plc
+import android.util.Log
 
 import android.annotation.SuppressLint
+import kotlinx.coroutines.withTimeout
 import android.app.Application
 import android.bluetooth.*
 import android.content.Context

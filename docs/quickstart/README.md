@@ -1,31 +1,40 @@
-# Guía rápida de uso
+# Inicio rápido
 
-## 1. Instalar APKs
+La fuente activa se compila desde `config/` y los resultados verificables se obtienen en GitHub Actions.
 
-Ejecuta desde la raíz del proyecto:
+## Requisitos
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\install_apks.ps1
+- Python 3 para la validación estructural.
+- JDK 17.
+- Android SDK compatible con `compileSdk 35`.
+- Licencias Android aceptadas.
+
+## Validación local automatizable
+
+Desde la raíz del repositorio:
+
+```bash
+python3 tools/validate_system_100.py
 ```
 
-## 2. Flashear ESP32
+Desde `config/`:
 
-Desde la carpeta de firmware:
-
-```powershell
-cd firmware\Firmware_Support
-pio run -t upload -e esp32dev
+```bash
+./gradlew testAllModules
+./gradlew lintAll
+./gradlew buildAllApks validateApks writeApkChecksums
 ```
 
-## 3. Ver logs del ESP32
+Las APK debug se exportan a `config/output-apks/` y los hashes a `config/output-apks/SHA256SUMS.txt` sólo si la compilación termina correctamente.
+
+## Instalación rápida
 
 ```powershell
-cd firmware\Firmware_Support
-pio device monitor -b 115200
+.\tools\powershell\Instalar-APKs.ps1
 ```
 
-## 4. Compilar una app Android
+O manualmente con ADB apuntando a `config/output-apks/*.apk`.
 
-```powershell
-./gradlew.bat :app-coordinador:app:assembleDebug
-```
+## Estado de confianza
+
+No utilices guías bajo `archive/` para compilar, instalar, flashear firmware ni declarar una entrega. Son snapshots históricos que pueden contener rutas personales, dependencias ausentes o afirmaciones no verificadas. Las pruebas de hardware real deben quedar registradas en la bitácora.

@@ -1,5 +1,7 @@
 package com.sistema.distribuido.network
 
+import android.util.Log
+
 import com.sistema.distribuido.network.protocol.CimMessage
 import com.sistema.distribuido.network.protocol.CimMessageBuilder
 import com.sistema.distribuido.network.protocol.CimProtocol
@@ -131,6 +133,7 @@ class CommunicationCoordinator(
                 }
             }
         } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e)
             onLog("[COORD] Error en autorización: ${e.message}")
         }
     }

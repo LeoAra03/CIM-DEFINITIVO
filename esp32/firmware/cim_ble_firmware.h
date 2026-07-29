@@ -21,11 +21,23 @@
 #define STATION_TYPE "ROBOT_ARM"
 #endif
 
+#ifndef STATION_UUID
+#define STATION_UUID "CIM-ST-MAN-X2"
+#endif
+
+#define FIRMWARE_VERSION "1.0.0"
+#define HARDWARE_MODEL "Wemos D1 R32"
+
 // Definir CIM_IS_PLC antes del include en firmware PLC
 #ifdef CIM_IS_PLC
   static const char* const kStationType = "PLC_CONTROLLER";
+  static const char* const kCapabilities = "BLE_NUS,RELAY,PROXIMITY_SENSOR";
+#elif defined(CIM_HAS_SCORBOT)
+  static const char* const kStationType = STATION_TYPE;
+  static const char* const kCapabilities = "BLE_NUS,UART_SCORBOT,ARUCO_LASER";
 #else
   static const char* const kStationType = STATION_TYPE;
+  static const char* const kCapabilities = "BLE_NUS";
 #endif
 
 #define SERVICE_UUID           "6E400001-B5A3-F393-E0A9-E50E24DCCA9E"
@@ -53,19 +65,34 @@ static void blinkLed(int times, int ms = 150) {
   }
 }
 
+// Android starts with a 23-byte ATT MTU (20 payload bytes). Fragment responses
+// explicitly; Android reassembles them using the newline terminator.
+static const size_t BLE_NOTIFY_CHUNK_SIZE = 20;
+
 static void sendBleResponse(const String& payload) {
   if (!deviceConnected || pTxCharacteristic == NULL) return;
-  String msg = String(kStationType) + "|" + String(millis()) + "|RESP|" + payload + "\n";
-  pTxCharacteristic->setValue(msg.c_str());
-  pTxCharacteristic->notify();
+  const String msg = String(kStationType) + "|" + String(millis()) + "|RESP|" + payload + "\n";
+  for (size_t offset = 0; offset < msg.length(); offset += BLE_NOTIFY_CHUNK_SIZE) {
+    const String chunk = msg.substring(offset, offset + BLE_NOTIFY_CHUNK_SIZE);
+    pTxCharacteristic->setValue(chunk.c_str());
+    pTxCharacteristic->notify();
+    // Give the BLE stack time to enqueue each notification on a Wemos D1 R32.
+    delay(8);
+  }
   Serial.print(">>> TX: ");
   Serial.println(payload);
 }
 
 static void forwardToScorbot(const String& cmd) {
+#ifdef CIM_HAS_SCORBOT
   Serial2.println(cmd);
   Serial.print(">>> SCORBOT: ");
   Serial.println(cmd);
+#else
+  // Storage and quality boards must never drive unconfigured UART pins.
+  Serial.print(">>> SCORBOT COMMAND REJECTED (no robot UART): ");
+  Serial.println(cmd);
+#endif
 }
 
 static String extractPayload(const String& data) {
@@ -85,7 +112,8 @@ static void handleCommand(String raw) {
   Serial.println(data);
 
   if (data.indexOf("IDENTIFY") >= 0) {
-    sendBleResponse("IDENTIFIED|" + String(kStationType) + "|1.0");
+    sendBleResponse("CIM_ID|" + String(DEVICE_NAME) + "|" + String(STATION_UUID) + "|" +
+                    String(kStationType) + "|" + HARDWARE_MODEL + "|" + FIRMWARE_VERSION + "|" + kCapabilities);
     blinkLed(2);
     return;
   }
@@ -145,13 +173,20 @@ static void handleCommand(String raw) {
   }
 
   if (data.startsWith("PLC:")) {
-    if (data.indexOf("START") >= 0) {
+#ifdef CIM_IS_PLC
+    if (data == "PLC:START") {
       digitalWrite(PIN_RELAY, HIGH);
       sendBleResponse("PLC:RUNNING");
-    } else if (data.indexOf("STOP") >= 0) {
+    } else if (data == "PLC:STOP") {
       digitalWrite(PIN_RELAY, LOW);
       sendBleResponse("PLC:STOPPED");
+    } else {
+      sendBleResponse("ERR:UNSUPPORTED_PLC_COMMAND");
     }
+#else
+    // Never drive the conveyor relay from a non-PLC station.
+    sendBleResponse("ERR:PLC_COMMAND_ON_NON_PLC");
+#endif
     return;
   }
 
@@ -181,6 +216,11 @@ class CimBleRxCallbacks : public BLECharacteristicCallbacks {
     String value = pCharacteristic->getValue();
     if (value.length() == 0) return;
     rxBuffer += value;
+    if (rxBuffer.length() > 512) {
+      rxBuffer = "";
+      sendBleResponse("ERR:FRAME_TOO_LARGE");
+      return;
+    }
     int nl;
     while ((nl = rxBuffer.indexOf('\n')) >= 0) {
       String line = rxBuffer.substring(0, nl);
@@ -198,7 +238,7 @@ static void cimBleSetup() {
   pinMode(PIN_RELAY, OUTPUT);
   digitalWrite(PIN_RELAY, LOW);
   pinMode(PIN_SENSOR, INPUT);
-#else
+#elif defined(CIM_HAS_SCORBOT)
   Serial2.begin(9600, SERIAL_8N1, PIN_SCORBOT_RX, PIN_SCORBOT_TX);
 #endif
 
@@ -243,7 +283,7 @@ static void cimBleLoop() {
     sendBleResponse("SENSOR:TRIPPED");
     lastSensor = millis();
   }
-#else
+#elif defined(CIM_HAS_SCORBOT)
   while (Serial2.available()) {
     String line = Serial2.readStringUntil('\n');
     line.trim();

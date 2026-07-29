@@ -1,5 +1,7 @@
 package com.sistema.distribuido.network
 
+import android.util.Log
+
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Build
@@ -44,6 +46,7 @@ class AppIdentifier private constructor(private val context: Context, val appTyp
                 Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
                     ?: UUID.randomUUID().toString()
             } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e)
                 UUID.randomUUID().toString()
             }
 

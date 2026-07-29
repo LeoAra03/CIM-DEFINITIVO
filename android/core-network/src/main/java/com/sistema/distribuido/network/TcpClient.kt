@@ -6,7 +6,6 @@ import kotlinx.coroutines.*
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.io.PrintWriter
-import java.net.InetSocketAddress
 import java.net.Socket
 
 class TcpClient(private val host: String, private val port: Int, private val maxRetries: Int = 3) {
@@ -24,50 +23,57 @@ class TcpClient(private val host: String, private val port: Int, private val max
         isRunning = true
         scope.launch {
             var attempts = 0
-            var connected = false
 
-            while (isRunning && attempts < maxRetries && !connected) {
+            while (isRunning && attempts < maxRetries) {
+                var disconnectedAfterSuccessfulConnection = false
+
                 try {
                     PerformanceProfiler.trace("TCP_CONNECT") {
-                        socket = TlsSocketHelper.createClientSocket(host, port, 2000)
-                        socket?.soTimeout = 2000
-                        // socket?.getOutputStream() puede ser null por interoperabilidad Java; asignamos solo si no es null
-                        socket?.getOutputStream()?.let { out ->
-                            writer = PrintWriter(out, true)
-                        }
-                        onConnectionStateChanged?.invoke(true)
-                        connected = true
-                        attempts = 0
+                        val activeSocket = TlsSocketHelper.createClientSocket(host, port, 2000)
+                        activeSocket.soTimeout = 2000
+                        socket = activeSocket
+                        writer = PrintWriter(activeSocket.getOutputStream(), true)
                     }
 
-                    // Start heartbeat
+                    onConnectionStateChanged?.invoke(true)
+                    attempts = 0
                     startHeartbeat()
 
-                    val reader = BufferedReader(InputStreamReader(socket?.getInputStream()))
-                    var inputLine: String?
-                    while (isRunning && connected) {
+                    val inputStream = socket?.getInputStream()
+                        ?: throw IllegalStateException("Socket sin InputStream después de conectar")
+                    val reader = BufferedReader(InputStreamReader(inputStream))
+
+                    while (isRunning) {
                         try {
-                            inputLine = reader.readLine()
-                            if (inputLine == null) break
-                            onMessageReceived?.invoke(CimTransportCodec.tryUnwrap(inputLine!!))
-                        } catch (e: java.net.SocketTimeoutException) {
-                            // continue loop to allow heartbeat and retries
+                            val inputLine = reader.readLine() ?: break
+                            onMessageReceived?.invoke(CimTransportCodec.tryUnwrap(inputLine))
+                        } catch (_: java.net.SocketTimeoutException) {
+                            // Keep looping so heartbeat and explicit disconnect can be processed.
                             continue
-                        } catch (e: Exception) {
-                            break
                         }
                     }
+                    disconnectedAfterSuccessfulConnection = true
+                } catch (cancellation: CancellationException) {
+                    throw cancellation
                 } catch (e: Exception) {
-                    onConnectionStateChanged?.invoke(false)
-                    attempts++
-                    delay(2000)
+                    if (isRunning) {
+                        attempts++
+                        onConnectionStateChanged?.invoke(false)
+                        delay(2000)
+                    }
                 } finally {
                     stopHeartbeat()
-                    socket?.close()
+                    closeSocketQuietly()
+                }
+
+                if (isRunning && disconnectedAfterSuccessfulConnection) {
+                    attempts++
+                    onConnectionStateChanged?.invoke(false)
+                    delay(2000)
                 }
             }
 
-            if (!connected) {
+            if (isRunning) {
                 onConnectionStateChanged?.invoke(false)
             }
             isRunning = false
@@ -85,8 +91,8 @@ class TcpClient(private val host: String, private val port: Int, private val max
             try {
                 writer?.println(wrapOutgoing(message))
                 writer?.flush()
-            } catch (e: Exception) {
-                // log silently
+            } catch (_: Exception) {
+                // Keep network failures non-fatal for UI callers.
             }
         }
     }
@@ -105,17 +111,18 @@ class TcpClient(private val host: String, private val port: Int, private val max
                 w.flush()
                 return@withContext !w.checkError()
             }
-        } catch (e: Exception) {
-            // log silently
+        } catch (_: Exception) {
+            // Keep network failures non-fatal for UI callers.
         }
         return@withContext false
     }
 
     fun disconnect() {
         isRunning = false
+        stopHeartbeat()
         scope.launch {
-            socket?.close()
-            scope.cancel()
+            closeSocketQuietly()
+            onConnectionStateChanged?.invoke(false)
         }
     }
 
@@ -124,8 +131,11 @@ class TcpClient(private val host: String, private val port: Int, private val max
             while (isActive) {
                 try {
                     val heartbeat = "HEARTBEAT|${System.currentTimeMillis()}"
-                    writer?.println(heartbeat)
-                } catch (_: Exception) { }
+                    writer?.println(wrapOutgoing(heartbeat))
+                    writer?.flush()
+                } catch (_: Exception) {
+                    // Heartbeat failures are handled by read/send loops.
+                }
                 delay(5000)
             }
         }
@@ -134,5 +144,16 @@ class TcpClient(private val host: String, private val port: Int, private val max
     private fun stopHeartbeat() {
         heartbeatJob?.cancel()
         heartbeatJob = null
+    }
+
+    private fun closeSocketQuietly() {
+        try {
+            socket?.close()
+        } catch (_: Exception) {
+            // Ignore close failures.
+        } finally {
+            socket = null
+            writer = null
+        }
     }
 }

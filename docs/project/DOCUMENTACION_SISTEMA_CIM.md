@@ -1,60 +1,60 @@
-# 🏭 SISTEMA INDUSTRIAL CIM v7.0 - MANUAL DE IMPLEMENTACIÓN
+# Sistema Industrial CIM v6.0 — Manual de implementación activo
 
-Este documento describe la arquitectura, despliegue y operación del sistema de manufactura flexible (CIM).
+<p align="center"><img src="../assets/ubb_logo.png" alt="Universidad del Bío-Bío" width="280"></p>
 
-## 📱 APLICACIONES ANDROID (APKs)
+## Propósito
 
-El sistema consta de 5 estaciones principales desarrolladas en Kotlin/Compose:
+El sistema CIM integra estaciones Android, una capa de red compartida y firmware ESP32/Wemos para coordinar un flujo de manufactura, calidad y almacenamiento. Este manual describe las fuentes activas y el uso reproducible del proyecto; no certifica seguridad funcional ni reemplaza la documentación de laboratorio.
 
-1.  **`app-coordinador`**: El cerebro de la red. Autoriza conexiones y supervisa el tráfico de datos.
-2.  **`app-manufactura`**: Controla el **Robot Scorbot** y el **Grabado Láser CNC**.
-3.  **`app-calidad`**: Realiza inspección por visión artificial (ArUco/YOLO) y controla un **Robot Scorbot** para descartes.
-4.  **`app-almacen`**: Gestiona la matriz de racks y utiliza un **Robot Scorbot** para el picking de piezas.
-5.  **`app-plc`**: Controla la **Cinta Transportadora** y los sensores de proximidad.
+## Arquitectura activa
 
----
+| Capa | Ubicación | Responsabilidad |
+|---|---|---|
+| Coordinación | `android/apps/app-coordinador` | Hub, autorización, orquestación y supervisión. |
+| PLC | `android/apps/app-plc` | Cinta, sensores y eventos de pallet. |
+| Manufactura | `android/apps/app-manufactura` | Robot, posiciones, G-code y orden de láser. |
+| Calidad | `android/apps/app-calidad` | Cámara, ArUco, visión y decisión PASS/FAIL. |
+| Almacén | `android/apps/app-almacen` | Rack, almacenamiento y retiro. |
+| Supervisión | `android/apps/wear-coordinador` | Vista compacta Wear OS. |
+| Red | `android/core-network` | Protocolo, identidad, BLE/TCP y utilidades comunes. |
+| Firmware | `esp32/firmware` | Firmware canónico de las estaciones. |
 
-## 🔧 FIRMWARE ARDUINO (WEMOS D1 R32)
+## Comunicación e identidad
 
-Se han estandarizado los scripts en la carpeta `/firmware/v7_standard/`:
+La comunicación combina BLE entre estación Android y hardware local, y TCP/Wi-Fi entre estaciones Android y Coordinador. El formato de mensaje principal es:
 
-*   **`CIM_SCORBOT_FIRMWARE.ino`**: Cargar en las placas destinadas a los brazos robóticos.
-    *   *Nota:* Cambiar `DEVICE_NAME` según la estación (MAN, CAL, ALM).
-*   **`CIM_PLC_FIRMWARE.ino`**: Cargar en la placa que controla los relés de la cinta y los sensores.
+```text
+ID|TIMESTAMP|SOURCE_MAC|SOURCE_APP|DEST_MAC|DEST_APP|CMD|PRIORITY|SESSION|PAYLOAD
+```
 
-### Configuración BLE
-Todos los dispositivos usan el protocolo **CIM over BLE**:
-*   **Service UUID:** `6E400001-B5A3-F393-E0A9-E50E24DCCA9E`
-*   **TX (Notify):** `6E400003-...`
-*   **RX (Write):** `6E400002-...`
+Cada estación debe ser validada por UUID, tipo y capacidades. El handshake Android transporta el token de emparejamiento como hash SHA-256. El anuncio `CIM_ID` debe ser capturado durante un ensayo físico; una coincidencia estática de código no sustituye esta captura.
 
----
+## Firmware canónico
 
-## 📡 PROTOCOLO DE RED
+Sólo utilizar `esp32/firmware/`:
 
-La comunicación es híbrida:
-1.  **Bluetooth (Local):** Entre la App de la estación y su hardware (ESP32).
-2.  **TCP/Wi-Fi (Red):** Entre las Apps de las estaciones y el Coordinador Central.
+- `esp32_plc_master.ino`
+- `esp32_scorbot_manufactura.ino`
+- `esp32_scorbot_calidad.ino`
+- `esp32_scorbot_almacen.ino`
+- `cim_ble_firmware.h`
 
-### Formato de Mensaje CIM
-`ID|TIMESTAMP|SOURCE_MAC|SOURCE_APP|DEST_MAC|DEST_APP|CMD|PRIORITY|SESSION|PAYLOAD`
+Los snapshots en `archive/` no son fuente de flasheo. Antes de llevar firmware al banco, ejecute `python3 tools/validate_firmware_contract.py --quiet` y revise el protocolo de laboratorio.
 
----
+## Construcción, entrega e instalación
 
-## 🚀 PASOS PARA EL DESPLIEGUE
+Siga el [instructivo de uso](../INSTRUCTIVO_USO_PROYECTO.md). Las APK debug se exportan a `config/output-apks/`, y `SHA256SUMS.txt` permite comprobar su integridad. No se versionan APKs ni claves de firma.
 
-1.  **Limpieza:** Se han eliminado todos los archivos `.md` antiguos para evitar confusión.
-2.  **Compilación:** Ejecutar `./gradlew assembleDebug` para generar las 5 APKs.
-3.  **Hardware:** Cargar los archivos `.ino` en las Wemos R32 usando el Arduino IDE.
-4.  **Vinculación:**
-    *   Abrir Coordinador y anotar la IP de la red local.
-    *   Abrir cada App de estación, ingresar la IP del Coordinador y pulsar "Sincronizar".
-    *   Aprobar las solicitudes de permiso en la pantalla del Coordinador.
-    *   Conectar el Bluetooth en cada estación para habilitar el control físico.
+## Secuencia operativa de alto nivel
 
----
+1. Validar repositorio, contrato de firmware y documentación.
+2. Compilar/probar el software con JDK 17 y Android SDK.
+3. Iniciar Coordinador y el hub en una red controlada.
+4. Solicitar admisión de cada estación y revisar identidad/capacidades.
+5. Ejecutar simulación o telemetría sin carga antes de conectar actuadores.
+6. Para banco físico, avanzar por los casos HW-01 a HW-09 con E-stop e interlocks.
+7. Registrar cada resultado y cualquier incidencia en la bitácora.
 
-## 📂 UBICACIÓN DE BINARIOS
+## Seguridad y alcance de validación
 
-*   **APKs Finales:** `/output-apks/v7_final/`
-*   **Firmware ESP32:** `/firmware/v7_standard/`
+La validación automática cubre estructura, contrato, sintaxis y las tareas de CI configuradas. No comprueba por sí sola UI en todos los dispositivos, rendimiento de LAN/BLE, cámara real, tensión eléctrica, E-stop, relé, robot, cinta ni láser. Consulte [validación y cobertura](../VALIDACION_Y_COBERTURA.md), el [manual de laboratorio](../deliverables/MANUAL_OPERATIVO_LABORATORIO.md) y el [protocolo hardware](../deliverables/PROTOCOLO_PRUEBAS_HARDWARE.md).

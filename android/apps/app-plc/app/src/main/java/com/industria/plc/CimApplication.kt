@@ -1,3 +1,7 @@
+/**
+ * CimApplication
+ * @author CIM Team
+ */
 package com.industria.plc
 
 import android.app.Application

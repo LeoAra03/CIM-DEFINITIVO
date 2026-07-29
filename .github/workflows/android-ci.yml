@@ -1,0 +1,57 @@
+# Copy this file in GitHub's web editor to: .github/workflows/android-ci.yml
+name: Android CIM CI
+
+on:
+  push:
+    branches:
+      - arena/019fa89b-cim-definitivo
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Build and unit tests (JDK 17)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: config
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Configure JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Configure Android SDK licenses
+        run: yes | sdkmanager --licenses || true
+      - name: Make Gradle wrapper executable
+        run: chmod +x gradlew
+      - name: Show build environment
+        run: |
+          java -version
+          ./gradlew --version
+      - name: Execute unit tests
+        run: ./gradlew testAllModules --stacktrace
+      - name: Build debug APKs
+        run: ./gradlew buildAllApks --stacktrace
+      - name: Publish APK artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cim-debug-apks
+          path: config/output-apks/*.apk
+          if-no-files-found: warn
+      - name: Publish test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cim-test-reports
+          path: |
+            android/**/build/reports/tests/**
+            android/**/build/test-results/**
+          if-no-files-found: warn

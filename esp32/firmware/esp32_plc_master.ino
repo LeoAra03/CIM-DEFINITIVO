@@ -4,6 +4,7 @@
  */
 #define DEVICE_NAME "CIM_PLC_MASTER"
 #define CIM_IS_PLC
+#define STATION_UUID "CIM-ST-PLC-X4"
 #include "cim_ble_firmware.h"
 
 void setup() {

@@ -1,6 +1,9 @@
+// FIX #11: Additional null safety
 package com.example.plc
 
 import com.sistema.distribuido.network.CommandBroker
+import org.junit.Before
+import org.junit.After
 import com.sistema.distribuido.network.protocol.AppType
 import com.sistema.distribuido.network.protocol.CimMessage
 import com.sistema.distribuido.network.protocol.CommandType

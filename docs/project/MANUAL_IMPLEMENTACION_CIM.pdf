@@ -1,0 +1,307 @@
+%PDF-1.4
+%âãÏÓ
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+2 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+3 0 obj
+<< /Length 2557 >>
+stream
+BT
+/F2 14 Tf
+50 800 Td
+DOCUMENTACION SISTEMA CIM
+ Tj
+/F1 9 Tf
+0 -22 Td
+12 TL
+Sistema Industrial CIM v6.0 - Manual de implementación activo
+ Tj
+T*
+
+ Tj
+T*
+<p align="center"><img src="../assets/ubb_logo.png" alt="Universidad del Bío-Bío"
+ Tj
+T*
+width="280"></p>
+ Tj
+T*
+
+ Tj
+T*
+Propósito
+ Tj
+T*
+
+ Tj
+T*
+El sistema CIM integra estaciones Android, una capa de red compartida y firmware ESP32/Wemos
+ Tj
+T*
+para coordinar un flujo de manufactura, calidad y almacenamiento. Este manual describe las
+ Tj
+T*
+fuentes activas y el uso reproducible del proyecto; no certifica seguridad funcional ni
+ Tj
+T*
+reemplaza la documentación de laboratorio.
+ Tj
+T*
+
+ Tj
+T*
+/F2 11 Tf
+ Arquitectura activa
+ Tj
+/F1 9 Tf
+T*
+
+ Tj
+T*
+|   Capa   |   Ubicación   |   Responsabilidad   |
+ Tj
+T*
+|  ---  |  ---  |  ---  |
+ Tj
+T*
+|   Coordinación   |   android/apps/app-coordinador   |   Hub, autorización, orquestación y
+ Tj
+T*
+supervisión.   |
+ Tj
+T*
+|   PLC   |   android/apps/app-plc   |   Cinta, sensores y eventos de pallet.   |
+ Tj
+T*
+|   Manufactura   |   android/apps/app-manufactura   |   Robot, posiciones, G-code y orden de
+ Tj
+T*
+láser.   |
+ Tj
+T*
+|   Calidad   |   android/apps/app-calidad   |   Cámara, ArUco, visión y decisión PASS/FAIL.   |
+ Tj
+T*
+|   Almacén   |   android/apps/app-almacen   |   Rack, almacenamiento y retiro.   |
+ Tj
+T*
+|   Supervisión   |   android/apps/wear-coordinador   |   Vista compacta Wear OS.   |
+ Tj
+T*
+|   Red   |   android/core-network   |   Protocolo, identidad, BLE/TCP y utilidades comunes.   |
+ Tj
+T*
+|   Firmware   |   esp32/firmware   |   Firmware canónico de las estaciones.   |
+ Tj
+T*
+
+ Tj
+T*
+/F2 11 Tf
+ Comunicación e identidad
+ Tj
+/F1 9 Tf
+T*
+
+ Tj
+T*
+La comunicación combina BLE entre estación Android y hardware local, y TCP/Wi-Fi entre
+ Tj
+T*
+estaciones Android y Coordinador. El formato de mensaje principal es:
+ Tj
+T*
+
+ Tj
+T*
+text
+ Tj
+T*
+ID  |  TIMESTAMP  |  SOURCE_MAC  |  SOURCE_APP  |  DEST_MAC  |  DEST_APP  |  CMD  |  PRIORITY  |
+ Tj
+T*
+SESSION  |  PAYLOAD
+ Tj
+T*
+
+ Tj
+T*
+
+ Tj
+T*
+Cada estación debe ser validada por UUID, tipo y capacidades. El handshake Android transporta el
+ Tj
+T*
+token de emparejamiento como hash SHA-256. El anuncio CIM_ID debe ser capturado durante un
+ Tj
+T*
+ensayo físico; una coincidencia estática de código no sustituye esta captura.
+ Tj
+T*
+
+ Tj
+T*
+/F2 11 Tf
+ Firmware canónico
+ Tj
+/F1 9 Tf
+T*
+
+ Tj
+T*
+Sólo utilizar esp32/firmware/:
+ Tj
+T*
+
+ Tj
+T*
+- esp32_plc_master.ino
+ Tj
+T*
+- esp32_scorbot_manufactura.ino
+ Tj
+T*
+- esp32_scorbot_calidad.ino
+ Tj
+T*
+ET
+BT /F1 8 Tf 260 25 Td
+Página 1 de 2
+ Tj ET
+endstream
+endobj
+4 0 obj
+<< /Type /Page /Parent 7 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 3 0 R >>
+endobj
+5 0 obj
+<< /Length 1682 >>
+stream
+BT
+/F2 14 Tf
+50 800 Td
+DOCUMENTACION SISTEMA CIM
+ Tj
+/F1 9 Tf
+0 -22 Td
+12 TL
+- esp32_scorbot_almacen.ino
+ Tj
+T*
+- cim_ble_firmware.h
+ Tj
+T*
+
+ Tj
+T*
+Los snapshots en archive/ no son fuente de flasheo. Antes de llevar firmware al banco, ejecute
+ Tj
+T*
+python3 tools/validate_firmware_contract.py --quiet y revise el protocolo de laboratorio.
+ Tj
+T*
+
+ Tj
+T*
+/F2 11 Tf
+ Construcción, entrega e instalación
+ Tj
+/F1 9 Tf
+T*
+
+ Tj
+T*
+Siga el instructivo de uso. Las APK debug se exportan a config/output-apks/, y SHA256SUMS.txt
+ Tj
+T*
+permite comprobar su integridad. No se versionan APKs ni claves de firma.
+ Tj
+T*
+
+ Tj
+T*
+/F2 11 Tf
+ Secuencia operativa de alto nivel
+ Tj
+/F1 9 Tf
+T*
+
+ Tj
+T*
+1. Validar repositorio, contrato de firmware y documentación.
+ Tj
+T*
+2. Compilar/probar el software con JDK 17 y Android SDK.
+ Tj
+T*
+3. Iniciar Coordinador y el hub en una red controlada.
+ Tj
+T*
+4. Solicitar admisión de cada estación y revisar identidad/capacidades.
+ Tj
+T*
+5. Ejecutar simulación o telemetría sin carga antes de conectar actuadores.
+ Tj
+T*
+6. Para banco físico, avanzar por los casos HW-01 a HW-09 con E-stop e interlocks.
+ Tj
+T*
+7. Registrar cada resultado y cualquier incidencia en la bitácora.
+ Tj
+T*
+
+ Tj
+T*
+/F2 11 Tf
+ Seguridad y alcance de validación
+ Tj
+/F1 9 Tf
+T*
+
+ Tj
+T*
+La validación automática cubre estructura, contrato, sintaxis y las tareas de CI configuradas.
+ Tj
+T*
+No comprueba por sí sola UI en todos los dispositivos, rendimiento de LAN/BLE, cámara real,
+ Tj
+T*
+tensión eléctrica, E-stop, relé, robot, cinta ni láser. Consulte validación y cobertura, el
+ Tj
+T*
+manual de laboratorio y el protocolo hardware.
+ Tj
+T*
+ET
+BT /F1 8 Tf 260 25 Td
+Página 2 de 2
+ Tj ET
+endstream
+endobj
+6 0 obj
+<< /Type /Page /Parent 7 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 5 0 R >>
+endobj
+7 0 obj
+<< /Type /Pages /Kids [4 0 R 6 0 R] /Count 2 >>
+endobj
+8 0 obj
+<< /Type /Catalog /Pages 7 0 R >>
+endobj
+xref
+0 9
+0000000000 65535 f
+0000000015 00000 n
+0000000112 00000 n
+0000000214 00000 n
+0000002823 00000 n
+0000002959 00000 n
+0000004693 00000 n
+0000004829 00000 n
+0000004892 00000 n
+trailer
+<< /Size 9 /Root 8 0 R /Title (DOCUMENTACION SISTEMA CIM) >>
+startxref
+4941
+%%EOF

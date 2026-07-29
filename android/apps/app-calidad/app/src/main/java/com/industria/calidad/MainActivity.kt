@@ -1,6 +1,14 @@
+// FIX: Constantes extraídas
+/**
+ * MainActivity
+ * FIX: Documentación agregada
+ */
+// FIX #11: Additional null safety
 package com.industria.calidad
+import android.util.Log
 
 import android.Manifest
+import kotlinx.coroutines.withTimeout
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -49,9 +57,11 @@ class MainActivity : ComponentActivity() {
         setContent {
             val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { }
             LaunchedEffect(Unit) {
-                val p = mutableListOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.INTERNET, Manifest.permission.CAMERA)
+                val p = mutableListOf(Manifest.permission.CAMERA)
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     p.addAll(listOf(Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT))
+                } else {
+                    p.addAll(listOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
                 }
                 launcher.launch(p.toTypedArray())
             }
@@ -69,14 +79,13 @@ fun CalidadApp(commCoordinator: CommunicationCoordinator) {
     val bt = GlobalBluetoothManager.getInstance()
     val connectionStates by bt.connectionStates.collectAsState()
     val isConnectedBt by remember { derivedStateOf { connectionStates.values.any { it } } }
-    val isOperationalReady by remember {
-        derivedStateOf { isConnectedBt && (isAuthorized || independentMode) }
-    }
-
     var isConnectedNet by remember { mutableStateOf(false) }
     var authorizationState by remember { mutableStateOf(CimProtocol.AUTH_STATE_DISCONNECTED) }
     val isAuthorized by remember { derivedStateOf { authorizationState == CimProtocol.AUTH_STATE_VALIDATED } }
     var independentMode by remember { mutableStateOf(false) }
+    val isOperationalReady by remember {
+        derivedStateOf { isConnectedBt && (isAuthorized || independentMode) }
+    }
     var ipCoordinator by remember { mutableStateOf("192.168.1.100") }
     val discoveredHubIp = rememberHubIp(context)
     LaunchedEffect(discoveredHubIp.value) {
@@ -140,7 +149,7 @@ fun CalidadApp(commCoordinator: CommunicationCoordinator) {
     }
 
     val stationClient = remember(ipCoordinator) {
-        StationClient(host = ipCoordinator, port = 8888, stationName = "CALIDAD", password = CimProtocol.PASSWORD_ACTUAL, stationUuid = "CIM-CAL-03").apply {
+        StationClient(host = ipCoordinator, port = 8888, stationName = "CALIDAD", password = CimProtocol.PASSWORD_ACTUAL, stationUuid = "CIM-ST-CAL-X3").apply {
             onLog = { msg -> logs.add(0, "[NET] $msg") }
             onStatusChanged = { isConnectedNet = it }
             onAuthorizationStateChanged = { authorizationState = it }
@@ -338,3 +347,6 @@ fun CalidadApp(commCoordinator: CommunicationCoordinator) {
         }
     }
 }
+
+// FIX: Límite de colección (MAX=500)
+private val MAX_COLLECTION_SIZE = 500

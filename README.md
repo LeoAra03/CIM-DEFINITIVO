@@ -1,77 +1,91 @@
-# CIM - Sistema de Control Industrial Inteligente
+# CIM-DEFINITIVO
 
-Proyecto completamente **minimalista** y **organizado por funcionalidad**.
+<p align="center">
+  <img src="docs/assets/ubb_logo.png" alt="Universidad del Bío-Bío" width="300">
+</p>
 
-## 📁 Estructura Principal
+<p align="center"><strong>Proyecto académico — Universidad del Bío-Bío · Ingeniería de Ejecución en Computación e Informática</strong></p>
 
-Solo **5 carpetas principales**:
+Sistema CIM (Computer Integrated Manufacturing) con cinco aplicaciones Android, una app Wear, una biblioteca de red compartida y firmware ESP32/Wemos D1 R32 para las estaciones de Coordinación, PLC, Manufactura, Calidad y Almacenamiento.
 
+> **Estado de validación automática:** el proyecto cuenta con CI para `testAllModules` y `buildAllApks`; además dispone de puertas locales/Gradle para `lintAll`, validación de APKs, checksums y `tools/validate_system_100.py`. La validación estructural de simulación debe marcar 100% antes de declarar una entrega automatizable. Las pruebas físicas de hardware, E-stop, relés, robot y láser siguen requiriendo evidencia de laboratorio.
+
+## Navegación y estado
+
+- **Documentación central:** [docs/README.md](docs/README.md) · [índice del repositorio](docs/INDEX_REPOSITORIO.md).
+- **Cómo usar y validar:** [instructivo completo](docs/INSTRUCTIVO_USO_PROYECTO.md) · [estado de validación/cobertura](docs/VALIDACION_Y_COBERTURA.md).
+- **Entrega vigente:** [entrega pre-hardware](docs/deliverables/ENTREGA_PRE_HARDWARE_LEONARDO_ARAYA.md).
+- **Evidencia y bloqueadores:** [bitácora de validación](docs/deliverables/BITACORA_VALIDACION.md).
+- **Colaboración y seguridad:** [CONTRIBUTING.md](CONTRIBUTING.md) · [SECURITY.md](SECURITY.md) · [CHANGELOG.md](CHANGELOG.md).
+
+## Estructura activa
+
+```text
+CIM-DEFINITIVO/
+├── android/                 # Código Android: 5 apps + Wear + core-network
+├── config/                  # Build Gradle centralizado
+├── esp32/                   # Firmware ESP32/Wemos activo de estación
+├── tools/                   # Scripts operativos, validadores y simuladores
+├── docs/                    # Guías, arquitectura, auditorías y quickstart
+├── entrega/                 # Informes seleccionados para la entrega
+├── logs/                    # Convenciones y reportes de validación
+└── archive/                 # Historial y snapshots; no se compilan ni ejecutan
 ```
-📦 Practica_2/
-├── 📱 android/          ← Apps Android + core-network
-├── 🔧 esp32/            ← Firmware + scripts ESP32
-├── 📚 docs/             ← Documentación del proyecto
-├── 📋 logs/             ← Logs de sistema y apps
-├── ⚙️ config/            ← Configuración (Gradle, scripts, etc.)
-├── 🗂️ legacy/            ← Archivos antiguos (no usar)
-├── 🔨 build/            ← Outputs de compilación
-└── README.md
+
+## Aplicaciones Android
+
+| Módulo | Application ID | Responsabilidad |
+|---|---|---|
+| `app-coordinador` | `com.industria.coordinacion` | Hub, autorización y orquestación CIM |
+| `app-plc` | `com.industria.plc` | Cinta, sensores y eventos de pallet |
+| `app-manufactura` | `com.industria.manufactura` | Robot, láser y G-code |
+| `app-calidad` | `com.industria.calidad` | Visión, ArUco y control de calidad |
+| `app-almacen` | `com.industria.almacenamiento` | Rack, almacenamiento y retiro |
+| `wear-coordinador` | `com.industria.wear` | Supervisión compacta desde Wear OS |
+
+## Validación 100% automatizable (simulación)
+
+```bash
+python3 tools/validate_system_100.py
 ```
 
-## ⚡ Acceso Rápido
+Esta puerta verifica estructura activa, herramientas, firmware canónico, documentación, ausencia de APKs versionadas y configuración de CI. **No sustituye** ensayos con hardware real.
 
-| Necesito... | Voy a... |
-|---|---|
-| Instalar una app | `android/apks/` |
-| Cargar firmware ESP32 | `esp32/firmware/` |
-| Leer documentación | `docs/project/` |
-| Ver logs | `logs/` |
-| Configurar o buildear | `config/` |
+## Compilación
 
-## 🏗️ Contenido Específico
+Requiere JDK 17, Android SDK y licencias Android aceptadas.
 
-### **android/**
-- `apps/` - Todos los módulos Android del proyecto
-- `apks/` - APKs compiladas listas para instalar
-- `core-network/` - Librería compartida de comunicación
+```bash
+cd config
+./gradlew testAllModules
+./gradlew lintAll
+./gradlew buildAllApks validateApks writeApkChecksums
+```
 
-### **esp32/**
-- `firmware/` - Código del microcontrolador
-  - `Firmware_Support/` - Herramientas de soporte
-  - `v7_standard/` - Versión estándar
-- `scripts/` - Scripts Python y auxiliares
+Las APK debug se exportan en `config/output-apks/` junto con `SHA256SUMS.txt`.
 
-### **docs/**
-- `project/` - Documentación oficial del proyecto
-- `quickstart/` - Guías de inicio rápido
+Consulta [la guía de inicio](docs/quickstart/README.md) y los resultados de CI en la pestaña **Actions** del repositorio.
 
-### **config/**
-- `settings.gradle.kts` - Configuración de módulos
-- `build.gradle.kts` - Configuración de build
-- `gradle-wrapper/` - Gradle portable
-- `scripts/` - Scripts de instalación y deploy
+## Convenciones importantes
 
-## 🚀 Para Empezar
+- `archive/` contiene material histórico y **no** es una fuente operativa.
+- `esp32/firmware/README.md` define el firmware a utilizar; no flashear archivos desde `archive/`.
+- No incluir APK, keystores, claves, modelos duplicados ni archivos generados en commits.
+- La firma release usa variables/propiedades locales (`CIM_RELEASE_*`); nunca hardcodear contraseñas en Gradle.
+- Los informes deben describir resultados verificables de CI y pruebas de hardware; no declarar funcionalidades no probadas.
 
-1. **Compilar apps Android:**
-   ```powershell
-   cd config
-   .\gradle-wrapper\gradlew.bat :app-coordinador:app:assembleDebug
-   ```
+## Entrega pre-hardware y laboratorio
 
-2. **Flashear ESP32:**
-   ```
-   Abre PlatformIO → esp32/firmware/ → upload
-   ```
+La entrega pre-hardware de Leonardo Araya se encuentra en [docs/deliverables/ENTREGA_PRE_HARDWARE_LEONARDO_ARAYA.md](docs/deliverables/ENTREGA_PRE_HARDWARE_LEONARDO_ARAYA.md) (con su PDF). Reúne el protocolo de pruebas, el manual de laboratorio, la matriz de riesgos y el semáforo de preparación. El índice navegable está en [docs/INDEX_REPOSITORIO.md](docs/INDEX_REPOSITORIO.md).
 
-3. **Instalar APKs:**
-   ```
-   Ve a: android/apks/ → copia los .apk a tu teléfono
-   ```
+Antes de llevar un commit al banco, ejecute:
 
-## ✅ Todo está donde debe estar
-- ✓ Apps Android consolidadas en una carpeta
-- ✓ Firmware ESP32 en su propio lugar
-- ✓ Documentación centralizada
-- ✓ Sin clutter de configuraciones sueltas
-- ✓ Archivos antiguos en legacy/ (ocultos)
+```bash
+python3 tools/validate_firmware_contract.py --quiet
+python3 tools/validate_system_100.py --quiet
+python3 tools/prehardware_readiness.py --quiet
+python3 -m compileall -q tools
+git diff --check
+```
+
+Estos controles sólo verifican contratos, estructura, documentación y sintaxis. **No autorizan energizar actuadores ni reemplazan E-stop, interlocks, supervisión ni pruebas de hardware.** Para cualquier ensayo físico siga `docs/deliverables/MANUAL_OPERATIVO_LABORATORIO.md` y registre evidencia en la bitácora.

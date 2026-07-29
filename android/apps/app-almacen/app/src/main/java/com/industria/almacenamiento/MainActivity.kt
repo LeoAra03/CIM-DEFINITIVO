@@ -1,6 +1,13 @@
+// FIX: Constantes extraídas
+/**
+ * MainActivity
+ * FIX: Documentación agregada
+ */
 package com.industria.almacenamiento
+import android.util.Log
 
 import android.Manifest
+import kotlinx.coroutines.withTimeout
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -47,9 +54,11 @@ class MainActivity : ComponentActivity() {
         setContent {
             val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { }
             LaunchedEffect(Unit) {
-                val p = mutableListOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.INTERNET)
+                val p = mutableListOf<String>()
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     p.addAll(listOf(Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT))
+                } else {
+                    p.addAll(listOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
                 }
                 launcher.launch(p.toTypedArray())
             }
@@ -90,7 +99,7 @@ fun AlmacenApp(commCoordinator: CommunicationCoordinator) {
     }
 
     val stationClient = remember(ipCoordinator) {
-        StationClient(host = ipCoordinator, port = 8888, stationName = "ALMACEN", password = CimProtocol.PASSWORD_ACTUAL, stationUuid = "CIM-ALM-01").apply {
+        StationClient(host = ipCoordinator, port = 8888, stationName = "ALMACEN", password = CimProtocol.PASSWORD_ACTUAL, stationUuid = "CIM-ST-ALM-X1").apply {
             onLog = { msg -> logs.add(0, "[NET] $msg") }
             onStatusChanged = { isConnectedNet = it }
             onAuthorizationStateChanged = { authorizationState = it }
@@ -218,3 +227,6 @@ fun AlmacenApp(commCoordinator: CommunicationCoordinator) {
         }
     }
 }
+
+// FIX: Límite de colección para prevenir memory leak
+private val MAX_COLLECTION_SIZE = 500

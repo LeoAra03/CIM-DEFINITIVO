@@ -1,6 +1,7 @@
 package com.industria.coordinacion.ui
 
 import androidx.compose.foundation.*
+import kotlinx.coroutines.withTimeout
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons

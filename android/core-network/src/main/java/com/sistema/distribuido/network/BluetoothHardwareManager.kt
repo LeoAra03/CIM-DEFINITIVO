@@ -1,5 +1,7 @@
 package com.sistema.distribuido.network
 
+import android.util.Log
+
 import android.Manifest
 import android.annotation.SuppressLint
 import android.bluetooth.*
@@ -18,6 +20,7 @@ import androidx.core.content.ContextCompat
 import com.sistema.distribuido.network.protocol.CimMessageBuilder
 import com.sistema.distribuido.network.protocol.CimMessage
 import com.sistema.distribuido.network.protocol.CommandType
+import com.sistema.distribuido.network.protocol.AppType
 import com.sistema.distribuido.network.protocol.CimProtocol
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
@@ -197,6 +200,7 @@ class BluetoothHardwareManager(
             adapter.cancelDiscovery()
             adapter.startDiscovery()
         } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e)
             onLog("⚠ Classic discovery: ${e.message}")
         }
     }
@@ -345,6 +349,7 @@ class BluetoothHardwareManager(
                         sendIdentification(address)
                     }
                 } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e)
                     onLog("⚠ Error setup GATT [$address]: ${e.message}")
                 }
             }
@@ -355,7 +360,7 @@ class BluetoothHardwareManager(
                 characteristic: BluetoothGattCharacteristic,
                 value: ByteArray
             ) {
-                handleIncomingData(gatt, String(value, Charsets.UTF_8).trim())
+                handleIncomingData(gatt, String(value, Charsets.UTF_8))
             }
 
             @Deprecated("Deprecated in API 33")
@@ -363,7 +368,7 @@ class BluetoothHardwareManager(
             override fun onCharacteristicChanged(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
                 @Suppress("DEPRECATION")
                 val value = characteristic.value ?: return
-                handleIncomingData(gatt, String(value, Charsets.UTF_8).trim())
+                handleIncomingData(gatt, String(value, Charsets.UTF_8))
             }
         }
     }
@@ -387,7 +392,59 @@ class BluetoothHardwareManager(
             val fullMessage = buffer.toString().trim()
             buffer.clear()
             onDataReceived?.invoke(mac, fullMessage)
+            handleFirmwareIdentity(gatt, mac, fullMessage)
             handleIdentifyHandshake(gatt, mac, fullMessage)
+        }
+    }
+
+    /** Registers a physical Wemos station after its CIM_ID firmware response. */
+    private fun handleFirmwareIdentity(gatt: BluetoothGatt, mac: String, fullMessage: String) {
+        val marker = "|RESP|CIM_ID|"
+        val payload = fullMessage.substringAfter(marker, missingDelimiterValue = "")
+        if (payload.isBlank()) return
+        val parts = payload.split("|")
+        if (parts.size < 6) {
+            onLog("⚠ CIM_ID incompleto desde $mac")
+            return
+        }
+        val deviceName = parts[0].take(80)
+        val stationUuid = parts[1].take(80)
+        val stationType = parts[2]
+        val model = parts[3].take(80)
+        val version = parts[4].take(40)
+        val capabilities = parts[5].take(240)
+        val appType = when (stationType) {
+            "PLC_CONTROLLER" -> AppType.PLC
+            "ROBOT_ARM" -> AppType.MANUFACTURA
+            "QUALITY_STATION" -> AppType.CALIDAD
+            "STORAGE_STATION" -> AppType.ALMACEN
+            else -> AppType.UNKNOWN
+        }
+        scope.launch {
+            val capabilitySet = capabilities.split(",").map { it.trim() }.filter { it.isNotBlank() }.toSet()
+            val verdict = StationIdentityPolicy.evaluate(
+                StationIdentity(stationUuid, appType, stationType, model, capabilitySet)
+            )
+            if (!verdict.accepted) {
+                GlobalPermissionManager.getInstance().ban(mac, "Identidad CIM inválida: ${verdict.reason}")
+                disconnect(mac)
+                onLog("🚫 CIM_ID bloqueado [$mac]: ${verdict.reason}")
+                return@launch
+            }
+            val info = DeviceInfo(
+                ip = "",
+                nombre = deviceName,
+                tipo = DeviceType.UNKNOWN,
+                mac = mac,
+                appType = appType,
+                stationUuid = stationUuid,
+                hardwareModel = model,
+                capabilities = capabilities,
+                version = version,
+                isConnected = true
+            )
+            GlobalDeviceRegistry.registry.register(mac, info)
+            onLog("✓ CIM_ID aceptado: $deviceName [$stationUuid] $model v$version")
         }
     }
 
@@ -437,6 +494,7 @@ class BluetoothHardwareManager(
                         onLog("→ SENT IDENTIFIED to $mac: $responsePayload")
                     }
                 } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e)
                     onLog("⚠ Error IDENTIFY [$mac]: ${e.message}")
                 }
             }
@@ -612,6 +670,7 @@ class BluetoothHardwareManager(
             sendToDevice(mac, identifyMsg)
             onLog("→ SENT IDENTIFY to $mac")
         } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e)
             onLog("⚠ Cannot send IDENTIFY to $mac: ${e.message}")
         }
     }
@@ -622,6 +681,7 @@ class BluetoothHardwareManager(
             try {
                 scanner?.stopScan(cb)
             } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e)
                 onLog("⚠ Error deteniendo escaneo BLE: ${e.message}")
             }
         }

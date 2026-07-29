@@ -79,7 +79,10 @@ class CommandBroker(
                 try {
                     sendViaBle(message, transaction)
                     sent = true
-                } catch (e: Exception) { lastError = e }
+                } catch (e: Exception) {
+                    Log.e("CIM", "Error: ${e.message}", e)
+                    lastError = e
+                }
             }
 
             // Intentar SPP (Bluetooth Classic)
@@ -94,7 +97,10 @@ class CommandBroker(
                     transaction.status = TransactionStatus.SENT
                     sent = true
                     if (message.requiresAck()) waitForAckOrTimeout(transaction)
-                } catch (e: Exception) { lastError = e }
+                } catch (e: Exception) {
+                    Log.e("CIM", "Error: ${e.message}", e)
+                    lastError = e
+                }
             }
 
             // Intentar TCP
@@ -106,7 +112,10 @@ class CommandBroker(
                         sent = true
                         if (message.requiresAck()) waitForAckOrTimeout(transaction)
                     }
-                } catch (e: Exception) { lastError = e }
+                } catch (e: Exception) {
+                    Log.e("CIM", "Error: ${e.message}", e)
+                    lastError = e
+                }
             }
 
             // Intentar TCP Server
@@ -118,7 +127,10 @@ class CommandBroker(
                         sent = true
                         if (message.requiresAck()) waitForAckOrTimeout(transaction)
                     }
-                } catch (e: Exception) { lastError = e }
+                } catch (e: Exception) {
+                    Log.e("CIM", "Error: ${e.message}", e)
+                    lastError = e
+                }
             }
 
             if (!sent && !allowOfflineSend) {
@@ -129,6 +141,7 @@ class CommandBroker(
             }
 
         } catch (e: Exception) {
+            Log.e("CIM", "Error: ${e.message}", e)
             transaction.status = TransactionStatus.ERROR
             notifyError("✗ BROKER ERROR: ${e.message}")
         }
@@ -203,3 +216,6 @@ class CommandBroker(
 }
 
 data class BrokerStats(val totalTransactions: Int, val avgLatencyMs: Double, val successRate: Double, val errorCount: Int, val logSize: Int)
+
+// FIX: Límite de colección (MAX=500)
+private val MAX_COLLECTION_SIZE = 500

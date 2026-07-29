@@ -197,18 +197,6 @@ class StationClient(
         }
     }
 
-    private fun performHandshake() {
-        val handshake = CimMessageBuilder.createPermissionHandshake(
-            sourceMac = macAddress,
-            sourceApp = AppType.values().firstOrNull { it.name.equals(stationName, ignoreCase = true) } ?: AppType.UNKNOWN,
-            stationName = stationName,
-            password = password,
-            stationUuid = stationUuid
-        ).let { if (CimProtocol.USE_CRC_V2) it.toSecureTransportString() else it.toTransportString() }
-        sendSecure(handshake)
-        onLog?.invoke(CimProtocol.formatLog("StationClient", "Handshake CIM enviado", true))
-    }
-
     /**
      * Realiza handshake de forma segura
      */
@@ -218,7 +206,7 @@ class StationClient(
             sourceMac = macAddress,
             sourceApp = AppType.values().firstOrNull { it.name.equals(stationName, ignoreCase = true) } ?: AppType.UNKNOWN,
             stationName = stationName,
-            password = password,
+            password = CimProtocol.pairingSecretForTransport(password),
             stationUuid = stationUuid
         ).let { if (CimProtocol.USE_CRC_V2) it.toSecureTransportString() else it.toTransportString() }
 

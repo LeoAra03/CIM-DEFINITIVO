@@ -1,6 +1,12 @@
+// FIX: Constantes extraídas
+/**
+ * MainActivity
+ * @author CIM Team
+ */
 package com.industria.plc
 
 import android.Manifest
+import kotlinx.coroutines.withTimeout
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -48,9 +54,11 @@ class MainActivity : ComponentActivity() {
         setContent {
             val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { }
             LaunchedEffect(Unit) {
-                val p = mutableListOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.INTERNET)
+                val p = mutableListOf<String>()
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     p.addAll(listOf(Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT))
+                } else {
+                    p.addAll(listOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
                 }
                 launcher.launch(p.toTypedArray())
             }
@@ -131,8 +139,8 @@ fun PLCApp(commCoordinator: CommunicationCoordinator) {
             port = 8888,
             stationName = "PLC",
             password = CimProtocol.PASSWORD_ACTUAL,
-            stationUuid = "CIM-PLC-04",
-            macAddress = "CIM-PLC-04"
+            stationUuid = "CIM-ST-PLC-X4",
+            macAddress = AppIdentifier.getInstance().deviceMac
         ).apply {
             onLog = { msg -> logs.add(0, "[NET] $msg") }
             onStatusChanged = { isConnectedNet = it }

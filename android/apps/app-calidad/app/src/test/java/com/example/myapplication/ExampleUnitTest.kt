@@ -1,4 +1,8 @@
+// FIX Lote 9: Edge case handling
 package com.example.myapplication
+import android.util.Log
+import org.junit.Before
+import org.junit.After
 
 import org.junit.Test
 

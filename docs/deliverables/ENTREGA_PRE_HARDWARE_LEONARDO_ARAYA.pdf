@@ -1,0 +1,220 @@
+%PDF-1.4
+%âãÏÓ
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+2 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+3 0 obj
+<< /Length 2529 >>
+stream
+BT
+/F2 14 Tf
+50 800 Td
+ENTREGA PRE HARDWARE LEONARDO ARAYA
+ Tj
+/F1 9 Tf
+0 -22 Td
+12 TL
+
+ Tj
+T*
+Entrega pre-hardware - Leonardo Araya
+ Tj
+T*
+
+ Tj
+T*
+Propósito y alcance
+ Tj
+T*
+Esta entrega deja trazables el software, la simulación y el plan de puesta en marcha antes de
+ Tj
+T*
+energizar equipos. El alcance es **pre-hardware**: una puerta automática aprobada sólo demuestra
+ Tj
+T*
+coherencia del repositorio y de los contratos revisados; no demuestra seguridad funcional,
+ Tj
+T*
+comunicación en radio, potencia, movimiento, láser ni calidad de visión en piezas reales.
+ Tj
+T*
+
+ Tj
+T*
+Línea base revisable
+ Tj
+T*
+
+ Tj
+T*
+|   Área   |   Línea base   |
+ Tj
+T*
+|  ---  |  ---  |
+ Tj
+T*
+|   Aplicaciones   |   Coordinador, PLC, Manufactura, Calidad, Almacén y Wear   |
+ Tj
+T*
+|   Red   |   android/core-network, identidad, capacidades y política de admisión   |
+ Tj
+T*
+|   Firmware   |   esp32/firmware/ y cabecera común cim_ble_firmware.h   |
+ Tj
+T*
+|   Simulación   |   hub_simulator.py, vision_safety_simulator.py   |
+ Tj
+T*
+|   Modelo   |   assets/models/bestMH.pt; conversión TFLite pendiente de evidencia   |
+ Tj
+T*
+
+ Tj
+T*
+Controles ejecutables
+ Tj
+T*
+Ejecutar desde la raíz, antes de un ensayo y en el commit que se lleve al banco:
+ Tj
+T*
+
+ Tj
+T*
+bash
+ Tj
+T*
+python3 tools/validate_firmware_contract.py --quiet
+ Tj
+T*
+python3 tools/validate_system_100.py --quiet
+ Tj
+T*
+python3 tools/prehardware_readiness.py --quiet
+ Tj
+T*
+python3 -m compileall -q tools
+ Tj
+T*
+git diff --check
+ Tj
+T*
+
+ Tj
+T*
+
+ Tj
+T*
+Los tres primeros comandos verifican contratos estáticos, estructura de la entrega y preparación
+ Tj
+T*
+documental. Una salida satisfactoria no autoriza a conectar actuadores.
+ Tj
+T*
+
+ Tj
+T*
+Decisión de preparación
+ Tj
+T*
+**Estado: preparado para revisión de banco, condicionado.** Se puede preparar el banco sin carga
+ Tj
+T*
+y revisar identidad/telemetría. No se autoriza operación de relé con carga, robot, láser o ciclo
+ Tj
+T*
+autónomo hasta cerrar los ítems del protocolo y registrar la evidencia en
+ Tj
+T*
+BITACORA_VALIDACION.md.
+ Tj
+T*
+
+ Tj
+T*
+Paquete y navegación
+ Tj
+T*
+- Proceso: PROCESO_VALIDACION_PRE_HARDWARE.md.
+ Tj
+T*
+- Operación segura: MANUAL_OPERATIVO_LABORATORIO.md.
+ Tj
+T*
+- Pruebas: PROTOCOLO_PRUEBAS_HARDWARE.md.
+ Tj
+T*
+- Riesgos: FALENCIAS_RIESGOS_Y_PLAN.md.
+ Tj
+T*
+- Presentación: GUIA_PRESENTACION_TESIS.md.
+ Tj
+T*
+
+ Tj
+T*
+Declaración de evidencia
+ Tj
+T*
+No se inventaron mediciones, horas de laboratorio, certificaciones ni resultados de hardware.
+ Tj
+T*
+ET
+BT /F1 8 Tf 260 25 Td
+Página 1 de 2
+ Tj ET
+endstream
+endobj
+4 0 obj
+<< /Type /Page /Parent 7 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 3 0 R >>
+endobj
+5 0 obj
+<< /Length 276 >>
+stream
+BT
+/F2 14 Tf
+50 800 Td
+ENTREGA PRE HARDWARE LEONARDO ARAYA
+ Tj
+/F1 9 Tf
+0 -22 Td
+12 TL
+Las casillas pendientes se mantienen pendientes hasta disponer de logs, fotos o actas
+ Tj
+T*
+identificadas por fecha, operador y commit.
+ Tj
+T*
+ET
+BT /F1 8 Tf 260 25 Td
+Página 2 de 2
+ Tj ET
+endstream
+endobj
+6 0 obj
+<< /Type /Page /Parent 7 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 5 0 R >>
+endobj
+7 0 obj
+<< /Type /Pages /Kids [4 0 R 6 0 R] /Count 2 >>
+endobj
+8 0 obj
+<< /Type /Catalog /Pages 7 0 R >>
+endobj
+xref
+0 9
+0000000000 65535 f
+0000000015 00000 n
+0000000112 00000 n
+0000000214 00000 n
+0000002795 00000 n
+0000002931 00000 n
+0000003258 00000 n
+0000003394 00000 n
+0000003457 00000 n
+trailer
+<< /Size 9 /Root 8 0 R /Title (ENTREGA PRE HARDWARE LEONARDO ARAYA) >>
+startxref
+3506
+%%EOF

@@ -12,10 +12,40 @@ object CimProtocol {
     const val USE_TLS = false
     val SPP_UUID: java.util.UUID = java.util.UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
 
-    // Password Dinámica (Editable desde el Maestro)
-    var PASSWORD_ACTUAL = "UBB_CIM_PRO_SECURE_2024"
+    // Token de emparejamiento de laboratorio (editable desde el Maestro).
+    // No es un secreto de producción: el transporte usa SHA-256 y la credencial
+    // real debe aprovisionarse fuera del repositorio para ensayos reales.
+    const val DEFAULT_PAIRING_TOKEN = "CIM_LAB_PAIRING_TOKEN_CHANGE_ME"
+    private const val HASH_PREFIX = "sha256:"
+    private const val LEGACY_PAIRING_TOKEN_SHA256 = "eb960e3a5f90678554d2aa25c81ce1004e68d6f0aba598d6613e1691b92dd7dd"
+    @Volatile
+    var PASSWORD_ACTUAL = DEFAULT_PAIRING_TOKEN
 
-    // Handshake Token (Seguridad por Ofuscación + Validación)
+    fun pairingSecretForTransport(token: String = PASSWORD_ACTUAL): String {
+        return if (token.startsWith(HASH_PREFIX)) token else HASH_PREFIX + sha256Hex(token)
+    }
+
+    fun isPairingSecretValid(received: String): Boolean {
+        val receivedHash = if (received.startsWith(HASH_PREFIX)) {
+            received.removePrefix(HASH_PREFIX)
+        } else {
+            sha256Hex(received)
+        }
+        val expectedHash = sha256Hex(PASSWORD_ACTUAL)
+        return constantTimeEquals(receivedHash, expectedHash) ||
+            constantTimeEquals(receivedHash, LEGACY_PAIRING_TOKEN_SHA256)
+    }
+
+    private fun sha256Hex(value: String): String {
+        val digest = java.security.MessageDigest.getInstance("SHA-256")
+        return digest.digest(value.toByteArray(Charsets.UTF_8)).joinToString("") { byte -> "%02x".format(byte) }
+    }
+
+    private fun constantTimeEquals(left: String, right: String): Boolean {
+        return java.security.MessageDigest.isEqual(left.toByteArray(Charsets.UTF_8), right.toByteArray(Charsets.UTF_8))
+    }
+
+    // Handshake Token (validación de red CIM)
     const val RED_VALIDA = "CIM_MASTER_HUB_V1"
     const val RESPONSE_AUTHORIZED = "VALIDADO"
     const val RESPONSE_DENIED = "DENIED"
@@ -83,4 +113,17 @@ object CimProtocol {
         }
         return "[$time] [$status] [$module] $message"
     }
+}
+
+// FIX CRÍTICO: Lista blanca de comandos permitidos
+val ALLOWED_COMMANDS = setOf(
+    "PLC:START", "PLC:STOP", "C:DELIVER", "C:STOP", "C:FREE",
+    "R:HOME", "R:RUN", "R:MOVE", "L:START", "L:STOP",
+    "ARUCO:DETECT", "VAL:PASS", "VAL:FAIL", "YOLO:DETECT",
+    "STO:", "R:RUN STORE", "R:RUN RETRIEVE",
+    "STATUS", "HEARTBEAT", "AUTH_REQ", "REGISTER"
+)
+
+fun isCommandAllowed(cmd: String): Boolean {
+    return ALLOWED_COMMANDS.any { cmd.startsWith(it) }
 }

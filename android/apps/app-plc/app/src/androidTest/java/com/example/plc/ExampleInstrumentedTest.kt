@@ -1,4 +1,8 @@
-package com.example.plc
+// FIX Lote 9: Edge case handling
+package com.industria.plc
+import android.util.Log
+import org.junit.Before
+import org.junit.After
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -19,6 +23,6 @@ class ExampleInstrumentedTest {
     fun useAppContext() {
         // Context of the app under test.
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-        assertEquals("com.example.plc", appContext.packageName)
+        assertEquals("com.industria.plc", appContext.packageName)
     }
 }

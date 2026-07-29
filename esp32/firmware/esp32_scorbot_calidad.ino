@@ -3,6 +3,7 @@
  */
 #define DEVICE_NAME "CIM_SCORBOT_CAL"
 #define STATION_TYPE "QUALITY_STATION"
+#define STATION_UUID "CIM-ST-CAL-X3"
 #include "cim_ble_firmware.h"
 
 void setup() {

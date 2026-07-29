@@ -18,6 +18,12 @@ import java.util.concurrent.ConcurrentHashMap
  * - Revocación en cualquier momento
  */
 
+data class BlockedDevice(
+    val mac: String,
+    val reason: String,
+    val blockedAt: Long
+)
+
 data class PermissionRequest(
     val id: String = java.util.UUID.randomUUID().toString(),
     val mac: String,
@@ -47,6 +53,9 @@ class PermissionManager(private val context: Context) {
     // Decisiones recordadas: MAC -> (Approved: Boolean, Timestamp)
     private val remembereddecisions = ConcurrentHashMap<String, Pair<Boolean, Long>>()
 
+    // Blocked devices are persistent and are denied before any auto-approval path.
+    private val blockedDevices = ConcurrentHashMap<String, BlockedDevice>()
+
     // Listeners para cambios
     private val listeners: MutableList<PermissionListener> = mutableListOf()
 
@@ -59,6 +68,7 @@ class PermissionManager(private val context: Context) {
 
     init {
         loadRememberedDecisions()
+        loadBlockedDevices()
     }
 
     suspend fun addListener(listener: PermissionListener) {
@@ -73,6 +83,11 @@ class PermissionManager(private val context: Context) {
         appType: AppType,
         deviceName: String = "Unknown Device"
     ): PermissionDecision {
+        if (isBlocked(mac)) {
+            AuthorizationManager.deny(mac)
+            return PermissionDecision.REJECTED
+        }
+
         // Si estamos en modo test y auto-approve activado, responder inmediatamente
         try {
             if (GlobalPermissionManager.autoApproveTestMode) {
@@ -114,6 +129,7 @@ class PermissionManager(private val context: Context) {
      * Aprueba una solicitud de permiso
      */
     suspend fun approve(mac: String, rememberDecision: Boolean = true) {
+        if (isBlocked(mac)) return
         val request = pendingRequests[mac] ?: return
 
         request.approved = true
@@ -157,6 +173,39 @@ class PermissionManager(private val context: Context) {
         pendingRequests.remove(mac)
         listeners.forEach { it.onPermissionRejected(mac) }
     }
+
+
+    /** Bloquea persistentemente un equipo desconocido o no confiable. */
+    suspend fun ban(mac: String, reason: String = "Bloqueado por operador") {
+        val normalizedMac = mac.trim().uppercase()
+        if (normalizedMac.isBlank()) return
+        val blocked = BlockedDevice(normalizedMac, reason.take(160), System.currentTimeMillis())
+        blockedDevices[normalizedMac] = blocked
+        remembereddecisions[normalizedMac] = Pair(false, blocked.blockedAt)
+        pendingRequests.remove(normalizedMac)
+        sharedPrefs.edit()
+            .putString("blocked_${normalizedMac}_reason", blocked.reason)
+            .putLong("blocked_${normalizedMac}_timestamp", blocked.blockedAt)
+            .apply()
+        AuthorizationManager.deny(normalizedMac)
+        listeners.forEach { it.onPermissionRejected(normalizedMac) }
+    }
+
+    /** Retira un bloqueo persistente; no autoriza el dispositivo automáticamente. */
+    suspend fun unban(mac: String) {
+        val normalizedMac = mac.trim().uppercase()
+        blockedDevices.remove(normalizedMac)
+        sharedPrefs.edit()
+            .remove("blocked_${normalizedMac}_reason")
+            .remove("blocked_${normalizedMac}_timestamp")
+            .apply()
+        AuthorizationManager.revoke(normalizedMac)
+    }
+
+    fun isBlocked(mac: String): Boolean = blockedDevices.containsKey(mac.trim().uppercase())
+
+    fun getBlockedDevices(): List<BlockedDevice> =
+        blockedDevices.values.sortedByDescending { it.blockedAt }
 
     /**
      * Revoca los permisos de un dispositivo
@@ -260,6 +309,19 @@ class PermissionManager(private val context: Context) {
                 } catch (e: Exception) {
                     // ignorar entradas mal formateadas
                 }
+            }
+        }
+    }
+
+    private fun loadBlockedDevices() {
+        sharedPrefs.all.forEach { (key, value) ->
+            if (key.startsWith("blocked_") && key.endsWith("_timestamp")) {
+                val mac = key.removePrefix("blocked_").removeSuffix("_timestamp")
+                val timestamp = value as? Long ?: return@forEach
+                val reason = sharedPrefs.getString("blocked_${mac}_reason", "Bloqueado por operador")
+                    ?: "Bloqueado por operador"
+                blockedDevices[mac] = BlockedDevice(mac, reason, timestamp)
+                AuthorizationManager.deny(mac)
             }
         }
     }

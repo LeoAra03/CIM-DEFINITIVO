@@ -8,6 +8,13 @@
 | `esp32/firmware/` | Firmware canónico de estaciones ESP32/Wemos. |
 | `tools/` | Simulación, validadores, inspección de visión y utilidades de operación. |
 | `config/` | Configuración Gradle centralizada. |
+| `docs/` | Documentación activa; comenzar en [`docs/README.md`](README.md). |
+
+## Uso y validación
+
+- [Instructivo de uso completo](INSTRUCTIVO_USO_PROYECTO.md): preparación, build, instalación, simulación y paso a laboratorio.
+- [Estado de validación y cobertura](VALIDACION_Y_COBERTURA.md): alcance exacto de CI, UI y hardware.
+- [Manual de implementación (Markdown)](project/DOCUMENTACION_SISTEMA_CIM.md) · [PDF](project/MANUAL_IMPLEMENTACION_CIM.pdf).
 
 ## Entrega pre-hardware
 

@@ -107,6 +107,7 @@ def check_tools(root: Path) -> CheckResult:
         "tools/tflite_yolo_test.py",
         "tools/validate_firmware_contract.py",
         "tools/prehardware_readiness.py",
+        "tools/generate_project_pdfs.py",
         "tools/powershell/Validar_Sistema_100pc.ps1",
         "tools/powershell/Simular_Ciclo_Completo.ps1",
         "tools/powershell/Instalar-APKs.ps1",
@@ -121,6 +122,9 @@ def check_docs(root: Path) -> CheckResult:
     expected = [
         "README.md",
         "docs/README.md",
+        "docs/INSTRUCTIVO_USO_PROYECTO.md",
+        "docs/VALIDACION_Y_COBERTURA.md",
+        "docs/project/MANUAL_IMPLEMENTACION_CIM.pdf",
         "docs/INDEX_REPOSITORIO.md",
         "CONTRIBUTING.md",
         "SECURITY.md",

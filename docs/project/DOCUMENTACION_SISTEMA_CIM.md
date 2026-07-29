@@ -1,22 +1,37 @@
 # Sistema Industrial CIM v6.0 — Manual de implementación activo
 
-Este documento resume la arquitectura, despliegue y operación del sistema de manufactura flexible CIM desde la estructura activa del repositorio.
+<p align="center"><img src="../assets/ubb_logo.png" alt="Universidad del Bío-Bío" width="280"></p>
 
-## Aplicaciones Android
+## Propósito
 
-El sistema consta de cinco estaciones Android principales, una app Wear y una librería compartida:
+El sistema CIM integra estaciones Android, una capa de red compartida y firmware ESP32/Wemos para coordinar un flujo de manufactura, calidad y almacenamiento. Este manual describe las fuentes activas y el uso reproducible del proyecto; no certifica seguridad funcional ni reemplaza la documentación de laboratorio.
 
-1. `app-coordinador`: hub de red, autorización y supervisión.
-2. `app-manufactura`: robot Scorbot, láser/G-code y visión de apoyo.
-3. `app-calidad`: inspección por visión ArUco/YOLO y validación PASS/FAIL.
-4. `app-almacen`: gestión de racks, almacenamiento y retiro.
-5. `app-plc`: cinta transportadora, sensores y eventos de pallet.
-6. `wear-coordinador`: supervisión compacta Wear OS.
-7. `core-network`: protocolo, registro, BLE/TCP, visión y utilidades comunes.
+## Arquitectura activa
 
-## Firmware ESP32/Wemos D1 R32
+| Capa | Ubicación | Responsabilidad |
+|---|---|---|
+| Coordinación | `android/apps/app-coordinador` | Hub, autorización, orquestación y supervisión. |
+| PLC | `android/apps/app-plc` | Cinta, sensores y eventos de pallet. |
+| Manufactura | `android/apps/app-manufactura` | Robot, posiciones, G-code y orden de láser. |
+| Calidad | `android/apps/app-calidad` | Cámara, ArUco, visión y decisión PASS/FAIL. |
+| Almacén | `android/apps/app-almacen` | Rack, almacenamiento y retiro. |
+| Supervisión | `android/apps/wear-coordinador` | Vista compacta Wear OS. |
+| Red | `android/core-network` | Protocolo, identidad, BLE/TCP y utilidades comunes. |
+| Firmware | `esp32/firmware` | Firmware canónico de las estaciones. |
 
-La carpeta canónica es `esp32/firmware/`:
+## Comunicación e identidad
+
+La comunicación combina BLE entre estación Android y hardware local, y TCP/Wi-Fi entre estaciones Android y Coordinador. El formato de mensaje principal es:
+
+```text
+ID|TIMESTAMP|SOURCE_MAC|SOURCE_APP|DEST_MAC|DEST_APP|CMD|PRIORITY|SESSION|PAYLOAD
+```
+
+Cada estación debe ser validada por UUID, tipo y capacidades. El handshake Android transporta el token de emparejamiento como hash SHA-256. El anuncio `CIM_ID` debe ser capturado durante un ensayo físico; una coincidencia estática de código no sustituye esta captura.
+
+## Firmware canónico
+
+Sólo utilizar `esp32/firmware/`:
 
 - `esp32_plc_master.ino`
 - `esp32_scorbot_manufactura.ino`
@@ -24,51 +39,22 @@ La carpeta canónica es `esp32/firmware/`:
 - `esp32_scorbot_almacen.ino`
 - `cim_ble_firmware.h`
 
-No usar firmwares desde `archive/` para nuevas pruebas.
+Los snapshots en `archive/` no son fuente de flasheo. Antes de llevar firmware al banco, ejecute `python3 tools/validate_firmware_contract.py --quiet` y revise el protocolo de laboratorio.
 
-## Protocolo de red
+## Construcción, entrega e instalación
 
-La comunicación es híbrida:
+Siga el [instructivo de uso](../INSTRUCTIVO_USO_PROYECTO.md). Las APK debug se exportan a `config/output-apks/`, y `SHA256SUMS.txt` permite comprobar su integridad. No se versionan APKs ni claves de firma.
 
-1. Bluetooth/BLE entre la app de estación y su hardware local ESP32.
-2. TCP/Wi-Fi entre estaciones Android y Coordinador.
+## Secuencia operativa de alto nivel
 
-Formato de mensaje principal:
+1. Validar repositorio, contrato de firmware y documentación.
+2. Compilar/probar el software con JDK 17 y Android SDK.
+3. Iniciar Coordinador y el hub en una red controlada.
+4. Solicitar admisión de cada estación y revisar identidad/capacidades.
+5. Ejecutar simulación o telemetría sin carga antes de conectar actuadores.
+6. Para banco físico, avanzar por los casos HW-01 a HW-09 con E-stop e interlocks.
+7. Registrar cada resultado y cualquier incidencia en la bitácora.
 
-```text
-ID|TIMESTAMP|SOURCE_MAC|SOURCE_APP|DEST_MAC|DEST_APP|CMD|PRIORITY|SESSION|PAYLOAD
-```
+## Seguridad y alcance de validación
 
-El handshake Android transporta el token de emparejamiento como `sha256:<hash>` y requiere aprobación del Coordinador.
-
-## Validación automática
-
-Desde la raíz:
-
-```bash
-python3 tools/validate_system_100.py
-```
-
-Desde `config/`:
-
-```bash
-./gradlew testAllModules
-./gradlew lintAll
-./gradlew buildAllApks validateApks writeApkChecksums
-```
-
-## Ubicación de artefactos
-
-- APKs debug: `config/output-apks/*.apk`
-- Checksums: `config/output-apks/SHA256SUMS.txt`
-- Reporte estructural opcional: `logs/system_100_validation.json`
-- Scripts PowerShell: `tools/powershell/`
-
-## Despliegue básico
-
-1. Generar APKs con Gradle o descargar artefactos de CI.
-2. Instalar APKs con ADB o `tools/powershell/Instalar-APKs.ps1`.
-3. Abrir Coordinador, iniciar el hub y revisar solicitudes.
-4. Abrir cada estación, usar la IP descubierta/indicada y solicitar autorización.
-5. Para hardware físico, flashear desde `esp32/firmware/` y registrar evidencia en la bitácora.
-6. No energizar actuadores reales sin E-stop físico, límites e interlocks validados.
+La validación automática cubre estructura, contrato, sintaxis y las tareas de CI configuradas. No comprueba por sí sola UI en todos los dispositivos, rendimiento de LAN/BLE, cámara real, tensión eléctrica, E-stop, relé, robot, cinta ni láser. Consulte [validación y cobertura](../VALIDACION_Y_COBERTURA.md), el [manual de laboratorio](../deliverables/MANUAL_OPERATIVO_LABORATORIO.md) y el [protocolo hardware](../deliverables/PROTOCOLO_PRUEBAS_HARDWARE.md).

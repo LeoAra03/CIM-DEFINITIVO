@@ -10,8 +10,9 @@ Este directorio contiene la documentación activa, académica y operativa del Si
 
 1. **[Índice del repositorio](INDEX_REPOSITORIO.md):** mapa de código, documentación, comandos y rutas activas.
 2. **[Entrega pre-hardware](deliverables/ENTREGA_PRE_HARDWARE_LEONARDO_ARAYA.md):** alcance de la entrega y límites de validación.
-3. **[Manual del sistema](project/DOCUMENTACION_SISTEMA_CIM.md):** arquitectura, despliegue y operación.
-4. **[Guía rápida](quickstart/README.md):** preparación inicial del entorno.
+3. **[Instructivo de uso](INSTRUCTIVO_USO_PROYECTO.md):** preparación, compilación, instalación y paso a laboratorio.
+4. **[Manual del sistema](project/DOCUMENTACION_SISTEMA_CIM.md):** arquitectura, despliegue y operación (también disponible en [PDF](project/MANUAL_IMPLEMENTACION_CIM.pdf)).
+5. **[Guía rápida](quickstart/README.md):** preparación inicial del entorno.
 
 ## Documentación por propósito
 

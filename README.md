@@ -13,6 +13,7 @@ Sistema CIM (Computer Integrated Manufacturing) con cinco aplicaciones Android, 
 ## Navegación y estado
 
 - **Documentación central:** [docs/README.md](docs/README.md) · [índice del repositorio](docs/INDEX_REPOSITORIO.md).
+- **Cómo usar y validar:** [instructivo completo](docs/INSTRUCTIVO_USO_PROYECTO.md) · [estado de validación/cobertura](docs/VALIDACION_Y_COBERTURA.md).
 - **Entrega vigente:** [entrega pre-hardware](docs/deliverables/ENTREGA_PRE_HARDWARE_LEONARDO_ARAYA.md).
 - **Evidencia y bloqueadores:** [bitácora de validación](docs/deliverables/BITACORA_VALIDACION.md).
 - **Colaboración y seguridad:** [CONTRIBUTING.md](CONTRIBUTING.md) · [SECURITY.md](SECURITY.md) · [CHANGELOG.md](CHANGELOG.md).

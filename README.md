@@ -59,3 +59,19 @@ Consulta [la guía de inicio](docs/quickstart/README.md) y los resultados de CI 
 - No incluir APK, keystores, claves, modelos duplicados ni archivos generados en commits.
 - La firma release usa variables/propiedades locales (`CIM_RELEASE_*`); nunca hardcodear contraseñas en Gradle.
 - Los informes deben describir resultados verificables de CI y pruebas de hardware; no declarar funcionalidades no probadas.
+
+## Entrega pre-hardware y laboratorio
+
+La entrega pre-hardware de Leonardo Araya se encuentra en [docs/deliverables/ENTREGA_PRE_HARDWARE_LEONARDO_ARAYA.md](docs/deliverables/ENTREGA_PRE_HARDWARE_LEONARDO_ARAYA.md) (con su PDF). Reúne el protocolo de pruebas, el manual de laboratorio, la matriz de riesgos y el semáforo de preparación. El índice navegable está en [docs/INDEX_REPOSITORIO.md](docs/INDEX_REPOSITORIO.md).
+
+Antes de llevar un commit al banco, ejecute:
+
+```bash
+python3 tools/validate_firmware_contract.py --quiet
+python3 tools/validate_system_100.py --quiet
+python3 tools/prehardware_readiness.py --quiet
+python3 -m compileall -q tools
+git diff --check
+```
+
+Estos controles sólo verifican contratos, estructura, documentación y sintaxis. **No autorizan energizar actuadores ni reemplazan E-stop, interlocks, supervisión ni pruebas de hardware.** Para cualquier ensayo físico siga `docs/deliverables/MANUAL_OPERATIVO_LABORATORIO.md` y registre evidencia en la bitácora.

@@ -21,6 +21,7 @@ status: Registro vivo
 | 2026-07-28 | `4677ee1` | Bloqueo persistente de dispositivos. | Pendiente de prueba en dispositivo Android. | Pendiente hardware/UI |
 | 2026-07-28 | `2e6f0c3` | Quality Gates de entrega. | Documento de control creado. | Documentado |
 | 2026-07-28 | Rama `arena/019fab05-cim-definitivo` | Puerta 100% automatizable, lint real, checksums de APKs, scripts activos y mitigación de secretos Gradle/handshake. | `python3 tools/validate_system_100.py --quiet` = PASS 12/12 local; GitHub Actions PR #3 verde en `79bbb98`. | Verificado por CI |
+| 2026-07-29 | Entrega pre-hardware | Se incorporan contrato estático de firmware, protocolo, manual, matriz de riesgos, semáforo y PDF de entrega. | Preparación documental/automatizada; sin ensayo físico declarado. | Preparado para banco condicionado |
 
 ## Registro de evidencia por ensayo
 

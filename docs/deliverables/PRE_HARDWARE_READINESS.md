@@ -17,3 +17,7 @@ Sólo se avanza de verde condicionado/ámbar a la siguiente prueba cuando las ca
 
 ## Evidencia mínima para cambiar estado
 Fecha, operador, commit, dispositivo, versión/hash, configuración, resultado esperado/observado y enlace a log/captura. Una captura sin contexto no cierra el ítem.
+
+## Cierre documental
+
+La entrega está **100 % completa en su alcance documental/pre-hardware**: los documentos de proceso, operación, protocolo, riesgos, bitácora, índice y validadores están presentes. Este cierre no modifica el semáforo de ensayos físicos: Bluetooth multiconexión, cámara/OpenCV, actuadores, LAN y pruebas unitarias específicas conservan sus evidencias y cierres propios.

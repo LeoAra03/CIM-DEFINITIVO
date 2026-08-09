@@ -253,12 +253,17 @@ fun PLCApp(commCoordinator: CommunicationCoordinator) {
                         }
                     }
                     2 -> {
-                        IndustrialCard("Red Industrial", Icons.Default.Lan, headerColor = IndustrialTheme.Secundario) {
-                            IndustrialTextField(valor = ipCoordinator, onValueChange = { ipCoordinator = it }, label = "IP Coordinador")
-                            IndustrialStatusRow("Enlace de Datos", if(isConnectedNet) "SINCRO OK" else "OFFLINE", isConnectedNet)
-                            IndustrialStatusRow("Autorización", authorizationState, isAuthorized)
-                            IndustrialActionButton(texto = "Vincular al Hub", icono = Icons.Default.Router, onClick = { stationClient.connect() })
-                        }
+                        EasyConnectCard(
+                            ipCoordinator = ipCoordinator,
+                            onIpChange = { ipCoordinator = it },
+                            discoveredIp = discoveredHubIp.value,
+                            isConnectedNet = isConnectedNet,
+                            isAuthorized = isAuthorized,
+                            authorizationState = authorizationState,
+                            independentMode = independentMode,
+                            onIndependentChange = { independentMode = it },
+                            onConnect = { stationClient.connect() }
+                        )
                     }
                 }
 

@@ -77,6 +77,7 @@ class PermissionManager(private val context: Context) {
 
     /**
      * Solicita permiso para un dispositivo
+     * CORREGIDO: autoApprove solo permitido en DEBUG y con protección extra
      */
     suspend fun requestPermission(
         mac: String,
@@ -88,19 +89,24 @@ class PermissionManager(private val context: Context) {
             return PermissionDecision.REJECTED
         }
 
-        // Si estamos en modo test y auto-approve activado, responder inmediatamente
+        // CORREGIDO: Si estamos en modo test y auto-approve activado, solo en DEBUG builds
+        // y nunca si el dispositivo está bloqueado
         try {
-            if (GlobalPermissionManager.autoApproveTestMode) {
-                // Guardar decisión recordada y devolver APPROVED
+            if (GlobalPermissionManager.isTestAutoApproveAllowed()) {
+                // Guardar decisión recordada y devolver APPROVED solo en modo debug
                 remembereddecisions[mac] = Pair(true, System.currentTimeMillis())
                 saveRememberedDecision(mac, true)
                 // Mantener sincronía con AuthorizationManager
                 try {
                     AuthorizationManager.authorize(mac)
-                } catch (_: Exception) {}
+                } catch (_: Exception) {
+                    android.util.Log.w("PermissionManager", "No se pudo autorizar $mac en AuthorizationManager")
+                }
                 return PermissionDecision.APPROVED
             }
-        } catch (_: Exception) {}
+        } catch (e: Exception) {
+            android.util.Log.w("PermissionManager", "Error en autoApprove check: ${e.message}")
+        }
         // Verificar si ya tiene permiso recordado
         val remembered = remembereddecisions[mac]
         if (remembered != null) {
@@ -261,27 +267,23 @@ class PermissionManager(private val context: Context) {
         mac: String,
         timeout: Long = 5000
     ): PermissionDecision {
-        return withContext(Dispatchers.Default) {
-            val startTime = System.currentTimeMillis()
-
-            while (System.currentTimeMillis() - startTime < timeout) {
-                val request = pendingRequests[mac]
-                if (request != null && request.respondedAt > 0) {
-                    return@withContext if (request.approved) {
-                        PermissionDecision.APPROVED
-                    } else {
-                        PermissionDecision.REJECTED
-                    }
+        val startTime = System.currentTimeMillis()
+        while (System.currentTimeMillis() - startTime < timeout) {
+            val request = pendingRequests[mac]
+            if (request != null && request.respondedAt > 0) {
+                return if (request.approved) {
+                    PermissionDecision.APPROVED
+                } else {
+                    PermissionDecision.REJECTED
                 }
-
-                Thread.sleep(100)
             }
-
-            // Timeout
-            pendingRequests.remove(mac)
-            listeners.forEach { it.onPermissionExpired(mac) }
-            PermissionDecision.TIMEOUT
+            // CORREGIDO: usar delay no bloqueante en lugar de Thread.sleep
+            kotlinx.coroutines.delay(100)
         }
+        // Timeout
+        pendingRequests.remove(mac)
+        listeners.forEach { it.onPermissionExpired(mac) }
+        return PermissionDecision.TIMEOUT
     }
 
     private fun loadRememberedDecisions() {
@@ -341,18 +343,29 @@ class PermissionManager(private val context: Context) {
 
 /**
  * Singleton global para acceso centralizado
+ * CORREGIDO: autoApprove protegido para solo DEBUG builds
  */
 object GlobalPermissionManager {
     lateinit var manager: PermissionManager
     // Modo de test: cuando true, todas las solicitudes se aprueban automáticamente (útil para E2E sin interacción)
+    // CORREGIDO: solo permitido en debug, con validación explícita
+    @Volatile
     var autoApproveTestMode: Boolean = false
+    private var debugAllowed: Boolean = false
 
     fun init(context: Context) {
         manager = PermissionManager(context)
+        // Detectar si es build debuggable
+        debugAllowed = try {
+            (context.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0
+        } catch (_: Exception) { false }
     }
 
-    fun getInstance(): PermissionManager {
-        return manager
+    fun getInstance(): PermissionManager = manager
+
+    fun isTestAutoApproveAllowed(): Boolean {
+        // Solo true si debugAllowed y flag activado
+        return debugAllowed && autoApproveTestMode
     }
 }
 

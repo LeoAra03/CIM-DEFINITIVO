@@ -1,0 +1,313 @@
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Manufactura - ArUcoGen + Laser - CIM</title><link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="../assets/style.css">
+<style>
+body{padding:12px;display:flex;justify-content:center;background:#080808;min-height:100vh}
+.phone-frame{width:420px;max-width:95vw}
+.control-row{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.input-mini{background:#111;border:1px solid #2a2a2a;border-radius:6px;padding:6px 8px;color:#fff;font-size:11px;width:80px}
+select.input-mini{width:auto;min-width:120px}
+.preview-box{background:#fff;border-radius:8px;padding:12px;display:flex;align-items:center;justify-content:center;min-height:200px;position:relative}
+.gcode-preview{background:#0d0d0d;border:1px solid #2a2a2a;border-radius:6px;padding:8px;font-family:'JetBrains Mono',monospace;font-size:9px;height:140px;overflow:auto;white-space:pre;color:#9E9E9E}
+.laser-sim{position:relative;height:100px;background:#000;border:1px solid #FF3C0033;border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.laser-dot{width:4px;height:4px;background:#FF3C00;border-radius:50%;box-shadow:0 0 8px #FF3C00;position:absolute;animation:laserMove 3s linear infinite}
+@keyframes laserMove{0%{transform:translate(-100px, -20px)}25%{transform:translate(100px, -10px)}50%{transform:translate(80px, 20px)}75%{transform:translate(-80px, 10px)}100%{transform:translate(-100px, -20px)}}
+</style>
+</head>
+<body>
+<div class="phone-frame"><div class="phone-notch"></div><div class="phone-screen">
+<div style="padding:12px;background:#141414;border-bottom:1px solid #2a2a2a;display:flex;justify-content:space-between;align-items:center">
+<div><div style="font-weight:900;font-size:14px;color:#FF6D00">Manufactura Pro v6.0</div><div style="font-size:10px;color:#9E9E9E">ArUcoGen + Laser • Port Integrated Panel</div></div>
+<div style="display:flex;gap:6px"><a href="../index.html" class="btn btn-ghost btn-sm" style="font-size:9px;padding:4px 8px">Hub</a></div>
+</div>
+<div class="tab-bar"><div class="tab active" onclick="switchTab('aruco')">ArUcoGen</div><div class="tab" onclick="switchTab('laser')">Laser</div><div class="tab" onclick="switchTab('robot')">Robot</div><div class="tab" onclick="switchTab('sincro')">Sincro</div></div>
+
+<div id="tab-aruco" style="padding:12px;display:flex;flex-direction:column;gap:12px">
+  <div style="background:linear-gradient(135deg, rgba(255,109,0,0.12), rgba(255,109,0,0.03));border:1px solid rgba(255,109,0,0.2);border-radius:10px;padding:10px">
+    <div style="font-size:11px;font-weight:800;color:#FF6D00;letter-spacing:0.5px">🧩 GENERADOR ARUCO • chev.me/arucogen/ PORT</div>
+    <div style="font-size:10px;color:#9E9E9E;margin-top:4px">Diccionarios 4x4/5x5/6x6/7x7 + tamaño mm + margen + laser directo • Basado en bestMH.pt + integrated_panel.py</div>
+  </div>
+
+  <div class="card"><div class="card-header"><h3>⚙️ Parámetros ArUco</h3></div><div class="card-body" style="display:flex;flex-direction:column;gap:10px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="input-group"><label>Diccionario</label><select id="dictSelect" class="input-mini" style="width:100%;font-size:11px;height:34px"></select></div>
+      <div class="input-group"><label>ID Marcador</label><div style="display:flex;gap:4px"><input id="markerId" type="number" value="12" min="0" max="999" class="input-mini" style="flex:1"><button class="btn btn-ghost btn-sm" onclick="randomId()">🎲</button></div><div style="font-size:9px;color:#666" id="idRange">0-49</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+      <div class="input-group"><label>Tamaño (px)</label><input id="sizePx" type="number" value="300" min="100" max="1000" step="50" class="input-mini" style="width:100%"></div>
+      <div class="input-group"><label>Borde (bits)</label><select id="borderBits" class="input-mini" style="width:100%"><option value="1" selected>1 (estándar)</option><option value="2">2</option><option value="3">3</option></select></div>
+      <div class="input-group"><label>Margen (px)</label><input id="marginPx" type="number" value="20" min="0" max="100" class="input-mini" style="width:100%"></div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#9E9E9E"><input type="checkbox" id="invertCheck"> Invertir (blanco/negro)</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#9E9E9E"><input type="checkbox" id="labelCheck" checked> Con etiqueta ID</label>
+    </div>
+    <button class="btn btn-primary btn-block" onclick="generateMarker()">✨ Generar Marcador</button>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button class="btn btn-ghost btn-sm" onclick="downloadPNG()">⬇ PNG</button>
+      <button class="btn btn-ghost btn-sm" onclick="downloadSVG()">⬇ SVG</button>
+      <button class="btn btn-ghost btn-sm" onclick="sendToLaser()">🔥 Enviar a Laser</button>
+      <button class="btn btn-success btn-sm" onclick="useForGcode()">G-code Laser</button>
+    </div>
+  </div></div>
+
+  <div class="card"><div class="card-header"><h3>👁️ Preview • Laser Sim</h3></div><div class="card-body">
+    <div id="previewContainer" class="preview-box"><span style="color:#666;font-size:11px">Genera un marcador para ver preview</span></div>
+    <div style="margin-top:8px;display:flex;gap:8px"><div style="font-size:10px;color:#9E9E9E">ID: <span id="previewId" class="mono" style="color:#fff">-</span> Dict: <span id="previewDict" class="mono" style="color:#fff">-</span> Tamaño: <span id="previewSize" class="mono" style="color:#fff">-px</span></div></div>
+    <div id="laserSim" class="laser-sim" style="margin-top:8px;display:none"><div class="laser-dot"></div><span style="font-size:9px;color:#FF6D00;z-index:1">Sim Laser rasterizando...</span></div>
+  </div></div>
+
+  <div class="card"><div class="card-header"><h3>📄 G-code Laser</h3></div><div class="card-body"><div id="gcodePreview" class="gcode-preview">; G-code aparecerá aquí tras generar</div><div style="display:flex;gap:6px;margin-top:8px"><button class="btn btn-ghost btn-sm" style="flex:1" onclick="copyGcode()">📋 Copiar G-code</button><button class="btn btn-ghost btn-sm" style="flex:1" onclick="downloadGcode()">⬇ Descargar .gcode</button></div></div></div>
+</div>
+
+<div id="tab-laser" style="padding:12px;display:none;flex-direction:column;gap:12px">
+  <div style="background:linear-gradient(135deg, rgba(255,60,0,0.12), rgba(255,0,0,0.05));border:1px solid rgba(255,60,0,0.2);border-radius:10px;padding:10px">
+    <div style="font-size:11px;font-weight:800;color:#FF3C00">🔥 LÁSER CNC • Port integrated_panel.py laser panel + image upload</div>
+    <div style="font-size:10px;color:#9E9E9E;margin-top:4px">Sube imagen (PNG/JPG/SVG) o ArUco → convierte a G-code raster para Wemos ESP32</div>
+  </div>
+
+  <div class="card"><div class="card-header"><h3>🖼️ Imagen → Laser</h3></div><div class="card-body" style="display:flex;flex-direction:column;gap:10px">
+    <input type="file" id="imageUpload" accept="image/*,.svg,.gcode,.nc" style="display:none" onchange="handleImageUpload(event)">
+    <button class="btn btn-primary btn-block" onclick="document.getElementById('imageUpload').click()">📁 Seleccionar Imagen (PNG/JPG/SVG) o G-code</button>
+    <div id="uploadPreview" class="preview-box" style="display:none"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="input-group"><label>Potencia %</label><input id="laserPower" type="range" min="10" max="100" value="80" oninput="document.getElementById('powerVal').textContent=this.value+'%'"><span id="powerVal" style="font-size:11px;color:#FF6D00">80%</span></div>
+      <div class="input-group"><label>Velocidad mm/min</label><input id="laserSpeed" type="number" value="1200" class="input-mini" style="width:100%"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="input-group"><label>Umbral (0-255)</label><input id="threshold" type="range" min="50" max="200" value="128" oninput="document.getElementById('thrVal').textContent=this.value"><span id="thrVal" style="font-size:10px">128</span></div>
+      <div class="input-group"><label>Tamaño pixel mm</label><input id="pixelMm" type="number" value="0.1" step="0.05" min="0.05" max="1" class="input-mini" style="width:100%"></div>
+    </div>
+    <button class="btn btn-success btn-block" onclick="convertImageToGcode()">⚙️ Convertir a G-code</button>
+    <div id="imageGcode" class="gcode-preview">; Esperando imagen...</div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost btn-sm" style="flex:1" onclick="sendImageGcodeToHub()">📡 Enviar al Hub</button>
+      <button class="btn btn-error btn-sm" style="flex:1" onclick="simulateLaserJob()">🔥 Simular Grabado</button>
+    </div>
+  </div></div>
+
+  <div class="card"><div class="card-header"><h3>🦾 Control Scorbot + Laser (Quick)</h3></div><div class="card-body"><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><button class="btn btn-ghost btn-sm" onclick="sendCmd('R:HOME')">🏠 HOME</button><button class="btn btn-ghost btn-sm" onclick="sendCmd('R:READY')">READY</button><button class="btn btn-success btn-sm" onclick="sendCmd('L:START')">🔥 L START</button><button class="btn btn-error btn-sm" onclick="sendCmd('L:STOP')">■ L STOP</button></div></div></div>
+</div>
+
+<div id="tab-robot" style="padding:12px;display:none">
+  <div class="card"><div class="card-header"><h3>🦾 Robot Scorbot • Integrated Panel Port</h3></div><div class="card-body"><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px"><button class="btn btn-primary btn-sm" onclick="sendCmd('R:HOME')">HOME</button><button class="btn btn-ghost btn-sm" onclick="sendCmd('R:READY')">READY</button><button class="btn btn-ghost btn-sm" onclick="sendCmd('R:AUTO')">AUTO</button></div><div style="margin-top:8px;display:grid;grid-template-columns:repeat(5,1fr);gap:4px"><button class="btn btn-ghost btn-sm" onclick="sendCmd('R:RUN ARU')">ARU</button><button class="btn btn-ghost btn-sm" onclick="sendCmd('R:RUN ARU1')">ARU1</button><button class="btn btn-ghost btn-sm" onclick="sendCmd('R:RUN ARU2')">ARU2</button><button class="btn btn-ghost btn-sm" onclick="sendCmd('R:RUN ARU3')">ARU3</button><button class="btn btn-ghost btn-sm" onclick="sendCmd('R:RUN ARU4')">ARU4</button></div><div class="terminal" style="height:120px;margin-top:12px"><div class="line ok">[10:25] → R:RUN ARU1</div><div class="line ok">[10:25] ← SCORBOT: DONE</div></div></div></div>
+</div>
+
+<div id="tab-sincro" style="padding:12px;display:none">
+  <div class="card"><div class="card-header"><h3>🌐 Red Industrial • EasyConnect</h3></div><div class="card-body"><div style="background:#0D1F2D;border:1px solid #2196F3;border-radius:8px;padding:8px;font-size:11px">Hub auto-detectado por NSD • 1-click</div><div style="margin-top:8px" class="status-row"><span class="status-label">IP Hub</span><span class="status-value mono">192.168.1.100</span></div><button class="btn btn-primary btn-block" style="margin-top:8px" onclick="sendCmd('CONNECT_HUB')">🔗 Vincular al Hub</button></div></div>
+</div>
+
+</div></div>
+
+<script src="../assets/aruco-generator.js"></script>
+<script>
+let currentCanvas = null;
+let currentGcode = '';
+let uploadedImage = null;
+
+async function init(){
+  await window.ArucoGen.load();
+  const sel = document.getElementById('dictSelect');
+  const dicts = window.ArucoGen.getDictNames();
+  dicts.forEach(d=>{
+    const opt = document.createElement('option');
+    opt.value = d.key;
+    opt.textContent = d.label;
+    if(d.key==='DICT_4X4_50') opt.selected=true;
+    sel.appendChild(opt);
+  });
+  sel.addEventListener('change', updateIdRange);
+  updateIdRange();
+  generateMarker();
+}
+
+function updateIdRange(){
+  const sel = document.getElementById('dictSelect');
+  const dict = window.ArucoGen.dicts[sel.value];
+  if(dict){
+    document.getElementById('idRange').textContent = `0-${dict.count-1}`;
+    document.getElementById('markerId').max = dict.count-1;
+    const idInput = document.getElementById('markerId');
+    if(parseInt(idInput.value) >= dict.count) idInput.value = dict.count-1;
+  }
+}
+
+function randomId(){
+  const sel = document.getElementById('dictSelect');
+  const dict = window.ArucoGen.dicts[sel.value];
+  if(dict){
+    document.getElementById('markerId').value = Math.floor(Math.random()*dict.count);
+    generateMarker();
+  }
+}
+
+function generateMarker(){
+  const dictKey = document.getElementById('dictSelect').value;
+  const id = parseInt(document.getElementById('markerId').value)||0;
+  const size = parseInt(document.getElementById('sizePx').value)||300;
+  const border = parseInt(document.getElementById('borderBits').value)||1;
+  const margin = parseInt(document.getElementById('marginPx').value)||20;
+  const invert = document.getElementById('invertCheck').checked;
+
+  const canvas = window.ArucoGen.generateCanvas(dictKey, id, size, {borderBits:border, margin, invert});
+  if(!canvas){
+    document.getElementById('previewContainer').innerHTML='<span style="color:#F44336">Error generando</span>';
+    return;
+  }
+  currentCanvas = canvas;
+  const container = document.getElementById('previewContainer');
+  container.innerHTML='';
+  container.appendChild(canvas);
+  canvas.style.maxWidth='100%';
+  canvas.style.height='auto';
+  canvas.style.borderRadius='6px';
+  canvas.style.boxShadow='0 4px 20px rgba(0,0,0,0.3)';
+
+  document.getElementById('previewId').textContent = id;
+  document.getElementById('previewDict').textContent = dictKey.replace('DICT_','');
+  document.getElementById('previewSize').textContent = size+'px';
+
+  // auto generate gcode preview
+  const power = 80, speed=1200;
+  const gcode = window.ArucoGen.canvasToGcode(canvas, {power, speed, threshold:128, pixelSizeMm:0.1});
+  currentGcode = gcode;
+  document.getElementById('gcodePreview').textContent = gcode.slice(0,3000) + (gcode.length>3000 ? '\n; ... truncated' : '');
+}
+
+function downloadPNG(){
+  if(!currentCanvas) return;
+  const id = document.getElementById('markerId').value;
+  const dict = document.getElementById('dictSelect').value;
+  const a = document.createElement('a');
+  a.download = `aruco_${dict}_${id}.png`;
+  a.href = currentCanvas.toDataURL('image/png');
+  a.click();
+}
+
+function downloadSVG(){
+  if(!currentCanvas) return;
+  // Convert canvas to SVG via simple wrapper (raster embedded)
+  const id = document.getElementById('markerId').value;
+  const dict = document.getElementById('dictSelect').value;
+  const dataURL = currentCanvas.toDataURL('image/png');
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${currentCanvas.width}" height="${currentCanvas.height}"><image href="${dataURL}" width="${currentCanvas.width}" height="${currentCanvas.height}"/></svg>`;
+  const blob = new Blob([svg], {type:'image/svg+xml'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.download = `aruco_${dict}_${id}.svg`;
+  a.href = url;
+  a.click();
+}
+
+function sendToLaser(){
+  if(!currentCanvas) return;
+  document.getElementById('laserSim').style.display='flex';
+  setTimeout(()=>{ document.getElementById('laserSim').style.display='none'; }, 3000);
+  const msg = `L:ARUCO:${document.getElementById('markerId').value}|DICT:${document.getElementById('dictSelect').value}`;
+  console.log('→ LASER', msg);
+  if(window.parent && window.parent.sendCommand){
+    window.parent.sendCommand('MANUFACTURA','MANUFACTURA', msg);
+  }
+}
+
+function useForGcode(){
+  if(!currentGcode) generateMarker();
+  document.getElementById('gcodePreview').textContent = currentGcode;
+}
+
+function copyGcode(){
+  navigator.clipboard.writeText(currentGcode||document.getElementById('gcodePreview').textContent);
+  alert('G-code copiado');
+}
+
+function downloadGcode(){
+  const blob = new Blob([currentGcode], {type:'text/plain'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.download = `aruco_${document.getElementById('markerId').value}.gcode`;
+  a.href = url;
+  a.click();
+}
+
+function switchTab(name){
+  document.querySelectorAll('[id^=\"tab-\"]').forEach(el=>el.style.display='none');
+  document.getElementById('tab-'+name).style.display='flex';
+  document.querySelectorAll('.tab').forEach((t,i)=>{
+    t.classList.toggle('active', t.textContent.toLowerCase().includes(name) || (name==='aruco' && i===0));
+  });
+  // fix active
+  document.querySelectorAll('.tab-bar .tab').forEach(tab=>tab.classList.remove('active'));
+  if(name==='aruco') document.querySelectorAll('.tab-bar .tab')[0].classList.add('active');
+  if(name==='laser') document.querySelectorAll('.tab-bar .tab')[1].classList.add('active');
+  if(name==='robot') document.querySelectorAll('.tab-bar .tab')[2].classList.add('active');
+  if(name==='sincro') document.querySelectorAll('.tab-bar .tab')[3].classList.add('active');
+}
+
+function handleImageUpload(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev)=>{
+    if(file.type.startsWith('image/')){
+      const img = new Image();
+      img.onload = ()=>{
+        uploadedImage = img;
+        const preview = document.getElementById('uploadPreview');
+        preview.style.display='flex';
+        preview.innerHTML='';
+        const c = document.createElement('canvas');
+        c.width=200; c.height=200 * (img.height/img.width);
+        c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+        c.style.maxWidth='100%'; c.style.borderRadius='6px';
+        preview.appendChild(c);
+      };
+      img.src = ev.target.result;
+    } else {
+      // gcode file
+      document.getElementById('imageGcode').textContent = ev.target.result.slice(0,5000);
+      currentGcode = ev.target.result;
+    }
+  };
+  if(file.type.startsWith('image/')) reader.readAsDataURL(file);
+  else reader.readAsText(file);
+}
+
+function convertImageToGcode(){
+  if(!uploadedImage){
+    alert('Selecciona imagen primero');
+    return;
+  }
+  const power = parseInt(document.getElementById('laserPower').value)||80;
+  const speed = parseInt(document.getElementById('laserSpeed').value)||1200;
+  const thr = parseInt(document.getElementById('threshold').value)||128;
+  const pxMm = parseFloat(document.getElementById('pixelMm').value)||0.1;
+  const result = window.ArucoGen.imageToGcode(uploadedImage, {power, speed, threshold:thr, pixelSizeMm:pxMm, maxWidth:400});
+  document.getElementById('imageGcode').textContent = result.gcode.slice(0,6000);
+  currentGcode = result.gcode;
+  const preview = document.getElementById('uploadPreview');
+  preview.innerHTML='';
+  result.canvas.style.maxWidth='100%'; result.canvas.style.borderRadius='6px';
+  preview.appendChild(result.canvas);
+  preview.style.display='flex';
+}
+
+function sendImageGcodeToHub(){
+  if(!currentGcode){ alert('No hay G-code'); return; }
+  console.log('→ Enviar G-code al Hub', currentGcode.length);
+  alert('G-code enviado al Coordinador (simulado) - '+currentGcode.length+' chars');
+}
+
+function simulateLaserJob(){
+  const sim = document.getElementById('laserSim');
+  if(sim) sim.style.display='flex';
+  setTimeout(()=>{ if(sim) sim.style.display='none'; }, 4000);
+}
+
+function sendCmd(cmd){
+  console.log('→ CMD', cmd);
+  if(window.parent && window.parent.sendCommand){
+    window.parent.sendCommand('MANUFACTURA','MANUFACTURA', cmd);
+  }
+}
+
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body></html>

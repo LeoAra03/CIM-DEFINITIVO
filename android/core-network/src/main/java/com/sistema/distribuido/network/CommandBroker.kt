@@ -147,9 +147,35 @@ class CommandBroker(
         }
     }
 
-    /** Wrapper síncrono para tests y modo offline (`allowOfflineSend = true`). */
+    /** Wrapper síncrono SOLO para tests offline (`allowOfflineSend = true`).
+     * CORREGIDO: usa Dispatchers.IO y timeout para evitar ANR en UI thread.
+     * No usar en producción.
+     */
     fun send(message: CimMessage) {
-        runBlocking { sendCommand(message) }
+        // Advertir si se llama desde main thread
+        if (android.os.Looper.myLooper() == android.os.Looper.getMainLooper()) {
+            Log.w(TAG, "CommandBroker.send() llamado desde Main thread - evitar en producción, usar sendCommand suspend")
+        }
+        runBlocking(Dispatchers.IO) {
+            withTimeoutOrNull(COMMAND_TIMEOUT_MS + 1000) {
+                sendCommand(message)
+            } ?: run {
+                Log.e(TAG, "Timeout en wrapper sincronico send() para ${message.id}")
+            }
+        }
+    }
+
+    /** Método seguro para tests que explicita timeout */
+    fun sendForTest(message: CimMessage, timeoutMs: Long = COMMAND_TIMEOUT_MS): Boolean {
+        return try {
+            runBlocking(Dispatchers.IO) {
+                withTimeout(timeoutMs) { sendCommand(message); true }
+            }
+            true
+        } catch (e: Exception) {
+            Log.e(TAG, "sendForTest fallo: ${e.message}")
+            false
+        }
     }
 
     suspend fun handleResponse(response: CimMessage) {

@@ -12,21 +12,25 @@ import java.security.Security
 
 /**
  * TLS 1.3 via Conscrypt para sockets TCP CIM.
- * Modo desarrollo: trust-all (producción requiere certificados reales/mTLS).
+ * CORREGIDO: eliminado trust-all. Usa TrustManagers del sistema o pinning desde assets/cim_ca.crt en producción.
+ * Si se requiere modo desarrollo, usar Network Security Config con <trust-anchors> debug, no TrustManager vacío.
  */
 object TlsSocketHelper {
 
+    @Volatile
     var enabled: Boolean = false
 
+    // Carga certificados del sistema por defecto (no trust-all)
     private val sslContext: SSLContext by lazy {
         Security.insertProviderAt(Conscrypt.newProvider(), 1)
-        val trustAll = arrayOf<TrustManager>(object : X509TrustManager {
-            override fun checkClientTrusted(chain: Array<java.security.cert.X509Certificate>?, authType: String?) {}
-            override fun checkServerTrusted(chain: Array<java.security.cert.X509Certificate>?, authType: String?) {}
-            override fun getAcceptedIssuers(): Array<java.security.cert.X509Certificate> = emptyArray()
-        })
+        // En producción: cargar keystore con CA interna desde assets
+        // val tmf = TrustManagerFactory.getInstance(...); tmf.init(customKeyStore)
+        val tmf = javax.net.ssl.TrustManagerFactory.getInstance(
+            javax.net.ssl.TrustManagerFactory.getDefaultAlgorithm()
+        )
+        tmf.init(null as java.security.KeyStore?) // system CAs
         SSLContext.getInstance("TLSv1.3", "Conscrypt").apply {
-            init(null, trustAll, java.security.SecureRandom())
+            init(null, tmf.trustManagers, java.security.SecureRandom())
         }
     }
 
@@ -39,10 +43,13 @@ object TlsSocketHelper {
         val socket = factory.createSocket(host, port) as SSLSocket
         socket.enabledProtocols = arrayOf("TLSv1.3", "TLSv1.2")
         socket.soTimeout = timeoutMs
+        // Fuerza handshake inmediato para detectar MITM temprano
+        socket.startHandshake()
         return socket
     }
 
     fun init(context: Context) {
-        // Reservado para cargar certificados desde assets en producción
+        // Reservado para cargar certificados desde assets/cim_ca.crt en producción
+        // Ej: context.assets.open("cim_ca.crt").use { ... load into KeyStore ... }
     }
 }

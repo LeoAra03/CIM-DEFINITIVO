@@ -118,78 +118,79 @@ class StationClient(
         }
     }
 
-    private var lastSentMsg: String = ""
-    private var lastSentTime: Long = 0
+    // CORREGIDO: thread-safe anti-spam usando Mutex + Atomic
+    private val sendMutex = kotlinx.coroutines.sync.Mutex()
+    private val lastSent = java.util.concurrent.atomic.AtomicReference<Pair<String, Long>>(Pair("", 0L))
     private var handshakeAttempts = 0
 
     fun connect() {
-        onLog?.invoke("→ Iniciando conexión a $host:$port...")
+        onLog?.invoke("→ Iniciando conexión a $host:$port [${stationName}]")
+        // Validar token strength
+        if (CimProtocol.isDefaultTokenInUse()) {
+            onLog?.invoke("⚠ Token default en uso - cambiar en Coordinador para producción")
+        }
         tcpClient.connect()
     }
 
     /**
-     * Envía un mensaje con anti-spam y sanitización (no-bloqueante)
+     * Envía un mensaje con anti-spam y sanitización (no-bloqueante) - CORREGIDO thread-safe
      */
     private fun sendSecure(msg: String) {
-        if (!tcpClient.isSocketConnected()) {
-            onLog?.invoke("✗ No conectado - No se puede enviar: $msg")
-            return
+        scope.launch {
+            if (!tcpClient.isSocketConnected()) {
+                onLog?.invoke("✗ No conectado - No se puede enviar: $msg")
+                return@launch
+            }
+            if ((msg.startsWith("COMMAND;") || msg.startsWith("CMD;")) && !isAuthorized) {
+                onLog?.invoke("✗ Comando bloqueado: estación no autorizada")
+                return@launch
+            }
+            val now = System.currentTimeMillis()
+            val (lastMsg, lastTime) = lastSent.get()
+            if (msg == lastMsg && (now - lastTime) < 300) {
+                onLog?.invoke("⟳ Mensaje duplicado ignorado (anti-spam)")
+                return@launch
+            }
+            lastSent.set(Pair(msg, now))
+            try {
+                val cleanMsg = IndustrialErrorManager.sanitizeInput(msg)
+                tcpClient.send(cleanMsg)
+            } catch (e: Exception) {
+                Log.w("StationClient", "sendSecure error: ${e.message}")
+            }
         }
-        // Bloquear comandos críticos hasta autorización
-        if ((msg.startsWith("COMMAND;") || msg.startsWith("CMD;")) && !isAuthorized) {
-            onLog?.invoke("✗ Comando bloqueado: estación no autorizada")
-            return
-        }
-        
-        val now = System.currentTimeMillis()
-        // Idempotencia y anti-spam (0.3s entre mensajes idénticos)
-        if (msg == lastSentMsg && (now - lastSentTime) < 300) {
-            onLog?.invoke("⟳ Mensaje duplicado ignorado (anti-spam)")
-            return
-        }
-        
-        lastSentMsg = msg
-        lastSentTime = now
-        
-        val cleanMsg = IndustrialErrorManager.sanitizeInput(msg)
-        tcpClient.send(cleanMsg)
     }
 
     /**
      * Envía mensaje de forma SEGURA y SÍNCRONA con manejo de error completo
-     * Útil para operaciones críticas
+     * CORREGIDO: thread-safe con Mutex
      */
     suspend fun sendSafe(msg: String): Boolean = withContext(Dispatchers.IO) {
         return@withContext try {
-            if (!tcpClient.isSocketConnected()) {
-                onLog?.invoke("✗ sendSafe: Socket NO conectado")
-                return@withContext false
+            sendMutex.withLock {
+                if (!tcpClient.isSocketConnected()) {
+                    onLog?.invoke("✗ sendSafe: Socket NO conectado")
+                    return@withContext false
+                }
+                if ((msg.startsWith("COMMAND;") || msg.startsWith("CMD;")) && !isAuthorized) {
+                    onLog?.invoke("✗ sendSafe: comando bloqueado - estación no autorizada")
+                    return@withContext false
+                }
+                val now = System.currentTimeMillis()
+                val (lastMsg, lastTime) = lastSent.get()
+                if (msg == lastMsg && (now - lastTime) < 300) {
+                    return@withContext true
+                }
+                lastSent.set(Pair(msg, now))
+                val cleanMsg = IndustrialErrorManager.sanitizeInput(msg)
+                val success = tcpClient.sendSafe(cleanMsg)
+                if (success) {
+                    onLog?.invoke("✓ Enviado: ${msg.take(80)}")
+                } else {
+                    onLog?.invoke("✗ Fallo al enviar: ${msg.take(80)}")
+                }
+                success
             }
-            // Bloquear comandos críticos hasta autorización
-            if ((msg.startsWith("COMMAND;") || msg.startsWith("CMD;")) && !isAuthorized) {
-                onLog?.invoke("✗ sendSafe: comando bloqueado - estación no autorizada")
-                return@withContext false
-            }
-            
-            val now = System.currentTimeMillis()
-            // Anti-spam
-            if (msg == lastSentMsg && (now - lastSentTime) < 300) {
-                return@withContext true // Considerar como exitoso si es spam (ignorado)
-            }
-            
-            lastSentMsg = msg
-            lastSentTime = now
-            
-            val cleanMsg = IndustrialErrorManager.sanitizeInput(msg)
-            val success = tcpClient.sendSafe(cleanMsg)
-            
-            if (success) {
-                onLog?.invoke("✓ Enviado: $msg")
-            } else {
-                onLog?.invoke("✗ Fallo al enviar: $msg")
-            }
-            
-            success
         } catch (e: Exception) {
             onLog?.invoke("✗ Excepción en sendSafe: ${e.message}")
             Log.e("StationClient", "Error en sendSafe", e)

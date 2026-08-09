@@ -179,17 +179,17 @@ fun AlmacenApp(commCoordinator: CommunicationCoordinator) {
                         }
                     }
                     1 -> {
-                        IndustrialCard("Red de Coordinación", Icons.Default.Lan, headerColor = IndustrialTheme.Secundario) {
-                            IndustrialTextField(valor = ipCoordinator, onValueChange = { ipCoordinator = it }, label = "IP Hub Central")
-                            IndustrialStatusRow("Servicio Hub", if(isConnectedNet) "ACTIVO" else "DOWN", isConnectedNet)
-                            IndustrialStatusRow("Autorización", authorizationState, isAuthorized)
-                            Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                                Text("Modo Autónomo", color = IndustrialTheme.TextoSecundario)
-                                Switch(checked = independentMode, onCheckedChange = { independentMode = it }, colors = SwitchDefaults.colors(checkedThumbColor = IndustrialTheme.Exito))
-                            }
-                            IndustrialStatusRow("Modo Autónomo", if(independentMode) "ACTIVO" else "DESACTIVADO", independentMode)
-                            IndustrialActionButton(texto = "Sincronizar", icono = Icons.Default.Router, enabled = true, onClick = { stationClient.connect() })
-                        }
+                        EasyConnectCard(
+                            ipCoordinator = ipCoordinator,
+                            onIpChange = { ipCoordinator = it },
+                            discoveredIp = discoveredHubIp.value,
+                            isConnectedNet = isConnectedNet,
+                            isAuthorized = isAuthorized,
+                            authorizationState = authorizationState,
+                            independentMode = independentMode,
+                            onIndependentChange = { independentMode = it },
+                            onConnect = { stationClient.connect() }
+                        )
                     }
                     2 -> {
                         IndustrialCard("Control Scorbot", Icons.Default.PrecisionManufacturing) {

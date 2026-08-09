@@ -86,30 +86,88 @@ fun NetworkTab(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
-            IndustrialCard("Servidor Maestro TCP", Icons.Default.Router) {
-                IndustrialStatusRow("Estado Server", if(state.isServerRunning) "ESCUCHANDO" else "OFFLINE", state.isServerRunning)
-                IndustrialStatusRow("NSD", "_cim-hub._tcp", state.isServerRunning)
-                Spacer(Modifier.height(8.dp))
+            IndustrialCard("🌐 Servidor Maestro TCP - Conexión Fácil", Icons.Default.Router, headerColor = if(state.isServerRunning) IndustrialTheme.Exito else IndustrialTheme.Primario) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            if(state.isServerRunning) Color(0xFF0D2A12) else Color(0xFF1A1A1A),
+                            androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
+                        )
+                        .border(
+                            1.dp,
+                            if(state.isServerRunning) IndustrialTheme.Exito else IndustrialTheme.Borde,
+                            androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
+                        )
+                        .padding(12.dp)
+                ) {
+                    Column {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Box(modifier = Modifier.size(10.dp).background(if(state.isServerRunning) Color.Green else Color.Gray, androidx.compose.foundation.shape.CircleShape))
+                            Text(
+                                if(state.isServerRunning) "● HUB ACTIVO - Listo para recibir 5 estaciones" else "○ HUB DETENIDO - Inicia para multiconectarse",
+                                color = if(state.isServerRunning) IndustrialTheme.Exito else IndustrialTheme.TextoSecundario,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 11.sp
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            "1-click: Inicia Hub → Activa AUTO → Las estaciones se conectan automáticamente por NSD",
+                            color = IndustrialTheme.TextoSecundario,
+                            fontSize = 10.sp,
+                            lineHeight = 13.sp
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+                IndustrialStatusRow("Estado Server", if(state.isServerRunning) "ESCUCHANDO :8888" else "OFFLINE", state.isServerRunning)
+                IndustrialStatusRow("NSD Descubrimiento", "_cim-hub._tcp. ${if(state.isServerRunning) "publicado ✓" else "detenido"}", state.isServerRunning)
+                IndustrialStatusRow("Conectados", "${state.totalConnected} / 5 estaciones", state.totalConnected>0)
+                IndustrialStatusRow("Pendientes Auth", "${state.pendingRequestCount}", state.pendingRequestCount==0)
+                Spacer(Modifier.height(10.dp))
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     IndustrialActionButton(
-                        texto = "Start", 
-                        icono = Icons.Default.PlayArrow, 
+                        texto = if(state.isServerRunning) "ON :8888" else "▶ Iniciar Hub",
+                        icono = Icons.Default.PlayArrow,
                         modifier = Modifier.weight(1f),
                         enabled = enabled && !state.isServerRunning,
                         onClick = onStartServer
                     )
                     IndustrialActionButton(
-                        texto = "Stop", 
-                        icono = Icons.Default.Stop, 
+                        texto = "■ Detener",
+                        icono = Icons.Default.Stop,
                         modifier = Modifier.weight(1f),
                         colorFondo = IndustrialTheme.Error,
                         enabled = enabled && state.isServerRunning,
                         onClick = onStopServer
                     )
                 }
+                Spacer(Modifier.height(10.dp))
+                // Quick actions
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    IndustrialActionButton(
+                        texto = "🔗 Autorizar Todo",
+                        icono = Icons.Default.DoneAll,
+                        modifier = Modifier.weight(1f),
+                        colorFondo = IndustrialTheme.Exito,
+                        enabled = enabled && state.pendingRequestCount>0,
+                        onClick = { state.connectedDevices.filter{!it.isAuthorized}.forEach{ onAuthorizeDevice(it.mac) } }
+                    )
+                    IndustrialActionButton(
+                        texto = "🔍 Refrescar",
+                        icono = Icons.Default.Refresh,
+                        modifier = Modifier.weight(1f),
+                        enabled = enabled,
+                        onClick = onRefreshBluetooth
+                    )
+                }
                 Spacer(Modifier.height(12.dp))
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text("Modo AUTO", color = IndustrialTheme.TextoSecundario, fontSize = 12.sp)
+                    Column {
+                        Text("Modo AUTO (Laboratorio)", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text("Aprueba automáticamente sin diálogo", color = IndustrialTheme.TextoSecundario, fontSize = 10.sp)
+                    }
                     Switch(
                         checked = state.isAutoModeEnabled,
                         onCheckedChange = onToggleAutoMode,

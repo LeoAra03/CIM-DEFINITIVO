@@ -1,0 +1,8 @@
+# FIX: versión corregida de android-ci.yml
+name: Android CIM CI
+on:
+  push:
+    branches: [main, "arena/**"]
+  pull_request:
+    branches: [main, "arena/**"]
+  workflow_dispatch:

@@ -125,33 +125,43 @@ class CoordinatorViewModel : ViewModel() {
                 commandBroker?.addErrorListener { errorMsg ->
                     addLog("✗ BROKER ERROR: $errorMsg")
                 }
-            } catch (_: Exception) {
-                // Ignorar errores de inicialización del listener
+            } catch (e: Exception) {
+                Log.w("CoordinatorVM", "Listener init error: ${e.message}", e)
+                addLog("⚠ Error inicializando listeners: ${e.message}")
             }
         }
     }
 
     private fun startMonitoring() {
         viewModelScope.launch {
-            while (true) {
-                updateDeviceList()
-                // Poll pending permission requests
+            while (kotlinx.coroutines.isActive) {
                 try {
-                    val pending = GlobalPermissionManager.getInstance().getPendingRequests()
-                val firstRequest = pending.firstOrNull()
-                _uiState.value = _uiState.value.copy(
-                    pendingPermissionRequest = firstRequest,
-                    networkState = _uiState.value.networkState.copy(
-                        pendingRequestCount = pending.size,
-                        pendingRequestSummary = if (pending.isEmpty()) {
-                            "Sin solicitudes pendientes"
-                        } else {
-                            "${pending.size} solicitudes pendientes. Última: ${firstRequest?.deviceName}"
-                        },
-                        lastMessage = firstRequest?.let { "PENDING_PERMISSION:${it.mac}" } ?: _uiState.value.networkState.lastMessage
+                    updateDeviceList()
+                    // Poll pending permission requests
+                    val pending = try {
+                        GlobalPermissionManager.getInstance().getPendingRequests()
+                    } catch (e: Exception) {
+                        Log.w("CoordinatorVM", "Error polling perms: ${e.message}")
+                        emptyList()
+                    }
+                    val firstRequest = pending.firstOrNull()
+                    _uiState.value = _uiState.value.copy(
+                        pendingPermissionRequest = firstRequest,
+                        networkState = _uiState.value.networkState.copy(
+                            pendingRequestCount = pending.size,
+                            pendingRequestSummary = if (pending.isEmpty()) {
+                                "Sin solicitudes pendientes"
+                            } else {
+                                "${pending.size} solicitudes pendientes. Última: ${firstRequest?.deviceName}"
+                            },
+                            lastMessage = firstRequest?.let { "PENDING_PERMISSION:${it.mac}" } ?: _uiState.value.networkState.lastMessage
+                        )
                     )
-                )
-                } catch (_: Exception) {}
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Log.w("CoordinatorVM", "Monitoring error: ${e.message}")
+                }
                 kotlinx.coroutines.delay(2000)
             }
         }

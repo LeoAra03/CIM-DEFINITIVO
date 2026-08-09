@@ -126,14 +126,16 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
             command.startsWith("LASER_LOAD:") -> {
                 val parts = command.split(":", limit = 3)
                 if (parts.size == 3) {
-                    val filename = parts[1].ifBlank { "archivo.gcode" }
+                    val rawFilename = parts[1].ifBlank { "archivo.gcode" }
                     val base64 = parts[2]
                     try {
+                        val safeName = IndustrialErrorManager.sanitizeFileName(rawFilename)
                         val bytes = Base64.decode(base64, Base64.NO_WRAP)
-                        context.openFileOutput(filename, Context.MODE_PRIVATE).use { output ->
+                        IndustrialErrorManager.validateGcodeSize(bytes)
+                        context.openFileOutput(safeName, Context.MODE_PRIVATE).use { output ->
                             output.write(bytes)
                         }
-                        addLog("✓ G-code recibido: $filename (${bytes.size} bytes)")
+                        addLog("✓ G-code recibido: $safeName (${bytes.size} bytes)")
                     } catch (e: Exception) {
             Log.e("CIM", "Error: ${e.message}", e)
                         addLog("✗ Error guardando G-code: ${e.message ?: "desconocido"}")
@@ -145,14 +147,16 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
             command.startsWith("GCODE_LOAD;") -> {
                 val parts = command.split(";", limit = 3)
                 if (parts.size == 3) {
-                    val filename = parts[1].ifBlank { "archivo.gcode" }
+                    val rawFilename = parts[1].ifBlank { "archivo.gcode" }
                     val base64 = parts[2]
                     try {
+                        val safeName = IndustrialErrorManager.sanitizeFileName(rawFilename)
                         val bytes = Base64.decode(base64, Base64.NO_WRAP)
-                        context.openFileOutput(filename, Context.MODE_PRIVATE).use { output ->
+                        IndustrialErrorManager.validateGcodeSize(bytes)
+                        context.openFileOutput(safeName, Context.MODE_PRIVATE).use { output ->
                             output.write(bytes)
                         }
-                        addLog("✓ G-code recibido (legacy): $filename (${bytes.size} bytes)")
+                        addLog("✓ G-code recibido (legacy): $safeName (${bytes.size} bytes)")
                     } catch (e: Exception) {
             Log.e("CIM", "Error: ${e.message}", e)
                         addLog("✗ Error guardando G-code legacy: ${e.message ?: "desconocido"}")
@@ -183,19 +187,51 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
         }
     }
 
-    // File picker for external G-code loading
+    // File picker for external G-code / Imagen para Laser - CORREGIDO con sanitización + LaserImageProcessor
     val gcodeLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) {
             scope.launch {
                 try {
+                    val mime = context.contentResolver.getType(uri) ?: ""
+                    val isImage = mime.startsWith("image/") || uri.toString().endsWith(".png") || uri.toString().endsWith(".jpg") || uri.toString().endsWith(".jpeg")
                     val input = context.contentResolver.openInputStream(uri)
                     val bytes = input?.readBytes() ?: ByteArray(0)
-                    val b64 = Base64.encodeToString(bytes, Base64.NO_WRAP)
-                    // Send as an EVENT to coordinator (stationClient will handle connection)
-                    val filename = uri.lastPathSegment ?: "gcode"
-                    val payload = "GCODE_LOAD;$filename;$b64"
-                    val sent = stationClient.sendEventSafe(payload)
-                    if (sent) addLog("IMG: archivo '$filename' cargado y enviado") else addLog("IMG: fallo al enviar archivo '$filename'")
+                    if (isImage) {
+                        // Convertir imagen a G-code usando LaserImageProcessor (port integrated_panel.py)
+                        try {
+                            val bitmap = android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                            if (bitmap != null) {
+                                val params = LaserImageProcessor.LaserParams(
+                                    powerPercent = laserPower.toIntOrNull() ?: 80,
+                                    speedMmMin = laserSpeed.toIntOrNull() ?: 1200,
+                                    threshold = 128,
+                                    pixelSizeMm = 0.1f,
+                                    maxWidthPx = 400
+                                )
+                                val gcode = LaserImageProcessor.bitmapToGcode(bitmap, params)
+                                val safeName = "laser_image_${System.currentTimeMillis()}.gcode"
+                                context.openFileOutput(safeName, Context.MODE_PRIVATE).use { it.write(gcode.toByteArray()) }
+                                val b64 = Base64.encodeToString(gcode.toByteArray(), Base64.NO_WRAP)
+                                val payload = "LASER_LOAD:$safeName:$b64"
+                                stationClient.sendEventSafe(payload)
+                                addLog("✓ Imagen → G-code: $safeName (${gcode.length} chars, ${gcode.lines().size} líneas)")
+                            } else {
+                                addLog("✗ No se pudo decodificar imagen")
+                            }
+                        } catch (e: Exception) {
+                            Log.e("CIM", "Error procesando imagen: ${e.message}", e)
+                            addLog("✗ Error imagen→G-code: ${e.message}")
+                        }
+                    } else {
+                        // G-code directo
+                        IndustrialErrorManager.validateGcodeSize(bytes)
+                        val b64 = Base64.encodeToString(bytes, Base64.NO_WRAP)
+                        val rawName = uri.lastPathSegment ?: "gcode.gcode"
+                        val safeName = try { IndustrialErrorManager.sanitizeFileName(rawName) } catch(_:Exception){ "gcode_${System.currentTimeMillis()}.gcode" }
+                        val payload = "GCODE_LOAD;$safeName;$b64"
+                        val sent = stationClient.sendEventSafe(payload)
+                        if (sent) addLog("IMG: archivo '$safeName' cargado y enviado") else addLog("IMG: fallo al enviar archivo '$safeName'")
+                    }
                 } catch (e: Exception) {
             Log.e("CIM", "Error: ${e.message}", e)
                     addLog("IMG: error leyendo archivo: ${e.message ?: "desconocido"}")
@@ -458,7 +494,8 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                                             val bitmap = generatedArucoBitmap ?: return@IndustrialActionButton
                                             val id = arucoGenId.toIntOrNull() ?: 0
                                             val b64 = IndustrialVisionAnalyzer.bitmapToPngBase64(bitmap)
-                                            val filename = "aruco_${selectedDictionary.name}_${id}.png"
+                                            val rawFilename = "aruco_${selectedDictionary.name}_${id}.png"
+                                            val filename = try { IndustrialErrorManager.sanitizeFileName(rawFilename, setOf(".png",".gcode",".txt")) } catch(_:Exception){ "aruco_${id}.png" }
                                             sendAuthorizedHardwareCommand(
                                                 "L:ARUCO:${id}|DICT:${selectedDictionary.name}|SIZE:${arucoGenSizeMm}",
                                                 "LÁSER: Grabando ArUco #$id"
@@ -468,7 +505,9 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                                                 if (isConnectedNet) {
                                                     stationClient.sendEventSafe(payload)
                                                 }
-                                                context.openFileOutput(filename, Context.MODE_PRIVATE).use { it.write(android.util.Base64.decode(b64, Base64.NO_WRAP)) }
+                                                val decoded = android.util.Base64.decode(b64, Base64.NO_WRAP)
+                                                IndustrialErrorManager.validateGcodeSize(decoded, 10*1024*1024)
+                                                context.openFileOutput(filename, Context.MODE_PRIVATE).use { it.write(decoded) }
                                                 addLog("LÁSER: Patrón ArUco #$id enviado (${filename})")
                                             }
                                             showArucoGenerator = false
@@ -487,20 +526,17 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                         }
                     }
                     3 -> {
-                        IndustrialCard("Red Industrial", Icons.Default.Lan, headerColor = IndustrialTheme.Secundario) {
-                            IndustrialTextField(valor = ipCoordinator, onValueChange = { ipCoordinator = it }, label = "IP Coordinador (NSD auto)")
-                            if (discoveredHubIp.value != null) {
-                                IndustrialStatusRow("NSD Hub", discoveredHubIp.value!!, true)
-                            }
-                            IndustrialStatusRow("Estado Red", if(isConnectedNet) "SINCRO OK" else "STANDBY", isConnectedNet)
-                            IndustrialStatusRow("Autorización", authorizationState, isAuthorized)
-                            Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                                Text("Modo Autónomo", color = IndustrialTheme.TextoSecundario)
-                                Switch(checked = independentMode, onCheckedChange = { independentMode = it }, colors = SwitchDefaults.colors(checkedThumbColor = IndustrialTheme.Exito))
-                            }
-                            IndustrialStatusRow("Modo Autónomo", if(independentMode) "ACTIVO" else "DESACTIVADO", independentMode)
-                            IndustrialActionButton(texto = "UNIR AL HUB", icono = Icons.Default.Router, onClick = { stationClient.connect() })
-                        }
+                        EasyConnectCard(
+                            ipCoordinator = ipCoordinator,
+                            onIpChange = { ipCoordinator = it },
+                            discoveredIp = discoveredHubIp.value,
+                            isConnectedNet = isConnectedNet,
+                            isAuthorized = isAuthorized,
+                            authorizationState = authorizationState,
+                            independentMode = independentMode,
+                            onIndependentChange = { independentMode = it },
+                            onConnect = { stationClient.connect() }
+                        )
                     }
                 }
 

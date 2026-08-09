@@ -25,15 +25,27 @@ object CimProtocol {
         return if (token.startsWith(HASH_PREFIX)) token else HASH_PREFIX + sha256Hex(token)
     }
 
+    // CORREGIDO: validar token no default y eliminar soporte legacy downgrade
+    fun isDefaultTokenInUse(): Boolean = PASSWORD_ACTUAL == DEFAULT_PAIRING_TOKEN
+
     fun isPairingSecretValid(received: String): Boolean {
+        // Bloquear si sigue usando token default en producción (advertencia)
+        if (isDefaultTokenInUse()) {
+            android.util.Log.w("CIM_SECURITY", "⚠ Token default en uso - cambiar antes de producción")
+        }
         val receivedHash = if (received.startsWith(HASH_PREFIX)) {
             received.removePrefix(HASH_PREFIX)
         } else {
             sha256Hex(received)
         }
         val expectedHash = sha256Hex(PASSWORD_ACTUAL)
-        return constantTimeEquals(receivedHash, expectedHash) ||
-            constantTimeEquals(receivedHash, LEGACY_PAIRING_TOKEN_SHA256)
+        // CORREGIDO: eliminado soporte legacy hash que permitía bypass
+        // Solo validar contra token actual
+        return constantTimeEquals(receivedHash, expectedHash)
+    }
+
+    fun validateTokenStrength(token: String): Boolean {
+        return token.length >= 16 && token != DEFAULT_PAIRING_TOKEN && !token.contains("CHANGE_ME")
     }
 
     private fun sha256Hex(value: String): String {

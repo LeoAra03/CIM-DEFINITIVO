@@ -4,12 +4,12 @@ import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.widget.Toast
-import kotlin.system.exitProcess
 
 /**
  * Manager de Errores de Grado Industrial.
  * Diseñado para evitar que la aplicación se cierre ante excepciones no controladas
  * y proporcionar recuperación automática de estados.
+ * CORREGIDO: sanitizeInput ahora preserva delimitadores CIM y valida path traversal.
  */
 object IndustrialErrorManager {
 
@@ -20,8 +20,6 @@ object IndustrialErrorManager {
         
         // Inicializar Fallback de Procedimientos (TXT)
         ProceduralFallback.initialize(context)
-        
-        val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
         
         Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
             // Registrar error en log industrial de forma segura
@@ -43,9 +41,29 @@ object IndustrialErrorManager {
     }
 
     /**
-     * Sanitiza entradas de usuario para evitar inyecciones o caracteres que rompan protocolos
+     * Sanitiza entradas de usuario para evitar inyecciones y path traversal,
+     * pero preservando delimitadores del protocolo CIM (| ; : , _ - .)
+     * CORREGIDO: versión anterior eliminaba '|' y ';' rompiendo handshake.
      */
-    fun sanitizeInput(input: String): String {
-        return input.replace(Regex("[^a-zA-Z0-9.\\-_:]"), "").trim()
+    fun sanitizeInput(input: String, maxLen: Int = 1024): String {
+        if (input.isBlank()) return ""
+        // Eliminar solo caracteres de control
+        val filtered = input.filter { it.code >= 32 && it.code != 127 }
+        val truncated = filtered.take(maxLen).trim()
+        require(!truncated.contains("..")) { "Path traversal detectado" }
+        return truncated
+    }
+
+    fun sanitizeFileName(raw: String, allowedExts: Set<String> = setOf(".gcode", ".nc", ".txt")): String {
+        val base = raw.substringAfterLast('/').substringAfterLast('\\').substringAfterLast(':')
+        val clean = base.replace(Regex("[^a-zA-Z0-9._-]"), "_").take(64)
+        require(allowedExts.any { clean.lowercase().endsWith(it) }) { "Extension no permitida: $clean" }
+        require(clean.isNotBlank()) { "Nombre vacío tras sanitización" }
+        return clean.ifBlank { "file_${System.currentTimeMillis()}.gcode" }
+    }
+
+    fun validateGcodeSize(bytes: ByteArray, maxBytes: Int = 5 * 1024 * 1024) {
+        require(bytes.size <= maxBytes) { "G-code excede $maxBytes bytes" }
+        require(bytes.isNotEmpty()) { "G-code vacío" }
     }
 }

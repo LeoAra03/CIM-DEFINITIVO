@@ -19,10 +19,14 @@ class TcpServer(private val port: Int, private val collisionPolicy: CollisionPol
     private val clientInfos = ConcurrentHashMap<String, ClientInfo>()
     // MAC -> connectionId para lookup O(1) cuando se necesita enviar por MAC
     private val macToConnId = ConcurrentHashMap<String, String>()
-    // Opcional: limitar número de conexiones concurrentes
-    private val maxClients = 200
+    // Opcional: limitar número de conexiones concurrentes - REDUCIDO a 50 para evitar DoS
+    private val maxClients = 50
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private var isRunning = false
+    // Rate limiting por IP: ip -> lastTime
+    private val rateLimitMap = ConcurrentHashMap<String, Long>()
+    private var lastBroadcastHash = ""
+    private var lastBroadcastTime = 0L
 
     var onMessageReceived: ((String, String) -> Unit)? = null
     var onClientConnected: ((String) -> Unit)? = null
@@ -83,11 +87,15 @@ class TcpServer(private val port: Int, private val collisionPolicy: CollisionPol
                 }
                 Log.d("TcpServer", "✓ TCP Server escuchando en puerto ${serverSocket!!.localPort}")
 
-                // Broadcaster de clientes cada 2s y limpieza de conexiones stale cada 5s
+                // Broadcaster de clientes solo cuando cambia (debounce 5s) y limpieza stale cada 5s
+                // CORREGIDO: evita spam cada 2s O(n²)
                 launch {
                     while (isRunning) {
-                        broadcastClientList()
-                        delay(2000)
+                        val now = System.currentTimeMillis()
+                        if (now - lastBroadcastTime > 5000) {
+                            broadcastClientListIfChanged()
+                        }
+                        delay(1000)
                     }
                 }
 
@@ -207,6 +215,17 @@ class TcpServer(private val port: Int, private val collisionPolicy: CollisionPol
     private fun broadcastClientList() {
         val list = clientInfos.entries.map { (connId, info) -> "$connId:${info.appType.name}" }.joinToString(",")
         if (list.isNotEmpty()) broadcast("CLIENTS|$list")
+    }
+
+    private fun broadcastClientListIfChanged() {
+        val list = clientInfos.entries.map { (connId, info) -> "$connId:${info.appType.name}" }.joinToString(",")
+        if (list.isEmpty()) return
+        val hash = list.hashCode().toString()
+        if (hash != lastBroadcastHash) {
+            lastBroadcastHash = hash
+            lastBroadcastTime = System.currentTimeMillis()
+            broadcast("CLIENTS|$list")
+        }
     }
 
     private fun cleanupStaleConnections() {

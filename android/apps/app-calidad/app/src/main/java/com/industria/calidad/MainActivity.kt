@@ -328,17 +328,17 @@ fun CalidadApp(commCoordinator: CommunicationCoordinator) {
                         }
                     }
                     3 -> {
-                        IndustrialCard("Enlace al Hub Maestro", Icons.Default.Lan, headerColor = IndustrialTheme.Secundario) {
-                            IndustrialTextField(valor = ipCoordinator, onValueChange = { ipCoordinator = it }, label = "IP Coordinador")
-                            IndustrialStatusRow("Conexión HUB", if(isConnectedNet) "SINCRONIZADO" else "STANDBY", isConnectedNet)
-                            IndustrialStatusRow("Autorización", authorizationState, isAuthorized)
-                            Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                                Text("Modo Autónomo", color = IndustrialTheme.TextoSecundario)
-                                Switch(checked = independentMode, onCheckedChange = { independentMode = it }, colors = SwitchDefaults.colors(checkedThumbColor = IndustrialTheme.Exito))
-                            }
-                            IndustrialStatusRow("Modo Autónomo", if(independentMode) "ACTIVO" else "DESACTIVADO", independentMode)
-                            IndustrialActionButton(texto = if(isConnectedNet) "OPERATIVO" else "VINCULAR", icono = Icons.Default.Router, colorFondo = if(isConnectedNet) IndustrialTheme.Exito else IndustrialTheme.Primario, onClick = { stationClient.connect() })
-                        }
+                        EasyConnectCard(
+                            ipCoordinator = ipCoordinator,
+                            onIpChange = { ipCoordinator = it },
+                            discoveredIp = discoveredHubIp.value,
+                            isConnectedNet = isConnectedNet,
+                            isAuthorized = isAuthorized,
+                            authorizationState = authorizationState,
+                            independentMode = independentMode,
+                            onIndependentChange = { independentMode = it },
+                            onConnect = { stationClient.connect() }
+                        )
                     }
                 }
 

@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.isActive
 
 /**
  * VIEWMODEL DEL COORDINADOR
@@ -134,7 +135,7 @@ class CoordinatorViewModel : ViewModel() {
 
     private fun startMonitoring() {
         viewModelScope.launch {
-            while (kotlinx.coroutines.isActive) {
+            while (isActive) {
                 try {
                     updateDeviceList()
                     // Poll pending permission requests

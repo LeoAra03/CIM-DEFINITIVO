@@ -1,6 +1,7 @@
 package com.sistema.distribuido.network
 
 import kotlinx.coroutines.*
+import kotlinx.coroutines.sync.withLock
 import android.util.Log
 import com.sistema.distribuido.network.protocol.AppType
 import com.sistema.distribuido.network.protocol.CimMessage

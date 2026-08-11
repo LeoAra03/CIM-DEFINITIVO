@@ -390,34 +390,3 @@ tasks.register("qualityGate100") {
     dependsOn("buildRelease")
 }
 
-// Diagnóstico temporal: ante cualquier fallo del build (compilación, tests o configuración),
-// escribe el error en la ruta que el CI publica como artefacto (android/**/build/reports/tests)
-// para poder inspeccionar la causa sin depender de los logs de Actions.
-gradle.buildFinished(
-    org.gradle.api.Action<org.gradle.invocation.BuildResult> { result ->
-        try {
-            val failure = result.failure
-            val text = if (failure != null) {
-                val sw = java.io.StringWriter()
-                failure.printStackTrace(java.io.PrintWriter(sw))
-                "BUILD FAILED\nMessage: ${failure.message}\n\n${sw}"
-            } else {
-                "BUILD SUCCESS"
-            }
-            val targets = listOf(
-                rootProject.file("../android/core-network/build/reports/tests"),
-                rootProject.file("../android/apps/app-coordinador/app/build/reports/tests"),
-                rootProject.file("../android/apps/app-plc/app/build/reports/tests")
-            )
-            targets.forEach { dir ->
-                try {
-                    dir.mkdirs()
-                    dir.resolve("gradle-build-result.txt").writeText(text)
-                } catch (_: Exception) {
-                }
-            }
-        } catch (_: Exception) {
-        }
-    }
-)
-

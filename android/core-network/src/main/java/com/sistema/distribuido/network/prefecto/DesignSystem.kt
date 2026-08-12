@@ -16,20 +16,25 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.*
 import androidx.compose.ui.unit.*
 
 object IndustrialTheme {
+    // Fondo con leve degradado (menos plano que negro puro)
     val Fondo = Color(0xFF0F111A)
+    val FondoTop = Color(0xFF141829)
     val Tarjeta = Color(0xFF1A1D2D)
+    val TarjetaAlta = Color(0xFF232741)
     val Primario = Color(0xFF00E5FF)
     val Secundario = Color(0xFF7C4DFF)
     val Exito = Color(0xFF00E676)
     val Error = Color(0xFFFF5252)
     val Advertencia = Color(0xFFFFD600)
     val Borde = Color.White.copy(alpha = 0.08f)
+    val BordeFuerte = Color.White.copy(alpha = 0.18f)
     val TextoPrincipal = Color.White
     val TextoSecundario = Color(0xFF94A3B8)
 }
@@ -83,9 +88,21 @@ fun IndustrialScaffold(
                 )
             }
         },
-        containerColor = IndustrialTheme.Fondo,
+        containerColor = Color.Transparent,
         floatingActionButton = floatingActionButton,
-        content = content
+        content = { padding ->
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(IndustrialTheme.FondoTop, IndustrialTheme.Fondo)
+                        )
+                    )
+            ) {
+                content(padding)
+            }
+        }
     )
 }
 
@@ -102,21 +119,23 @@ fun IndustrialCard(
         modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp),
-        colors = CardDefaults.cardColors(containerColor = IndustrialTheme.Tarjeta),
-        border = BorderStroke(1.dp, borderColor),
-        shape = RoundedCornerShape(16.dp)
+        colors = CardDefaults.cardColors(containerColor = IndustrialTheme.Tarjeta.copy(alpha = 0.92f)),
+        border = BorderStroke(1.dp, borderColor.copy(alpha = 0.5f)),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
         Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    icono,
-                    null,
+                Box(
                     Modifier
-                        .size(24.dp)
-                        .background(headerColor.copy(alpha = 0.1f), CircleShape)
-                        .padding(4.dp),
-                    tint = headerColor
-                )
+                        .size(28.dp)
+                        .background(headerColor.copy(alpha = 0.18f), CircleShape)
+                        .drawBehind {
+                            drawCircle(color = headerColor.copy(alpha = 0.10f), radius = size.minDimension * 0.75f)
+                        }
+                ) {
+                    Icon(icono, null, Modifier.size(22.dp).padding(2.dp), tint = headerColor)
+                }
                 Spacer(Modifier.width(12.dp))
                 Text(
                     titulo.uppercase(),
@@ -216,39 +235,82 @@ fun IndustrialTextField(valor: String, onValueChange: (String) -> Unit, label: S
 
 @Composable
 fun IndustrialStatusRow(label: String, valor: String, activo: Boolean = false) {
+    val color = when {
+        activo -> IndustrialTheme.Exito
+        valor.contains("NO", ignoreCase = true) || valor.contains("OFF", ignoreCase = true) || valor.contains("DESCONECT", ignoreCase = true) -> IndustrialTheme.Error
+        else -> IndustrialTheme.Advertencia
+    }
     Row(
         Modifier
             .fillMaxWidth()
             .padding(vertical = 6.dp)
-            .background(Color.White.copy(alpha = 0.02f), RoundedCornerShape(8.dp))
+            .background(Color.White.copy(alpha = 0.03f), RoundedCornerShape(10.dp))
+            .border(1.dp, IndustrialTheme.Borde, RoundedCornerShape(10.dp))
             .padding(12.dp),
         Arrangement.SpaceBetween,
         Alignment.CenterVertically
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
+            // Luz piloto HMI con brillo
             Box(
                 Modifier
-                    .size(10.dp)
-                    .background(
-                        if (activo) IndustrialTheme.Exito else IndustrialTheme.Error,
-                        CircleShape
-                    )
+                    .size(14.dp)
+                    .background(color.copy(alpha = 0.25f), CircleShape)
                     .drawBehind {
-                        drawCircle(
-                            color = (if (activo) IndustrialTheme.Exito else IndustrialTheme.Error).copy(alpha = 0.3f),
-                            radius = size.minDimension * 0.8f
-                        )
+                        drawCircle(color = color.copy(alpha = 0.15f), radius = size.minDimension * 0.9f)
+                        drawCircle(color = color.copy(alpha = 0.35f), radius = size.minDimension * 0.55f)
                     }
-            )
-            Spacer(Modifier.width(16.dp))
+                    .padding(3.dp)
+            ) {
+                Box(Modifier.fillMaxSize().background(color, CircleShape))
+            }
+            Spacer(Modifier.width(14.dp))
             Text(label, color = IndustrialTheme.TextoSecundario, fontSize = 14.sp, fontWeight = FontWeight.Medium)
         }
         Text(
             valor.uppercase(),
-            color = if (activo) IndustrialTheme.Exito else IndustrialTheme.TextoPrincipal,
+            color = color,
             fontWeight = FontWeight.ExtraBold,
             fontSize = 14.sp
         )
+    }
+}
+
+/** Medidor de barra estilo HMI (porcentaje 0..1). */
+@Composable
+fun IndustrialGauge(
+    label: String,
+    fraction: Float,
+    color: Color = IndustrialTheme.Primario,
+    modifier: Modifier = Modifier
+) {
+    val safe = fraction.coerceIn(0f, 1f)
+    Column(modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+        Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween) {
+            Text(label, color = IndustrialTheme.TextoSecundario, fontSize = 11.sp, fontWeight = FontWeight.Medium)
+            Text("${(safe * 100).toInt()}%", color = color, fontSize = 12.sp, fontWeight = FontWeight.ExtraBold)
+        }
+        Spacer(Modifier.height(4.dp))
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .height(10.dp)
+                .background(Color.White.copy(alpha = 0.06f), RoundedCornerShape(5.dp))
+        ) {
+            Box(
+                Modifier
+                    .fillMaxWidth(safe)
+                    .fillMaxHeight()
+                    .background(color, RoundedCornerShape(5.dp))
+                    .drawBehind {
+                        drawRoundRect(
+                            color = color.copy(alpha = 0.35f),
+                            cornerRadius = androidx.compose.ui.geometry.CornerRadius(5.dp.toPx()),
+                            size = Size(size.width + 8.dp.toPx(), size.height)
+                        )
+                    }
+            )
+        }
     }
 }
 

@@ -225,6 +225,12 @@ fun PLCApp(commCoordinator: CommunicationCoordinator) {
                     }
                     1 -> {
                         ArcadeConveyor(stations = trackingStations, palletPresent = palletPresent, lastEvent = lastTrackingEvent)
+                        Spacer(Modifier.height(8.dp))
+                        IndustrialGauge(
+                            label = "OCUPACIÓN DE CINTA",
+                            fraction = (palletPresent.values.count { it }.toFloat() / trackingStations.size.coerceAtLeast(1)),
+                            color = IndustrialTheme.Exito
+                        )
                         Spacer(Modifier.height(4.dp))
                         IndustrialCard("Tracking de Pallets", Icons.Default.Sensors, headerColor = IndustrialTheme.Secundario) {
                             IndustrialStatusRow("Último evento", lastTrackingEvent, true)

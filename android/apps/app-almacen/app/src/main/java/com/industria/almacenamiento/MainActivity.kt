@@ -93,6 +93,11 @@ fun AlmacenApp(commCoordinator: CommunicationCoordinator) {
         derivedStateOf { isConnectedBt && (isAuthorized || independentMode) }
     }
 
+    // Anti-softlock: retroceder entre pestañas en vez de cerrar la app
+    androidx.activity.compose.BackHandler(enabled = selectedTab > 0) {
+        selectedTab -= 1
+    }
+
     fun addLog(msg: String) {
         val time = java.text.SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
         logs.add(0, "[$time] $msg")

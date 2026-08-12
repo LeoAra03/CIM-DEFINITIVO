@@ -426,6 +426,14 @@ fun CoordinatorMasterScreen(
     )
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var showGlobalActions by remember { mutableStateOf(false) }
+    // Anti-softlock: back cierra modales primero, luego retrocede de pestaña, y solo cierra la app desde la pestaña EXEC
+    androidx.activity.compose.BackHandler(enabled = true) {
+        when {
+            showGlobalActions -> showGlobalActions = false
+            showAutomation -> showAutomation = false
+            selectedTabIndex > 0 -> { selectedTabIndex -= 1; vm.selectTab(selectedTabIndex) }
+        }
+    }
     val executiveState = state.executiveState
 
     IndustrialScaffold(

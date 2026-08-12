@@ -95,6 +95,11 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
     val isOperationalReady by remember {
         derivedStateOf { isConnectedBt && (isAuthorized || independentMode) }
     }
+    var lastDetectedArucoId by remember { mutableStateOf<Int?>(null) }
+    // Anti-softlock: retroceder entre pestañas en vez de cerrar la app
+    androidx.activity.compose.BackHandler(enabled = selectedTab > 0) {
+        selectedTab -= 1
+    }
 
     fun addLog(msg: String) {
         val time = java.text.SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
@@ -367,10 +372,11 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                                 }
                                 Spacer(Modifier.height(12.dp))
                                 CameraPreviewWithVision(
-                                    isDetecting = isOperationalReady,
+                                    isDetecting = true,
                                     arucoDictionary = selectedDictionary,
                                     onArucoFound = { results ->
                                         if (results.isNotEmpty()) {
+                                            lastDetectedArucoId = results[0].id
                                             addLog("VISIÓN: Detectado ArUco #${results[0].id} (${selectedDictionary.label})")
                                             scope.launch {
                                                 stationClient.sendEventSafe("ARUCO_DETECTED:${results[0].id}|DICT:${selectedDictionary.name}")
@@ -381,6 +387,21 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                                         addLog("VISIÓN: QR Detectado -> $qr")
                                     }
                                 )
+                                if (lastDetectedArucoId != null) {
+                                    Spacer(Modifier.height(12.dp))
+                                    Surface(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        color = IndustrialTheme.Exito.copy(alpha = 0.12f),
+                                        border = BorderStroke(1.dp, IndustrialTheme.Exito),
+                                        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+                                    ) {
+                                        Column(Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                                            Text("ARUCO IDENTIFICADO", color = IndustrialTheme.Exito, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+                                            Text("#${lastDetectedArucoId}", color = Color.White, fontSize = 56.sp, fontWeight = FontWeight.ExtraBold)
+                                            Text("Marcador ArUco ${selectedDictionary.label} · listo para grabado", color = IndustrialTheme.TextoSecundario, fontSize = 11.sp)
+                                        }
+                                    }
+                                }
                                 Spacer(Modifier.height(12.dp))
                                 Text("Diccionario detección", color = IndustrialTheme.TextoSecundario, fontSize = 10.sp)
                                 ExposedDropdownMenuBox(expanded = dictExpanded, onExpandedChange = { dictExpanded = it }) {

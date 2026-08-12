@@ -99,9 +99,15 @@ fun CalidadApp(commCoordinator: CommunicationCoordinator) {
     var yoloModeEnabled by remember { mutableStateOf(false) }
     var expectedAruco by remember { mutableStateOf("") }
     var lastDetectedAruco by remember { mutableStateOf<Int?>(null) }
+    var arucoDetections by remember { mutableStateOf(listOf<Int>()) }
     val arucoBitmap by viewModel.arucoBitmap.collectAsState()
     val progress by viewModel.progress.collectAsState()
     val jobStatus by viewModel.status.collectAsState()
+
+    // Anti-softlock: retroceder entre pestañas en vez de cerrar la app
+    androidx.activity.compose.BackHandler(enabled = selectedTab > 0) {
+        selectedTab -= 1
+    }
 
     fun addLog(msg: String) {
         val time = java.text.SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
@@ -187,14 +193,15 @@ fun CalidadApp(commCoordinator: CommunicationCoordinator) {
                                     )
                                 } else {
                                     CameraPreviewWithVision(
-                                        isDetecting = isConnectedBt && (isAuthorized || independentMode),
+                                        isDetecting = true,
                                         visionMode = if (yoloModeEnabled) IndustrialVisionAnalyzer.VisionMode.YOLO else IndustrialVisionAnalyzer.VisionMode.ARUCO,
                                         onArucoFound = { results ->
                                             if (results.isNotEmpty()) {
                                                 val id = results[0].id
                                                 if (id != lastDetectedAruco) {
                                                     lastDetectedAruco = id
-                                                    addLog("VISIÓN: Detectado ArUco #$id")
+                                                    arucoDetections = (listOf(id) + arucoDetections).take(8)
+                                                    addLog("VISIÓN: Detectado ArUco #$id (${results[0].dictionary.label})")
                                                     scope.launch { stationClient.sendEventSafe("ARUCO_DETECTED:$id") }
                                                     val exp = expectedAruco.trim().toIntOrNull()
                                                     if (exp != null) {
@@ -227,6 +234,22 @@ fun CalidadApp(commCoordinator: CommunicationCoordinator) {
                                             }
                                         }
                                     )
+                                }
+                                // Panel prominente de identificación ArUco (para presentación)
+                                if (lastDetectedAruco != null) {
+                                    Spacer(Modifier.height(12.dp))
+                                    Surface(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        color = IndustrialTheme.Exito.copy(alpha = 0.12f),
+                                        border = BorderStroke(1.dp, IndustrialTheme.Exito),
+                                        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+                                    ) {
+                                        Column(Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                                            Text("ARUCO IDENTIFICADO", color = IndustrialTheme.Exito, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+                                            Text("#${lastDetectedAruco}", color = Color.White, fontSize = 56.sp, fontWeight = FontWeight.ExtraBold)
+                                            Text("Marcador ArUco · ${if (lastDetectedAruco!! < 10) "Zona A (0-9)" else if (lastDetectedAruco!! < 20) "Zona B (10-19)" else "Zona C (20+)"}", color = IndustrialTheme.TextoSecundario, fontSize = 11.sp)
+                                        }
+                                    }
                                 }
                                 if (yoloModeEnabled) {
                                     Box(

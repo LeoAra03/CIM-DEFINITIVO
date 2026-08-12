@@ -150,6 +150,11 @@ fun PLCApp(commCoordinator: CommunicationCoordinator) {
     }
 
     val manager = remember { PlcStationManager(context) }
+
+    // Anti-softlock global: back retrocede de pestaña en vez de cerrar la app
+    androidx.activity.compose.BackHandler(enabled = selectedTab > 0) {
+        selectedTab -= 1
+    }
     LaunchedEffect(stationClient, isAuthorized) {
         // No hay un CommandBroker real en el manager que use StationClient, 
         // pero podemos inyectar un shim o manejarlo directamente aquí.
@@ -219,6 +224,8 @@ fun PLCApp(commCoordinator: CommunicationCoordinator) {
                         }
                     }
                     1 -> {
+                        ArcadeConveyor(stations = trackingStations, palletPresent = palletPresent, lastEvent = lastTrackingEvent)
+                        Spacer(Modifier.height(4.dp))
                         IndustrialCard("Tracking de Pallets", Icons.Default.Sensors, headerColor = IndustrialTheme.Secundario) {
                             IndustrialStatusRow("Último evento", lastTrackingEvent, true)
                             Text("Activa 'Detener' para frenar el pallet cuando pase por la estación", color = IndustrialTheme.TextoSecundario, fontSize = 10.sp)

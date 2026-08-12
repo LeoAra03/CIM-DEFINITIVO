@@ -403,6 +403,13 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                                     }
                                 }
                                 Spacer(Modifier.height(12.dp))
+                                IndustrialActionButton("SIMULAR DETECCIÓN ArUco", Icons.Default.Sensors, colorFondo = IndustrialTheme.Secundario, onClick = {
+                                    val demoId = (0..49).random()
+                                    lastDetectedArucoId = demoId
+                                    addLog("DEMO: Detección simulada ArUco #$demoId (${selectedDictionary.label})")
+                                    scope.launch { stationClient.sendEventSafe("ARUCO_DETECTED:$demoId|DICT:${selectedDictionary.name}") }
+                                })
+                                Spacer(Modifier.height(12.dp))
                                 Text("Diccionario detección", color = IndustrialTheme.TextoSecundario, fontSize = 10.sp)
                                 ExposedDropdownMenuBox(expanded = dictExpanded, onExpandedChange = { dictExpanded = it }) {
                                     OutlinedTextField(

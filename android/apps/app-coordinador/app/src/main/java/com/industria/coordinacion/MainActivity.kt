@@ -527,6 +527,16 @@ fun CoordinatorMasterScreen(
                                     Text("ACCIONES")
                                 }
                             }
+                            Spacer(Modifier.height(8.dp))
+                            OutlinedButton(
+                                onClick = { vm.simulateDemoStation() },
+                                modifier = Modifier.fillMaxWidth().height(44.dp),
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = IndustrialTheme.Secundario)
+                            ) {
+                                Icon(Icons.Default.Sensors, contentDescription = null)
+                                Spacer(Modifier.width(8.dp))
+                                Text("SIMULAR ESTACIÓN (demo sin hardware)")
+                            }
                             Spacer(Modifier.height(12.dp))
                             Text("Dashboard ejecutivo", fontWeight = FontWeight.Bold, color = IndustrialTheme.Primario)
                             Text("Estado en tiempo real de las estaciones", color = IndustrialTheme.TextoSecundario, fontSize = 12.sp)

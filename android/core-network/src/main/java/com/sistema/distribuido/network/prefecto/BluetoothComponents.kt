@@ -174,9 +174,11 @@ fun CameraPreviewWithVision(
     onArucoFound: (List<IndustrialVisionAnalyzer.ArucoResult>) -> Unit,
     onQrFound: (String) -> Unit,
     onYoloFound: (List<IndustrialVisionAnalyzer.YoloResult>) -> Unit = {},
-    onFpsUpdate: (Int) -> Unit = {}
+    onFpsUpdate: (Int) -> Unit = {},
+    onError: (String) -> Unit = {}
 ) {
     val context = LocalContext.current
+    var cameraError by remember { mutableStateOf<String?>(null) }
     val lifecycleOwner = androidx.compose.ui.platform.LocalLifecycleOwner.current
     val previewView = remember { androidx.camera.view.PreviewView(context) }
     val executor = remember { java.util.concurrent.Executors.newSingleThreadExecutor() }
@@ -194,6 +196,7 @@ fun CameraPreviewWithVision(
         )
     }
 
+    Box(modifier = androidx.compose.ui.Modifier.fillMaxSize()) {
     androidx.compose.ui.viewinterop.AndroidView(
         factory = { previewView },
         modifier = androidx.compose.ui.Modifier.fillMaxSize(),
@@ -215,8 +218,11 @@ fun CameraPreviewWithVision(
                 try {
                     cameraProvider.unbindAll()
                     cameraProvider.bindToLifecycle(lifecycleOwner, androidx.camera.core.CameraSelector.DEFAULT_BACK_CAMERA, preview, imageAnalysis)
+                    cameraError = null
                 } catch (e: Exception) {
                     android.util.Log.e("CameraVision", "Error binding: ${e.message}")
+                    cameraError = "Cámara no disponible: ${e.message}"
+                    onError(cameraError!!)
                 }
             }, androidx.core.content.ContextCompat.getMainExecutor(context))
         }
@@ -227,5 +233,26 @@ fun CameraPreviewWithVision(
             kotlinx.coroutines.delay(1000)
             onFpsUpdate((5..10).random())
         }
+    }
+    if (cameraError != null) {
+        androidx.compose.material3.Surface(
+            modifier = androidx.compose.ui.Modifier
+                .fillMaxSize()
+                .background(androidx.compose.ui.graphics.Color(0xCC000000)),
+            color = androidx.compose.ui.graphics.Color.Transparent
+        ) {
+            Column(
+                modifier = androidx.compose.ui.Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center
+            ) {
+                Icon(Icons.Default.NoPhotography, null, Modifier.size(40.dp), tint = Color(0xFFFF5252))
+                Spacer(Modifier.height(8.dp))
+                Text("CÁMARA NO DISPONIBLE", color = Color.White, fontSize = 14.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                Spacer(Modifier.height(4.dp))
+                Text(cameraError ?: "", color = Color.LightGray, fontSize = 11.sp, modifier = Modifier.padding(horizontal = 24.dp))
+            }
+        }
+    }
     }
 }

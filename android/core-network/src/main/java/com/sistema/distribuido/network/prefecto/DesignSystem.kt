@@ -336,3 +336,46 @@ fun ScorbotRunConsole(
         )
     }
 }
+
+@Composable
+fun ModoDemoBanner(activo: Boolean = true, texto: String = "MODO DEMO — SIN HARDWARE") {
+    if (activo) {
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            color = IndustrialTheme.Secundario.copy(alpha = 0.14f),
+            border = BorderStroke(1.dp, IndustrialTheme.Secundario),
+            shape = RoundedCornerShape(10.dp)
+        ) {
+            Row(
+                Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(Icons.Default.Science, null, Modifier.size(16.dp), tint = IndustrialTheme.Secundario)
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    texto.uppercase(),
+                    color = IndustrialTheme.Secundario,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = 0.5.sp
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun IndustrialEmptyState(icono: ImageVector, texto: String, detalle: String? = null) {
+    Column(
+        Modifier.fillMaxWidth().padding(vertical = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Icon(icono, null, Modifier.size(40.dp), tint = IndustrialTheme.TextoSecundario.copy(alpha = 0.45f))
+        Spacer(Modifier.height(8.dp))
+        Text(texto, color = IndustrialTheme.TextoSecundario, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+        if (detalle != null) {
+            Spacer(Modifier.height(4.dp))
+            Text(detalle, color = IndustrialTheme.TextoSecundario.copy(alpha = 0.6f), fontSize = 11.sp)
+        }
+    }
+}

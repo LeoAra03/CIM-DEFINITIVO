@@ -280,6 +280,24 @@ fun CalidadApp(commCoordinator: CommunicationCoordinator) {
                             Spacer(Modifier.height(8.dp))
                             IndustrialActionButton("Capturar y Validar", Icons.Default.Camera, enabled = isOperationalReady, onClick = { sendAuthorizedHardwareCommand("CAM:SNAP", "CMD: TRIGGER SCAN") })
                             Spacer(Modifier.height(8.dp))
+                            IndustrialActionButton("SIMULAR DETECCIÓN ArUco", Icons.Default.Sensors, colorFondo = IndustrialTheme.Secundario, onClick = {
+                                val demoId = (0..49).random()
+                                lastDetectedAruco = demoId
+                                arucoDetections = (listOf(demoId) + arucoDetections).take(8)
+                                addLog("DEMO: Detección simulada ArUco #$demoId")
+                                scope.launch { stationClient.sendEventSafe("ARUCO_DETECTED:$demoId") }
+                                val exp = expectedAruco.trim().toIntOrNull()
+                                if (exp != null) {
+                                    if (exp == demoId) {
+                                        addLog("✓ PATRÓN ArUco OK (#$demoId coincide)")
+                                        if (independentMode) { approvedCount += 1; sendAuthorizedHardwareCommand("VAL:PASS", "RESULT: APPROVED (ArUco $demoId)") }
+                                    } else {
+                                        addLog("✗ PATRÓN ArUco NO coincide (esperado #$exp, leído #$demoId)")
+                                        if (independentMode) { rejectedCount += 1; sendAuthorizedHardwareCommand("VAL:FAIL", "RESULT: REJECTED (ArUco $demoId)") }
+                                    }
+                                }
+                            })
+                            Spacer(Modifier.height(8.dp))
                             IndustrialActionButton("Ejecutar YOLO", Icons.Default.Search, enabled = isOperationalReady, colorFondo = IndustrialTheme.Secundario, onClick = {
                                 scope.launch {
                                     yoloModeEnabled = true

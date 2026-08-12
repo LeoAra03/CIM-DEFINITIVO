@@ -257,6 +257,21 @@ fun PLCApp(commCoordinator: CommunicationCoordinator) {
                                     IndustrialActionButton("POS $pos", Icons.Default.Sensors, Modifier.weight(1f), onClick = { handlePlcEvent("SENSOR_ACTIVATED|POS:$pos") })
                                 }
                             }
+                            Spacer(Modifier.height(8.dp))
+                            IndustrialActionButton("▶ SIMULAR FLUJO ARCADE COMPLETO", Icons.Default.PlayArrow, colorFondo = IndustrialTheme.Secundario, onClick = {
+                                scope.launch {
+                                    trackingStations.forEach { (_, pos) ->
+                                        handlePlcEvent("SENSOR_ACTIVATED|POS:$pos")
+                                        addLog("ARCADE: pallet en estación $pos")
+                                        kotlinx.coroutines.delay(1200)
+                                    }
+                                    kotlinx.coroutines.delay(1500)
+                                    trackingStations.forEach { (_, pos) ->
+                                        handlePlcEvent("PALLET_CLEARED|POS:$pos")
+                                        addLog("ARCADE: estación $pos liberada")
+                                    }
+                                }
+                            })
                         }
                     }
                     2 -> {

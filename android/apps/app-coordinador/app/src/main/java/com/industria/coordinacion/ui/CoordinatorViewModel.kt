@@ -689,6 +689,44 @@ class CoordinatorViewModel : ViewModel() {
         }
     }
 
+    fun simulateDemoStation() {
+        viewModelScope.launch {
+            try {
+                addLog("⟳ Conectando estación demo (simulación, sin hardware)...")
+                val demoDevice = ConnectedDevice(
+                    mac = "AA:BB:CC:00:11:22",
+                    appType = "PLC",
+                    name = "CINTA (DEMO)",
+                    isConnected = true,
+                    isAuthorized = true,
+                    rssi = -45,
+                    ip = "192.168.1.101",
+                    stationUuid = "CIM-ST-DEMO-1",
+                    version = "6.0.0",
+                    hardwareModel = "SIMULADA",
+                    capabilities = "CINTA,SENSORES"
+                )
+                val current = _uiState.value.networkState
+                val newDevices = current.connectedDevices.filterNot { it.mac == demoDevice.mac } + demoDevice
+                _uiState.value = _uiState.value.copy(
+                    networkState = current.copy(
+                        isServerRunning = true,
+                        connectedDevices = newDevices,
+                        totalConnected = newDevices.size,
+                        pendingRequestCount = 0,
+                        pendingRequestSummary = "Sin solicitudes pendientes",
+                        lastMessage = "Estación demo conectada"
+                    )
+                )
+                updateExecutiveStation("CINTA", ExecutiveStationStatus.READY, "Conectada (demo)", "Estación demo en línea")
+                addLog("✓ Estación demo conectada (1 dispositivo simulado) — modo presentación listo")
+            } catch (e: Exception) {
+                Log.e("CIM", "Error: ${e.message}", e)
+                addLog("⚠ Error simulando estación: ${e.message}")
+            }
+        }
+    }
+
     fun stopTcpServer() {
         viewModelScope.launch {
             try {

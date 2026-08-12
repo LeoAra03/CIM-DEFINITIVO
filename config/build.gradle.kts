@@ -27,7 +27,7 @@ tasks.register("buildFirmware") {
         if (missing.isNotEmpty()) {
             throw GradleException("Faltan firmwares activos: ${missing.joinToString()}")
         }
-        println("✓ Firmware ESP32 activo validado en ${firmwareDir.absolutePath}")
+        println("[OK] Firmware ESP32 activo validado en ${firmwareDir.absolutePath}")
     }
 }
 
@@ -84,10 +84,10 @@ tasks.register("buildAllApks") {
             if (apkFile != null && apkFile.exists()) {
                 val targetName = "$moduleName.apk"
                 apkFile.copyTo(File(outputDir.asFile, targetName), overwrite = true)
-                println("✓ Exportado: $targetName (debug, testeable)")
+                println("[OK] Exportado: $targetName (debug, testeable)")
             } else {
                 missingApks += moduleName
-                println("✗ ERROR: No se encontró APK en ${debugDir.absolutePath}")
+                println("[ERR] ERROR: No se encontró APK en ${debugDir.absolutePath}")
             }
         }
 
@@ -127,9 +127,9 @@ tasks.register("testAllModules") {
     description = "Ejecuta tests unitarios JVM de core-network y todas las apps"
 
     doFirst {
-        println("╔════════════════════════════════════════╗")
-        println("║  INICIANDO SUITE DE TESTS CIM v6.0    ║")
-        println("╚════════════════════════════════════════╝")
+        println("============================================")
+        println("  INICIANDO SUITE DE TESTS CIM v6.0")
+        println("============================================")
     }
 
     dependsOn(
@@ -143,7 +143,7 @@ tasks.register("testAllModules") {
     )
 
     doLast {
-        println("✓ Tests completados para core-network y las seis aplicaciones")
+        println("[OK] Tests completados para core-network y las seis aplicaciones")
     }
 }
 
@@ -190,9 +190,9 @@ tasks.register("validateApks") {
     dependsOn("buildAllApks")
 
     doLast {
-        println("\n╔════════════════════════════════════════╗")
-        println("║  VALIDACIÓN DE APKs CIM v6.0         ║")
-        println("╚════════════════════════════════════════╝\n")
+        println("\n============================================")
+        println("  VALIDACIÓN DE APKs CIM v6.0")
+        println("============================================\n")
 
         // Debug APK size varies substantially with native CameraX/OpenCV/TFLite
         // dependencies. Validate presence and a minimal non-empty payload instead
@@ -215,21 +215,21 @@ tasks.register("validateApks") {
             if (apkFile.exists()) {
                 val sizeMB = apkFile.length() / (1024 * 1024)
                 val isValid = apkFile.length() >= minimumSizeBytes
-                val status = if (isValid) "✓ OK" else "✗ DEMASIADO PEQUEÑA"
+                val status = if (isValid) "[OK]" else "[ERR] DEMASIADO PEQUEÑA"
 
                 println("  $apkName: $sizeMB MB [mínimo 1 MB] $status")
                 totalSize += apkFile.length()
 
                 if (!isValid) allValid = false
             } else {
-                println("  $apkName: ✗ NO ENCONTRADO")
+                println("  $apkName: [ERR] NO ENCONTRADO")
                 allValid = false
             }
         }
 
         val totalMB = totalSize / (1024 * 1024)
         println("\n  TOTAL: $totalMB MB")
-        println("  Estado: " + if (allValid) "✓ TODAS LAS APKs VÁLIDAS" else "✗ ALGUNAS APKs INVÁLIDAS")
+        println("  Estado: " + if (allValid) "[OK] TODAS LAS APKs VÁLIDAS" else "[ERR] ALGUNAS APKs INVÁLIDAS")
 
         if (!allValid) {
             throw GradleException("Validación de APKs falló")
@@ -266,7 +266,7 @@ tasks.register("writeApkChecksums") {
             "$hash  ${apk.name}"
         }
         checksumFile.asFile.writeText(lines.joinToString(System.lineSeparator()) + System.lineSeparator())
-        println("✓ Checksums SHA-256 generados: ${checksumFile.asFile.absolutePath}")
+        println("[OK] Checksums SHA-256 generados: ${checksumFile.asFile.absolutePath}")
     }
 }
 
@@ -287,12 +287,12 @@ tasks.register("buildReport") {
 **Estado**: BUILD SUCCESSFUL
 
 ## Módulos Compilados
-- ✓ core-network (Library)
-- ✓ app-coordinador (Maestro)
-- ✓ app-plc (Estación)
-- ✓ app-manufactura (Estación)
-- ✓ app-calidad (Estación)
-- ✓ app-almacen (Estación)
+- OK core-network (Library)
+- OK app-coordinador (Maestro)
+- OK app-plc (Estación)
+- OK app-manufactura (Estación)
+- OK app-calidad (Estación)
+- OK app-almacen (Estación)
 
 ## APKs Generadas
 """.trimIndent())
@@ -312,20 +312,20 @@ tasks.register("buildReport") {
 - Compile SDK: 35
 
 ## Tests Ejecutados
-- ✓ Unit Tests JVM (core-network)
-- ✓ Unit Tests JVM (app-coordinador)
-- ✓ Unit Tests JVM (app-plc)
-- ✓ Unit Tests JVM (app-calidad)
-- ✓ Unit Tests JVM (app-manufactura/app-almacen/wear sin tests específicos al momento)
+- OK Unit Tests JVM (core-network)
+- OK Unit Tests JVM (app-coordinador)
+- OK Unit Tests JVM (app-plc)
+- OK Unit Tests JVM (app-calidad)
+- OK Unit Tests JVM (app-manufactura/app-almacen/wear sin tests específicos al momento)
 
 ## Trazabilidad
-- ✓ Checksums SHA-256 generados en `output-apks/SHA256SUMS.txt`
+- OK Checksums SHA-256 generados en `output-apks/SHA256SUMS.txt`
 
 ## Resultado Final
-**✓ BUILD SUCCESSFUL - LISTO PARA VALIDACIÓN E2E SIMULADA**
+**BUILD SUCCESSFUL - LISTO PARA VALIDACIÓN E2E SIMULADA**
 """.trimIndent())
 
-        println("\n✓ Reporte generado: ${reportFile.absolutePath}")
+        println("\n[OK] Reporte generado: ${reportFile.absolutePath}")
     }
 }
 
@@ -344,9 +344,9 @@ tasks.register("signAllApks") {
         )
         val missing = required.filter { System.getenv(it).isNullOrBlank() && !project.hasProperty(it) }
         if (missing.isEmpty()) {
-            println("✓ Configuración de firma release detectada. Ejecuta: ./gradlew assembleRelease")
+            println("[OK] Configuración de firma release detectada. Ejecuta: ./gradlew assembleRelease")
         } else {
-            println("⚠ Firma release no configurada; faltan: ${missing.joinToString()}")
+            println("[WARN] Firma release no configurada; faltan: ${missing.joinToString()}")
             println("  Define esas variables como secretos de CI o en un archivo local no versionado.")
             println("  Sin ellas se generan APK release unsigned, evitando contraseñas embebidas.")
         }
@@ -377,10 +377,10 @@ tasks.register("buildRelease") {
     dependsOn("validateSystem100", "testAllModules", "lintAll", "buildReport")
 
     doLast {
-        println("\n╔════════════════════════════════════════╗")
-        println("║   COMPILACIÓN COMPLETA FINALIZADA    ║")
-        println("║   CIM v6.0 LISTO PARA VALIDACIÓN     ║")
-        println("╚════════════════════════════════════════╝\n")
+        println("\n============================================")
+        println("  COMPILACIÓN COMPLETA FINALIZADA")
+        println("  CIM v6.0 LISTO PARA VALIDACIÓN")
+        println("============================================\n")
     }
 }
 

@@ -44,7 +44,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -87,7 +86,7 @@ fun RobotLaserTab(
                 texto = "Scorbot",
                 icono = Icons.Default.PrecisionManufacturing,
                 modifier = Modifier.weight(1f),
-                colorFondo = if (selectedSubTab == 0) IndustrialTheme.Primario else Color.DarkGray,
+                colorFondo = if (selectedSubTab == 0) IndustrialTheme.Primario else IndustrialTheme.TarjetaAlta,
                 enabled = enabled,
                 onClick = { selectedSubTab = 0 }
             )
@@ -95,7 +94,7 @@ fun RobotLaserTab(
                 texto = "Láser",
                 icono = Icons.Default.FlashOn,
                 modifier = Modifier.weight(1f),
-                colorFondo = if (selectedSubTab == 1) IndustrialTheme.Primario else Color.DarkGray,
+                colorFondo = if (selectedSubTab == 1) IndustrialTheme.Primario else IndustrialTheme.TarjetaAlta,
                 enabled = enabled,
                 onClick = { selectedSubTab = 1 }
             )
@@ -103,7 +102,7 @@ fun RobotLaserTab(
                 texto = "QC",
                 icono = Icons.Default.VerifiedUser,
                 modifier = Modifier.weight(1f),
-                colorFondo = if (selectedSubTab == 2) IndustrialTheme.Primario else Color.DarkGray,
+                colorFondo = if (selectedSubTab == 2) IndustrialTheme.Primario else IndustrialTheme.TarjetaAlta,
                 enabled = enabled,
                 onClick = { selectedSubTab = 2 }
             )
@@ -201,7 +200,7 @@ private fun RobotControlPanel(onCommand: (String) -> Unit, enabled: Boolean) {
                 texto = "ABRIR",
                 icono = Icons.Default.KeyboardArrowUp,
                 modifier = Modifier.weight(1f),
-                colorFondo = Color.Gray,
+                colorFondo = IndustrialTheme.TextoSecundario,
                 enabled = enabled,
                 onClick = { onCommand("R:OPEN") }
             )
@@ -209,7 +208,7 @@ private fun RobotControlPanel(onCommand: (String) -> Unit, enabled: Boolean) {
                 texto = "CERRAR",
                 icono = Icons.Default.KeyboardArrowDown,
                 modifier = Modifier.weight(1f),
-                colorFondo = Color.Gray,
+                colorFondo = IndustrialTheme.TextoSecundario,
                 enabled = enabled,
                 onClick = { onCommand("R:CLOSE") }
             )
@@ -368,10 +367,10 @@ private fun QCStatusIndicator(label: String, status: QCStatus?) {
                 .size(24.dp)
                 .background(
                     when (status) {
-                        QCStatus.RUNNING -> Color.Yellow
-                        QCStatus.SUCCESS -> Color.Green
-                        QCStatus.FAILED -> Color.Red
-                        else -> Color.Gray
+                        QCStatus.RUNNING -> IndustrialTheme.Advertencia
+                        QCStatus.SUCCESS -> IndustrialTheme.Primario
+                        QCStatus.FAILED -> IndustrialTheme.Error
+                        else -> IndustrialTheme.TextoSecundario
                     },
                     shape = androidx.compose.foundation.shape.CircleShape
                 )
@@ -414,8 +413,8 @@ private fun QCProgramCard(
             status?.let {
                 when (it) {
                     QCStatus.RUNNING -> LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-                    QCStatus.SUCCESS -> Text("Estado: ÉXITO", fontSize = 11.sp, color = Color.Green)
-                    QCStatus.FAILED -> Text("Estado: FALLA", fontSize = 11.sp, color = Color.Red)
+                    QCStatus.SUCCESS -> Text("Estado: ÉXITO", fontSize = 11.sp, color = IndustrialTheme.Primario)
+                    QCStatus.FAILED -> Text("Estado: FALLA", fontSize = 11.sp, color = IndustrialTheme.Error)
                 }
             }
         }

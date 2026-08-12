@@ -58,7 +58,7 @@ class BluetoothSppManager(
         if (bluetoothAdapter == null) { onLog("Bluetooth no soportado"); return }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
             ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-            onLog("⚠ Permiso BLUETOOTH_CONNECT no concedido, no se puede iniciar servidor SPP")
+            onLog("Permiso BLUETOOTH_CONNECT no concedido, no se puede iniciar servidor SPP")
             return
         }
 
@@ -117,10 +117,10 @@ class BluetoothSppManager(
             scope.launch {
                 try {
                     sendToDevice(mac, identify)
-                    onLog("→ SENT IDENTIFY via SPP to $mac")
+                    onLog("SENT IDENTIFY via SPP to $mac")
                 } catch (e: Exception) {
             Log.e("CIM", "Error: ${e.message}", e)
-                    onLog("⚠ Error enviando IDENTIFY SPP a $mac: ${e.message}")
+                    onLog("Error enviando IDENTIFY SPP a $mac: ${e.message}")
                 }
             }
         } catch (_: Exception) { }
@@ -151,7 +151,7 @@ class BluetoothSppManager(
                 try {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                         if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.BLUETOOTH_CONNECT) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                            onLog("⚠ Permiso BLUETOOTH_CONNECT no concedido, no se puede iniciar servidor SPP")
+                            onLog("Permiso BLUETOOTH_CONNECT no concedido, no se puede iniciar servidor SPP")
                             isServerRunning = false
                             return
                         }

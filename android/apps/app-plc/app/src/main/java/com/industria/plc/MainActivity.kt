@@ -14,6 +14,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -27,7 +28,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Alignment
 import com.sistema.distribuido.network.AppIdentifier
 import com.sistema.distribuido.network.CommunicationCoordinator
@@ -100,7 +100,7 @@ fun PLCApp(commCoordinator: CommunicationCoordinator) {
 
     fun sendPlcHardwareCommand(command: String, logText: String) {
         if (!isAuthorized && !independentMode) {
-            addLog("✗ No autorizado - activar modo autónomo o esperar VALIDADO por coordinador")
+            addLog("[ERR] No autorizado - activar modo autónomo o esperar VALIDADO por coordinador")
             return
         }
         bluetoothManager.send(command, requireAuthorization = !independentMode, authorized = isAuthorized)
@@ -164,33 +164,107 @@ fun PLCApp(commCoordinator: CommunicationCoordinator) {
     IndustrialScaffold(
         titulo = "PLC Master v6.0", 
         subtitulo = "CONTROL DE CINTA TRANSPORTADORA",
+        estado = {
+            // Chip de estado en cabecera (punto + texto), como en los mockups HMI.
+            val enLinea = isConnectedBt || isConnectedNet
+            IndustrialStatusChip(
+                texto = when {
+                    independentMode -> "AUTONOMO"
+                    enLinea -> "RUNNING"
+                    else -> "OFFLINE"
+                },
+                color = when {
+                    independentMode -> IndustrialTheme.Advertencia
+                    enLinea -> IndustrialTheme.Primario
+                    else -> IndustrialTheme.Error
+                },
+                parpadeo = !enLinea && !independentMode
+            )
+        },
         floatingActionButton = { BluetoothConnectionFAB() }
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
-            ScrollableTabRow(selectedTabIndex = selectedTab, containerColor = Color.Black, contentColor = IndustrialTheme.Primario, edgePadding = 16.dp, divider = {}) {
-                Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 }, text = { Text("CONTROL", fontSize = 12.sp) })
-                Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 }, text = { Text("TRACKING", fontSize = 12.sp) })
-                Tab(selected = selectedTab == 2, onClick = { selectedTab = 2 }, text = { Text("SINCRO", fontSize = 12.sp) })
-            }
+            IndustrialTabBar(
+                items = listOf("CONTROL", "TRACKING", "SINCRO"),
+                seleccion = selectedTab,
+                onSelect = { selectedTab = it },
+                scrollable = false
+            )
 
             Column(Modifier.weight(1f).padding(16.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 when (selectedTab) {
                     0 -> {
-                        IndustrialCard("Energía y Sistema", Icons.Default.PowerSettingsNew) {
-                            val isActive = isConnectedBt && (isAuthorized || independentMode)
-                            IndustrialStatusRow("Estado Operativo", if(isActive) "SISTEMA VINCULADO" else "STANDBY (BT REQUERIDO)", isActive)
-                            Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                                Text("Modo Autónomo", color = IndustrialTheme.TextoSecundario)
-                                Switch(checked = independentMode, onCheckedChange = { independentMode = it }, colors = SwitchDefaults.colors(checkedThumbColor = IndustrialTheme.Exito))
+                        val isActive = isConnectedBt && (isAuthorized || independentMode)
+                        // Tarjeta principal "Conveyor Belt" del mockup: chip de estado a la
+                        // derecha, par START/STOP y pie con métricas Speed / Mode.
+                        IndustrialCard(
+                            titulo = "Cinta transportadora",
+                            icono = Icons.Default.PowerSettingsNew,
+                            subtitulo = "Control principal",
+                            trailing = {
+                                IndustrialStatusChip(
+                                    texto = if (isActive) "RUNNING" else "STANDBY",
+                                    color = if (isActive) IndustrialTheme.Primario else IndustrialTheme.TextoTenue
+                                )
                             }
-                            IndustrialStatusRow("Modo Autónomo", if(independentMode) "ACTIVO" else "DESACTIVADO", independentMode)
+                        ) {
                             Row(Modifier.fillMaxWidth(), Arrangement.spacedBy(12.dp)) {
-                                IndustrialActionButton(texto = "Arranque", icono = Icons.Default.PlayArrow, modifier = Modifier.weight(1f), colorFondo = IndustrialTheme.Exito, enabled = isActive, onClick = { sendPlcHardwareCommand("PLC:START", "PLC: START") })
-                                IndustrialActionButton(texto = "Parada", icono = Icons.Default.Stop, modifier = Modifier.weight(1f), colorFondo = IndustrialTheme.Error, enabled = isActive, onClick = { sendPlcHardwareCommand("PLC:STOP", "PLC: STOP") })
+                                IndustrialActionButton(texto = "START", icono = Icons.Default.PlayArrow, modifier = Modifier.weight(1f), colorFondo = IndustrialTheme.Primario, enabled = isActive, onClick = { sendPlcHardwareCommand("PLC:START", "PLC: START") })
+                                IndustrialActionButton(texto = "STOP", icono = Icons.Default.Stop, modifier = Modifier.weight(1f), colorFondo = IndustrialTheme.Error, enabled = isActive, onClick = { sendPlcHardwareCommand("PLC:STOP", "PLC: STOP") })
+                            }
+
+                            Spacer(Modifier.height(12.dp))
+                            HorizontalDivider(color = IndustrialTheme.Borde)
+                            Spacer(Modifier.height(10.dp))
+
+                            // Pie de métricas: dos columnas icono + etiqueta + valor.
+                            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                                Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.Speed, null, Modifier.size(20.dp), tint = IndustrialTheme.Secundario)
+                                    Spacer(Modifier.width(8.dp))
+                                    Column {
+                                        Text("ESTADO", color = IndustrialTheme.TextoSecundario, fontSize = 9.sp, letterSpacing = 0.6.sp)
+                                        Text(
+                                            if (isActive) "VINCULADO" else "STANDBY",
+                                            color = if (isActive) IndustrialTheme.Primario else IndustrialTheme.TextoSecundario,
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
+                                Box(Modifier.width(1.dp).height(30.dp).background(IndustrialTheme.Borde))
+                                Row(Modifier.weight(1f).padding(start = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.Settings, null, Modifier.size(20.dp), tint = IndustrialTheme.Secundario)
+                                    Spacer(Modifier.width(8.dp))
+                                    Column {
+                                        Text("MODO", color = IndustrialTheme.TextoSecundario, fontSize = 9.sp, letterSpacing = 0.6.sp)
+                                        Text(
+                                            if (independentMode) "AUTÓNOMO" else "COORDINADO",
+                                            color = if (independentMode) IndustrialTheme.Advertencia else IndustrialTheme.Secundario,
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
+                            }
+
+                            Spacer(Modifier.height(10.dp))
+                            Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                Text("Modo autónomo (sin coordinador)", color = IndustrialTheme.TextoSecundario, fontSize = 11.sp)
+                                Switch(
+                                    checked = independentMode,
+                                    onCheckedChange = { independentMode = it },
+                                    colors = SwitchDefaults.colors(
+                                        checkedThumbColor = IndustrialTheme.TextoPrincipal,
+                                        checkedTrackColor = IndustrialTheme.Primario,
+                                        uncheckedThumbColor = IndustrialTheme.TextoSecundario,
+                                        uncheckedTrackColor = IndustrialTheme.TarjetaAlta
+                                    )
+                                )
                             }
                         }
 
-                        IndustrialCard("Matriz de Distribución (3x10)", Icons.Default.GridView) {
+                        IndustrialCard("Matriz de distribución", Icons.Default.GridView, subtitulo = "Origen › destino (3x10)") {
                             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                 repeat(3) { fromIdx ->
                                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -241,8 +315,8 @@ fun PLCApp(commCoordinator: CommunicationCoordinator) {
                                 val hold = holdStations[pos] == true
                                 Column(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
                                     Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                                        Text("$pos · $name", color = Color.White, fontWeight = FontWeight.Bold)
-                                        Text(if (present) "● PALLET" else "○ vacío", color = if (present) IndustrialTheme.Exito else IndustrialTheme.TextoSecundario, fontSize = 12.sp)
+                                        Text("$pos · $name", color = IndustrialTheme.TextoPrincipal, fontWeight = FontWeight.Bold)
+                                        Text(if (present) "PALLET" else "vacío", color = if (present) IndustrialTheme.Exito else IndustrialTheme.TextoSecundario, fontSize = 12.sp)
                                     }
                                     Row(Modifier.fillMaxWidth(), Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                                         Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
@@ -256,7 +330,7 @@ fun PLCApp(commCoordinator: CommunicationCoordinator) {
                                 HorizontalDivider(color = IndustrialTheme.Borde)
                             }
                         }
-                        IndustrialCard("Simulador de Pallet", Icons.Default.DirectionsRun, headerColor = Color.Magenta) {
+                        IndustrialCard("Simulador de pallet", Icons.Default.DirectionsRun, headerColor = IndustrialTheme.Secundario) {
                             Text("Simula el paso de un pallet por una estación (pruebas sin hardware)", color = IndustrialTheme.TextoSecundario, fontSize = 10.sp)
                             Row(Modifier.fillMaxWidth(), Arrangement.spacedBy(8.dp)) {
                                 trackingStations.forEach { (_, pos) ->
@@ -264,7 +338,7 @@ fun PLCApp(commCoordinator: CommunicationCoordinator) {
                                 }
                             }
                             Spacer(Modifier.height(8.dp))
-                            IndustrialActionButton("▶ SIMULAR FLUJO ARCADE COMPLETO", Icons.Default.PlayArrow, colorFondo = IndustrialTheme.Secundario, onClick = {
+                            IndustrialActionButton("SIMULAR FLUJO ARCADE COMPLETO", Icons.Default.PlayArrow, colorFondo = IndustrialTheme.Secundario, onClick = {
                                 scope.launch {
                                     trackingStations.forEach { (_, pos) ->
                                         handlePlcEvent("SENSOR_ACTIVATED|POS:$pos")
@@ -295,8 +369,8 @@ fun PLCApp(commCoordinator: CommunicationCoordinator) {
                     }
                 }
 
-                IndustrialCard("Simulador de Sensor", Icons.Default.Sensors, headerColor = Color.Magenta) {
-                    IndustrialActionButton(texto = "Simular Sensor Activo", icono = Icons.Default.CheckCircle, colorFondo = Color.DarkGray, onClick = { 
+                IndustrialCard("Simulador de sensor", Icons.Default.Sensors, headerColor = IndustrialTheme.Secundario) {
+                    IndustrialActionButton(texto = "Simular Sensor Activo", icono = Icons.Default.CheckCircle, colorFondo = IndustrialTheme.TarjetaAlta, onClick = { 
                         if (isAuthorized) {
                             scope.launch {
                                 stationClient.sendEventSafe("SENSOR_ACTIVATED|POS:5")

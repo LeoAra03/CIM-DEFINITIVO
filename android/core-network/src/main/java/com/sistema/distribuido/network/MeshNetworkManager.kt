@@ -35,7 +35,7 @@ object MeshNetworkManager {
 
     fun propagateEmergency(source: String) {
         if (!meshActive) return
-        Log.w(TAG, "E-STOP propagado por mesh desde $source → ${peers.keys}")
+        Log.w(TAG, "E-STOP propagado por mesh desde $source -> ${peers.keys}")
         onEmergencyPropagate?.invoke(source)
     }
 

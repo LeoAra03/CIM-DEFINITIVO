@@ -1,11 +1,59 @@
 <!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Almacen - CIM</title><link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="../assets/style.css"><style>body{padding:20px;display:flex;justify-content:center} .phone-frame{width:390px}</style></head>
 <body><div class="phone-frame"><div class="phone-notch"></div><div class="phone-screen">
-<div style="padding:12px;background:#141414;border-bottom:1px solid #2a2a2a"><div style="font-weight:900;font-size:14px;color:#4CAF50">Almacén Pro v6.0</div><div style="font-size:10px;color:#9E9E9E">ESTACIÓN DE ALMACENAMIENTO</div></div>
+
+<div class="app-bar">
+  <div><div class="title">Almacén Pro v6.0</div><div class="subtitle">Gestión de racks industrial</div></div>
+  <span class="chip chip-ok">Ready</span>
+</div>
+
 <div class="tab-bar"><div class="tab active">RACK</div><div class="tab">ROBOT</div><div class="tab">SINCRO</div></div>
+
 <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
-<div class="card"><div class="card-header"><h3>📦 Rack 3x3</h3></div><div class="card-body"><div class="rack-viz"><div class="rack-slot occupied">📦 R1-C1<br><span style="font-size:8px">tuerca_macho</span></div><div class="rack-slot">○ R1-C2</div><div class="rack-slot occupied">📦 R1-C3<br><span style="font-size:8px">hacha_hembra</span></div><div class="rack-slot">○ R2-C1</div><div class="rack-slot occupied">📦 R2-C2</div><div class="rack-slot">○ R2-C3</div><div class="rack-slot">○ R3-C1</div><div class="rack-slot">○ R3-C2</div><div class="rack-slot">○ R3-C3</div></div><div style="display:flex;gap:8px;margin-top:10px"><button class="btn btn-primary btn-sm" style="flex:1">STORE POS</button><button class="btn btn-ghost btn-sm" style="flex:1">RETRIEVE POS</button></div></div></div>
-<div class="card"><div class="card-header"><h3>🦾 Scorbot Almacén</h3></div><div class="card-body"><div style="display:flex;gap:8px"><button class="btn btn-ghost btn-sm" style="flex:1">HOME</button><button class="btn btn-ghost btn-sm" style="flex:1">CLOSE</button><button class="btn btn-ghost btn-sm" style="flex:1">OPEN</button></div></div></div>
-<div class="terminal" style="height:80px"><div class="line ok">[10:27:01] ✓ Pallet recibido en POS 1</div><div class="line cmd">[10:27:03] → ROBOT: R:RUN STORE</div><div class="line ok">[10:27:06] STO:STORE:POS2 OK</div></div>
-</div></div></div>
-<div style="position:fixed;top:12px;left:12px"><a href="../index.html" class="btn btn-ghost btn-sm">← Volver</a></div>
+
+  <div class="card"><div class="card-header">
+    <h3>Rack A-01</h3><span class="chip chip-ok">6 / 18</span>
+  </div><div class="card-body">
+    <div style="font-size:10px;color:var(--text-sec);margin-top:-4px">3 columnas x 6 niveles · 18 posiciones</div>
+
+    <div class="rack-grid">
+      <div></div><div class="rack-col-head">01</div><div class="rack-col-head">02</div><div class="rack-col-head">03</div>
+
+      <div class="rack-level">06</div>
+      <div class="rack-cell"><i></i>VACÍO</div><div class="rack-cell"><i></i>VACÍO</div><div class="rack-cell occupied"><i></i>A-03-06</div>
+
+      <div class="rack-level">05</div>
+      <div class="rack-cell occupied"><i></i>A-01-05</div><div class="rack-cell"><i></i>VACÍO</div><div class="rack-cell"><i></i>VACÍO</div>
+
+      <div class="rack-level">04</div>
+      <div class="rack-cell"><i></i>VACÍO</div><div class="rack-cell occupied"><i></i>A-02-04</div><div class="rack-cell"><i></i>VACÍO</div>
+
+      <div class="rack-level">03</div>
+      <div class="rack-cell occupied"><i></i>A-01-03</div><div class="rack-cell"><i></i>VACÍO</div><div class="rack-cell occupied"><i></i>A-03-03</div>
+
+      <div class="rack-level">02</div>
+      <div class="rack-cell"><i></i>VACÍO</div><div class="rack-cell occupied"><i></i>A-02-02</div><div class="rack-cell"><i></i>VACÍO</div>
+
+      <div class="rack-level">01</div>
+      <div class="rack-cell occupied"><i></i>A-01-01</div><div class="rack-cell"><i></i>VACÍO</div><div class="rack-cell"><i></i>VACÍO</div>
+
+    </div>
+
+    <div class="rack-legend">
+      <span style="color:var(--primary)"><i style="background:rgba(76,175,80,0.35)"></i>OCUPADO</span>
+      <span style="color:var(--text-dim)"><i></i>VACÍO</span>
+      <span style="color:var(--warning)"><i style="background:rgba(224,165,38,0.35)"></i>RESERVADO</span>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:10px"><button class="btn btn-primary btn-sm" style="flex:1">STORE POS</button><button class="btn btn-ghost btn-sm" style="flex:1">RETRIEVE POS</button></div>
+  </div></div>
+
+  <div class="card"><div class="card-header"><h3>Scorbot Almacén</h3><span class="chip chip-info">Idle</span></div><div class="card-body"><div style="display:flex;gap:8px"><button class="btn btn-ghost btn-sm" style="flex:1">HOME</button><button class="btn btn-ghost btn-sm" style="flex:1">CLOSE</button><button class="btn btn-ghost btn-sm" style="flex:1">OPEN</button></div></div></div>
+
+  <div class="terminal" style="height:80px"><div class="line ok">[10:27:01] [OK] Pallet recibido en POS 1</div><div class="line cmd">[10:27:03] -> ROBOT: R:RUN STORE</div><div class="line ok">[10:27:06] STO:STORE:POS2 OK</div></div>
+</div>
+
+<div class="bottom-nav"><div class="item active"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="1.5"/><path d="M3 9.3h18M3 14.7h18M9 4v16M15 4v16"/></svg></span>Racks</div><div class="item"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5z"/><path d="M3 7.5 12 12l9-4.5M12 12v9"/></svg></span>Inventario</div><div class="item"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13l-3-3M20 16H7l3 3"/></svg></span>Movimientos</div><div class="item"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v2.6M12 18.6v2.6M21.2 12h-2.6M5.4 12H2.8M18.5 5.5l-1.8 1.8M7.3 16.7l-1.8 1.8M18.5 18.5l-1.8-1.8M7.3 7.3 5.5 5.5"/></svg></span>Ajustes</div></div>
+
+</div></div>
+<div style="position:fixed;top:12px;left:12px"><a href="../index.html" class="btn btn-ghost btn-sm">Volver</a></div>
 </body></html>

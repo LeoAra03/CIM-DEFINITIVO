@@ -116,17 +116,17 @@ class CommunicationCoordinator(
                 PermissionDecision.APPROVED -> {
                     AuthorizationManager.authorize(mac)
                     updateSessionAuth(mac, CimProtocol.AUTH_AUTHORIZED)
-                    onLog("[COORD] ✓ AUTORIZADO: $mac")
+                    onLog("[COORD] AUTORIZADO: $mac")
                 }
                 PermissionDecision.REJECTED -> {
                     AuthorizationManager.deny(mac)
                     updateSessionAuth(mac, CimProtocol.AUTH_BLOCKED)
-                    onLog("[COORD] ✗ RECHAZADO: $mac")
+                    onLog("[COORD] RECHAZADO: $mac")
                 }
                 PermissionDecision.TIMEOUT -> {
                     AuthorizationManager.deny(mac)
                     updateSessionAuth(mac, CimProtocol.AUTH_PENDING)
-                    onLog("[COORD] ⏱ TIMEOUT autorización: $mac")
+                    onLog("[COORD] TIMEOUT autorización: $mac")
                 }
                 else -> {
                     updateSessionAuth(mac, CimProtocol.AUTH_PENDING)
@@ -150,13 +150,13 @@ class CommunicationCoordinator(
     ): Boolean {
         val session = sessionStates[mac]
         if (session == null) {
-            onLog("[COORD] ✗ Sesión no encontrada: $mac")
+            onLog("[COORD] Sesión no encontrada: $mac")
             return false
         }
 
         // Validar autorización
         if (!AuthorizationManager.isAuthorized(mac)) {
-            onLog("[COORD] ✗ No autorizado: $mac")
+            onLog("[COORD] No autorizado: $mac")
             return false
         }
 
@@ -173,7 +173,7 @@ class CommunicationCoordinator(
         // Iniciar timeout
         scheduleCommandTimeout(cmdId, timeout)
 
-        onLog("[COORD] → ENVÍO: $mac | $command (timeout: ${timeout}ms)")
+        onLog("[COORD] ENVÍO: $mac | $command (timeout: ${timeout}ms)")
 
         // Aquí iría la integración con BLE/SPP
         // Para ahora, registramos la intención
@@ -201,7 +201,7 @@ class CommunicationCoordinator(
                     if (parts.size >= 3) {
                         val status = parts[1]
                         val version = parts.getOrNull(2) ?: "unknown"
-                        onLog("[COORD] 🆔 IDENTIFY: $mac | $status | v$version")
+                        onLog("[COORD] IDENTIFY: $mac | $status | v$version")
                         updateSessionHealth(mac, true)
                     }
                 }
@@ -210,7 +210,7 @@ class CommunicationCoordinator(
                     val parts = message.split("|")
                     if (parts.size >= 3) {
                         val status = parts[1]
-                        onLog("[COORD] 📊 STATUS: $mac | $status")
+                        onLog("[COORD] STATUS: $mac | $status")
                         updateSessionHealth(mac, true)
                     }
                 }
@@ -221,7 +221,7 @@ class CommunicationCoordinator(
                     if (parts.size >= 2) {
                         val cmdRef = parts[1]
                         pendingCommands.remove(cmdRef)
-                        onLog("[COORD] ✓ ACK recibido: $cmdRef")
+                        onLog("[COORD] ACK recibido: $cmdRef")
                     }
                 }
 
@@ -232,12 +232,12 @@ class CommunicationCoordinator(
                         val cmdRef = parts[1]
                         val reason = parts[2]
                         pendingCommands.remove(cmdRef)
-                        onLog("[COORD] ✗ NACK: $cmdRef | Razón: $reason")
+                        onLog("[COORD] NACK: $cmdRef | Razón: $reason")
                     }
                 }
 
                 else -> {
-                    onLog("[COORD] 📨 Mensaje: $mac | $message")
+                    onLog("[COORD] Mensaje: $mac | $message")
                     onMessageReceived(mac, message)
                 }
             }
@@ -252,7 +252,7 @@ class CommunicationCoordinator(
         lock.withLock {
             AuthorizationManager.deny(mac)
             updateSessionAuth(mac, CimProtocol.AUTH_BLOCKED)
-            onLog("[COORD] 🚫 REVOCADO: $mac")
+            onLog("[COORD] REVOCADO: $mac")
 
             if (permissionManager != null) {
                 permissionManager.revoke(mac)
@@ -284,7 +284,7 @@ class CommunicationCoordinator(
                     commandTimeoutJobs.remove(cmdId)
                 }
             updateCoordinationStatus()
-            onLog("[COORD] 🔌 DESCONECTADO: $mac")
+            onLog("[COORD] DESCONECTADO: $mac")
         }
     }
 
@@ -361,7 +361,7 @@ class CommunicationCoordinator(
         commandTimeoutJobs[cmdId] = scope.launch {
             delay(timeoutMs)
             if (pendingCommands.containsKey(cmdId)) {
-                onLog("[COORD] ⏱ TIMEOUT de comando: $cmdId")
+                onLog("[COORD] TIMEOUT de comando: $cmdId")
                 pendingCommands.remove(cmdId)
             }
         }

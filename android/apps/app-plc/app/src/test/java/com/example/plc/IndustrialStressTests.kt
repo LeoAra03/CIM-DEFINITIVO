@@ -96,8 +96,8 @@ class IndustrialStressTests {
 
     @Test
     fun `Buscador de Bugs - Pallet ID con espacios y emojis`() {
-        val weirdId = " 📦 PAL-001 "
-        assertEquals("📦 PAL-001", weirdId.trim())
+        val weirdId = "  PAL-001  "
+        assertEquals("PAL-001", weirdId.trim())
     }
 
     @Test

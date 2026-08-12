@@ -80,7 +80,7 @@ class AppControl(application: Application) : AndroidViewModel(application) {
     fun runPlcTriggerSequence() {
         viewModelScope.launch {
             if (authorizationState.value != CimProtocol.AUTH_STATE_VALIDATED) {
-                log("✗ No autorizado para enviar evento PLC: ${authorizationState.value}")
+                log("[ERR] No autorizado para enviar evento PLC: ${authorizationState.value}")
                 return@launch
             }
             log("EJECUTANDO MOTOR...")

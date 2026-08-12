@@ -32,7 +32,12 @@ fun DigitalTwinPanel(
     )
 
     Column(modifier.fillMaxWidth()) {
-        Text("GEMELO DIGITAL", color = IndustrialTheme.Primario, fontSize = 11.sp)
+        Text(
+            "GEMELO DIGITAL",
+            color = IndustrialTheme.TextoSecundario,
+            fontSize = 10.sp,
+            letterSpacing = 1.sp
+        )
         Spacer(Modifier.height(8.dp))
         Canvas(
             modifier = Modifier
@@ -43,7 +48,7 @@ fun DigitalTwinPanel(
             val cy = size.height / 2
             rotate(rotation, pivot = Offset(cx, cy)) {
                 drawRect(
-                    color = Color(0xFF1A1D2D),
+                    color = IndustrialTheme.TarjetaAlta,
                     topLeft = Offset(cx - 80, cy - 50),
                     size = androidx.compose.ui.geometry.Size(160f, 100f)
                 )
@@ -53,7 +58,7 @@ fun DigitalTwinPanel(
                 val x = cx + kotlin.math.cos(angle).toFloat() * 60
                 val y = cy + kotlin.math.sin(angle).toFloat() * 40
                 drawCircle(
-                    color = if (state.isTarget) Color(0x4400E5FF) else state.color,
+                    color = if (state.isTarget) IndustrialTheme.Primario.copy(alpha = 0.30f) else state.color,
                     radius = if (state.isTarget) 18f else 12f,
                     center = Offset(x, y)
                 )

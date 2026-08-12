@@ -44,9 +44,9 @@ class IndustrialVisionAnalyzer(
 
     init {
         if (!OpenCVLoader.initDebug()) {
-            Log.e("IndustrialVision", "✗ No se pudo inicializar OpenCV")
+            Log.e("IndustrialVision", "[ERR] No se pudo inicializar OpenCV")
         } else {
-            Log.d("IndustrialVision", "✓ OpenCV inicializado correctamente")
+            Log.d("IndustrialVision", "[OK] OpenCV inicializado correctamente")
         }
         arucoDetector = ArucoDetector(Objdetect.getPredefinedDictionary(arucoDictionary.opencvConstant))
     }
@@ -214,7 +214,7 @@ class IndustrialVisionAnalyzer(
                 Utils.matToBitmap(markerImage, bitmap)
 
                 markerImage.release()
-                Log.d("ArucoGenerator", "✓ Marcador $validId (${dictionary.label}) ${pixelSize}x${pixelSize}px")
+                Log.d("ArucoGenerator", "[OK] Marcador $validId (${dictionary.label}) ${pixelSize}x${pixelSize}px")
 
                 bitmap
             } catch (e: Exception) {

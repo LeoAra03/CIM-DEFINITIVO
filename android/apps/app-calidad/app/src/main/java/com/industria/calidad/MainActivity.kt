@@ -29,6 +29,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.launch
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
@@ -116,7 +117,7 @@ fun CalidadApp(commCoordinator: CommunicationCoordinator) {
 
     fun sendAuthorizedHardwareCommand(command: String, logText: String, routeToCoordinator: Boolean = true) {
         if (!isAuthorized && !independentMode) {
-            addLog("✗ No autorizado - activar modo autónomo o esperar VALIDADO por coordinador")
+            addLog("[ERR] No autorizado - activar modo autónomo o esperar VALIDADO por coordinador")
             return
         }
         bt.send(command, requireAuthorization = !independentMode, authorized = isAuthorized)
@@ -129,12 +130,12 @@ fun CalidadApp(commCoordinator: CommunicationCoordinator) {
     }
 
     fun handleIncomingCoordinatorCommand(command: String) {
-        addLog("← COORDINADOR: $command")
+        addLog("<- COORDINADOR: $command")
         when {
             command == "STATS:RESET" -> {
                 approvedCount = 0
                 rejectedCount = 0
-                addLog("✓ Contadores reiniciados desde coordinador")
+                addLog("[OK] Contadores reiniciados desde coordinador")
             }
             command == "CAM:YOLO" -> {
                 scope.launch {
@@ -149,7 +150,7 @@ fun CalidadApp(commCoordinator: CommunicationCoordinator) {
                 sendAuthorizedHardwareCommand(command, "CMD RECIBIDO: $command", routeToCoordinator = false)
             }
             else -> {
-                addLog("⚠ Comando desconocido: $command")
+                addLog("[WARN] Comando desconocido: $command")
             }
         }
     }
@@ -170,21 +171,44 @@ fun CalidadApp(commCoordinator: CommunicationCoordinator) {
     IndustrialScaffold(
         titulo = "Quality Pro v6.0", 
         subtitulo = "CONTROL DE CALIDAD & VISIÓN",
+        estado = {
+            // Chip de estado en cabecera (punto + texto), como en los mockups HMI.
+            val enLinea = isConnectedBt || isConnectedNet
+            IndustrialStatusChip(
+                texto = when {
+                    independentMode -> "AUTONOMO"
+                    enLinea -> "ONLINE"
+                    else -> "OFFLINE"
+                },
+                color = when {
+                    independentMode -> IndustrialTheme.Advertencia
+                    enLinea -> IndustrialTheme.Primario
+                    else -> IndustrialTheme.Error
+                },
+                parpadeo = !enLinea && !independentMode
+            )
+        },
+        bottomBar = {
+            // Bottom-nav de la figura de referencia (VISIÓN / BRAZO / STATS / SINCRO).
+            IndustrialBottomNav(
+                items = listOf(
+                    IndustrialNavItem("VISIÓN", Icons.Default.Camera),
+                    IndustrialNavItem("BRAZO", Icons.Default.PrecisionManufacturing),
+                    IndustrialNavItem("STATS", Icons.Default.BarChart),
+                    IndustrialNavItem("SINCRO", Icons.Default.Wifi)
+                ),
+                seleccion = selectedTab,
+                onSelect = { selectedTab = it }
+            )
+        },
         floatingActionButton = { BluetoothConnectionFAB() }
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
-            ScrollableTabRow(selectedTabIndex = selectedTab, containerColor = Color.Black, contentColor = IndustrialTheme.Primario, edgePadding = 16.dp, divider = {}) {
-                Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 }, text = { Text("VISIÓN", fontSize = 12.sp) })
-                Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 }, text = { Text("BRAZO", fontSize = 12.sp) })
-                Tab(selected = selectedTab == 2, onClick = { selectedTab = 2 }, text = { Text("STATS", fontSize = 12.sp) })
-                Tab(selected = selectedTab == 3, onClick = { selectedTab = 3 }, text = { Text("SINCRO", fontSize = 12.sp) })
-            }
-
             Column(Modifier.weight(1f).padding(16.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 when (selectedTab) {
                     0 -> {
                         IndustrialCard("Análisis ArUco / YOLO", Icons.Default.Camera) {
-                            Box(modifier = Modifier.fillMaxWidth().height(260.dp).background(Color.Black).border(1.dp, IndustrialTheme.Borde), contentAlignment = Alignment.Center) {
+                            Box(modifier = Modifier.fillMaxWidth().height(260.dp).background(IndustrialTheme.Fondo, androidx.compose.foundation.shape.RoundedCornerShape(IndustrialTheme.RadioControl)).border(1.dp, IndustrialTheme.Borde, androidx.compose.foundation.shape.RoundedCornerShape(IndustrialTheme.RadioControl)), contentAlignment = Alignment.Center) {
                                 if (arucoBitmap != null) {
                                     Image(
                                         bitmap = arucoBitmap!!.asImageBitmap(),
@@ -206,13 +230,13 @@ fun CalidadApp(commCoordinator: CommunicationCoordinator) {
                                                     val exp = expectedAruco.trim().toIntOrNull()
                                                     if (exp != null) {
                                                         if (exp == id) {
-                                                            addLog("✓ PATRÓN ArUco OK (#$id coincide)")
+                                                            addLog("[OK] PATRÓN ArUco OK (#$id coincide)")
                                                             if (independentMode) {
                                                                 approvedCount += 1
                                                                 sendAuthorizedHardwareCommand("VAL:PASS", "RESULT: APPROVED (ArUco $id)")
                                                             }
                                                         } else {
-                                                            addLog("✗ PATRÓN ArUco NO coincide (esperado #$exp, leído #$id)")
+                                                            addLog("[ERR] PATRÓN ArUco NO coincide (esperado #$exp, leído #$id)")
                                                             if (independentMode) {
                                                                 rejectedCount += 1
                                                                 sendAuthorizedHardwareCommand("VAL:FAIL", "RESULT: REJECTED (ArUco $id)")
@@ -229,7 +253,7 @@ fun CalidadApp(commCoordinator: CommunicationCoordinator) {
                                             if (results.isNotEmpty()) {
                                                 addLog("YOLO: ${results.size} objetos detectados")
                                                 results.forEach { result ->
-                                                    addLog("  • ${result.label} ${"%.0f".format(result.confidence * 100)}%")
+                                                    addLog("  - ${result.label} ${"%.0f".format(result.confidence * 100)}%")
                                                 }
                                             }
                                         }
@@ -246,7 +270,7 @@ fun CalidadApp(commCoordinator: CommunicationCoordinator) {
                                     ) {
                                         Column(Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                                             Text("ARUCO IDENTIFICADO", color = IndustrialTheme.Exito, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
-                                            Text("#${lastDetectedAruco}", color = Color.White, fontSize = 56.sp, fontWeight = FontWeight.ExtraBold)
+                                            Text("#${lastDetectedAruco}", color = IndustrialTheme.TextoPrincipal, fontSize = 56.sp, fontWeight = FontWeight.ExtraBold)
                                             Text("Marcador ArUco · ${if (lastDetectedAruco!! < 10) "Zona A (0-9)" else if (lastDetectedAruco!! < 20) "Zona B (10-19)" else "Zona C (20+)"}", color = IndustrialTheme.TextoSecundario, fontSize = 11.sp)
                                         }
                                     }
@@ -268,7 +292,7 @@ fun CalidadApp(commCoordinator: CommunicationCoordinator) {
                                 progress = { progress },
                                 modifier = Modifier.fillMaxWidth(),
                                 color = IndustrialTheme.Exito,
-                                trackColor = Color.DarkGray
+                                trackColor = IndustrialTheme.TarjetaAlta
                             )
                             Spacer(Modifier.height(8.dp))
                             Text("Estado: $jobStatus", color = IndustrialTheme.TextoSecundario)
@@ -289,10 +313,10 @@ fun CalidadApp(commCoordinator: CommunicationCoordinator) {
                                 val exp = expectedAruco.trim().toIntOrNull()
                                 if (exp != null) {
                                     if (exp == demoId) {
-                                        addLog("✓ PATRÓN ArUco OK (#$demoId coincide)")
+                                        addLog("[OK] PATRÓN ArUco OK (#$demoId coincide)")
                                         if (independentMode) { approvedCount += 1; sendAuthorizedHardwareCommand("VAL:PASS", "RESULT: APPROVED (ArUco $demoId)") }
                                     } else {
-                                        addLog("✗ PATRÓN ArUco NO coincide (esperado #$exp, leído #$demoId)")
+                                        addLog("[ERR] PATRÓN ArUco NO coincide (esperado #$exp, leído #$demoId)")
                                         if (independentMode) { rejectedCount += 1; sendAuthorizedHardwareCommand("VAL:FAIL", "RESULT: REJECTED (ArUco $demoId)") }
                                     }
                                 }
@@ -351,16 +375,72 @@ fun CalidadApp(commCoordinator: CommunicationCoordinator) {
                         }
                     }
                     2 -> {
-                        IndustrialCard("Estadísticas de Producción", Icons.Default.BarChart) {
-                            val totalPieces = approvedCount + rejectedCount
-                            val approvalRate = if (totalPieces > 0) (approvedCount * 100.0 / totalPieces) else 0.0
-                            Text("Tasa de Aprobación: ${"%.1f".format(approvalRate)}%", color = IndustrialTheme.Exito, fontWeight = FontWeight.Bold)
-                            Spacer(Modifier.height(8.dp))
-                            Text("Piezas Totales: $totalPieces", color = Color.White)
-                            Text("Piezas Aprobadas: $approvedCount", color = IndustrialTheme.Exito)
-                            Text("Piezas Rechazadas: $rejectedCount", color = IndustrialTheme.Error)
-                            Spacer(Modifier.height(16.dp))
-                            IndustrialActionButton("Limpiar Contador", Icons.Default.Delete, colorFondo = Color.DarkGray, onClick = {
+                        val totalPieces = approvedCount + rejectedCount
+                        val rejectionRate = if (totalPieces > 0) (rejectedCount * 100.0 / totalPieces) else 0.0
+
+                        IndustrialCard(
+                            titulo = "Resumen",
+                            icono = Icons.Default.BarChart,
+                            subtitulo = "Inspección en curso",
+                            trailing = { IndustrialStatusChip("$totalPieces PIEZAS", IndustrialTheme.Secundario) }
+                        ) {
+                            Row(Modifier.fillMaxWidth(), Arrangement.spacedBy(10.dp)) {
+                                CalidadCounterBox(
+                                    modifier = Modifier.weight(1f),
+                                    titulo = "APROBADAS",
+                                    valor = approvedCount,
+                                    color = IndustrialTheme.Primario
+                                )
+                                CalidadCounterBox(
+                                    modifier = Modifier.weight(1f),
+                                    titulo = "RECHAZADAS",
+                                    valor = rejectedCount,
+                                    color = IndustrialTheme.Error
+                                )
+                            }
+                        }
+
+                        IndustrialCard(
+                            titulo = "Tasa de rechazo",
+                            icono = Icons.Default.BarChart,
+                            subtitulo = "Objetivo: menor a 10%",
+                            trailing = {
+                                IndustrialStatusChip(
+                                    if (rejectionRate < 10.0) "EN OBJETIVO" else "FUERA DE RANGO",
+                                    if (rejectionRate < 10.0) IndustrialTheme.Primario else IndustrialTheme.Error
+                                )
+                            }
+                        ) {
+                            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                                IndustrialDonut(
+                                    fraction = (rejectionRate / 100.0).toFloat(),
+                                    label = "rechazadas",
+                                    color = if (rejectionRate < 10.0) IndustrialTheme.Primario else IndustrialTheme.Error,
+                                    diametro = 132.dp,
+                                    grosor = 12.dp
+                                )
+                            }
+                            Spacer(Modifier.height(10.dp))
+                            Text(
+                                "${"%.2f".format(rejectionRate)}% rechazadas · ${"%.2f".format(100.0 - rejectionRate)}% aprobadas",
+                                color = IndustrialTheme.TextoSecundario,
+                                fontSize = 11.sp,
+                                modifier = Modifier.fillMaxWidth(),
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            )
+                        }
+
+                        IndustrialCard(
+                            titulo = "Sesión",
+                            icono = Icons.Default.BarChart,
+                            subtitulo = "Datos acumulados del turno"
+                        ) {
+                            IndustrialKeyValueRow("Piezas totales", "$totalPieces")
+                            IndustrialKeyValueRow("Aprobadas", "$approvedCount", valorColor = IndustrialTheme.Primario)
+                            IndustrialKeyValueRow("Rechazadas", "$rejectedCount", valorColor = IndustrialTheme.Error)
+                            IndustrialKeyValueRow("Estado", jobStatus)
+                            Spacer(Modifier.height(12.dp))
+                            IndustrialActionButton("Limpiar Contador", Icons.Default.Delete, colorFondo = IndustrialTheme.TarjetaAlta, onClick = {
                                 approvedCount = 0
                                 rejectedCount = 0
                                 addLog("STATS: contadores reiniciados")
@@ -391,3 +471,25 @@ fun CalidadApp(commCoordinator: CommunicationCoordinator) {
 
 // FIX: Límite de colección (MAX=500)
 private val MAX_COLLECTION_SIZE = 500
+
+
+@Composable
+private fun CalidadCounterBox(
+    titulo: String,
+    valor: Int,
+    color: androidx.compose.ui.graphics.Color,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier
+            .clip(androidx.compose.foundation.shape.RoundedCornerShape(10.dp))
+            .background(color.copy(alpha = 0.10f))
+            .border(1.dp, color.copy(alpha = 0.45f), androidx.compose.foundation.shape.RoundedCornerShape(10.dp))
+            .padding(vertical = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(titulo, color = color, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.2.sp)
+        Spacer(Modifier.height(6.dp))
+        Text("$valor", color = color, fontSize = 32.sp, fontWeight = FontWeight.ExtraBold)
+    }
+}

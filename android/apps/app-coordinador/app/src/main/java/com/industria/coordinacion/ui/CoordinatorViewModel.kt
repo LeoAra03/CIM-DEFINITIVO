@@ -101,12 +101,12 @@ class CoordinatorViewModel : ViewModel() {
                 GlobalDeviceRegistry.registry.addListener(object : com.sistema.distribuido.network.MobileDeviceRegistry.RegistryListener {
                     override suspend fun onDeviceAdded(device: com.sistema.distribuido.network.DeviceInfo) {
                         updateDeviceList()
-                        addLog("✓ Dispositivo agregado: ${device.nombre} [${device.mac}]")
+                        addLog("[OK] Dispositivo agregado: ${device.nombre} [${device.mac}]")
                     }
 
                     override suspend fun onDeviceRemoved(mac: String) {
                         updateDeviceList()
-                        addLog("✗ Dispositivo desconectado: $mac")
+                        addLog("[ERR] Dispositivo desconectado: $mac")
                     }
 
                     override suspend fun onDeviceUpdated(device: com.sistema.distribuido.network.DeviceInfo) {
@@ -115,7 +115,7 @@ class CoordinatorViewModel : ViewModel() {
 
                     override suspend fun onAuthorizationChanged(mac: String, authorized: Boolean) {
                         updateDeviceList()
-                        addLog("${if (authorized) "✓" else "✗"} Autorización: $mac")
+                        addLog("${if (authorized) "[OK]" else "[ERR]"} Autorización: $mac")
                     }
                 })
 
@@ -124,11 +124,11 @@ class CoordinatorViewModel : ViewModel() {
                 }
 
                 commandBroker?.addErrorListener { errorMsg ->
-                    addLog("✗ BROKER ERROR: $errorMsg")
+                    addLog("[ERR] BROKER ERROR: $errorMsg")
                 }
             } catch (e: Exception) {
                 Log.w("CoordinatorVM", "Listener init error: ${e.message}", e)
-                addLog("⚠ Error inicializando listeners: ${e.message}")
+                addLog("[WARN] Error inicializando listeners: ${e.message}")
             }
         }
     }
@@ -234,7 +234,7 @@ class CoordinatorViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
             Log.e("CIM", "Error: ${e.message}", e)
-                addLog("✗ Error QC $program: ${e.message}")
+                addLog("[ERR] Error QC $program: ${e.message}")
             }
         }
     }
@@ -242,7 +242,7 @@ class CoordinatorViewModel : ViewModel() {
     fun stopQcProgram(program: String) {
         viewModelScope.launch {
             try {
-                addLog("✗ Deteniendo QC $program")
+                addLog("[ERR] Deteniendo QC $program")
                 _uiState.value = _uiState.value.copy(
                     qcState = when (program.uppercase()) {
                         "SR1" -> _uiState.value.qcState.copy(sr1Status = null, selectedProgram = null)
@@ -266,7 +266,7 @@ class CoordinatorViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
             Log.e("CIM", "Error: ${e.message}", e)
-                addLog("✗ Error detener QC $program: ${e.message}")
+                addLog("[ERR] Error detener QC $program: ${e.message}")
             }
         }
     }
@@ -306,7 +306,7 @@ class CoordinatorViewModel : ViewModel() {
             )
         } catch (e: Exception) {
             Log.e("CIM", "Error: ${e.message}", e)
-            addLog("⚠ Error actualizar devices: ${e.message}")
+            addLog("[WARN] Error actualizar devices: ${e.message}")
         }
     }
 
@@ -338,7 +338,7 @@ class CoordinatorViewModel : ViewModel() {
         updateExecutiveStation(stationName, status, event, event)
         if (stationName.uppercase() == "ALMACEN" && normalized.contains("PALLET LIBERADO")) {
             updateExecutiveStation("MANUFACTURA", ExecutiveStationStatus.BUSY, "Preparación automática por pallet liberado", "PREPARANDO")
-            addLog("→ FLUJO: Almacén reportó pallet liberado; Manufactura preparada")
+            addLog("-> FLUJO: Almacén reportó pallet liberado; Manufactura preparada")
             sendExecuteCommand(AppType.MANUFACTURA, "PREPARE_FROM_STORAGE")
         }
     }
@@ -350,14 +350,14 @@ class CoordinatorViewModel : ViewModel() {
                 updateExecutiveStation("CALIDAD", ExecutiveStationStatus.BUSY, "Calibración de visión activada", "CALIBRACIÓN")
                 updateExecutiveStation("ALMACEN", ExecutiveStationStatus.READY, "Preparación de almacén OK", "READY")
                 updateExecutiveStation("CINTA", ExecutiveStationStatus.BUSY, "Cinta en movimiento", "START")
-                addLog("→ FLUJO: Inicio de planta completa")
+                addLog("-> FLUJO: Inicio de planta completa")
                 sendExecuteCommand(AppType.MANUFACTURA, "PLANTA_START")
                 sendExecuteCommand(AppType.PLC, "PLANTA_START")
                 sendExecuteCommand(AppType.ALMACEN, "PLANTA_START")
                 sendExecuteCommand(AppType.CALIDAD, "PLANTA_START")
             } catch (e: Exception) {
             Log.e("CIM", "Error: ${e.message}", e)
-                addLog("✗ Error inicio planta completa: ${e.message}")
+                addLog("[ERR] Error inicio planta completa: ${e.message}")
             }
         }
     }
@@ -368,13 +368,13 @@ class CoordinatorViewModel : ViewModel() {
                 updateExecutiveStation("MANUFACTURA", ExecutiveStationStatus.READY, "Calibración global OK", "CALIBRACIÓN")
                 updateExecutiveStation("CALIDAD", ExecutiveStationStatus.READY, "Visión calibrada", "CALIBRACIÓN")
                 updateExecutiveStation("CINTA", ExecutiveStationStatus.ONLINE, "Cinta calibrada", "CALIBRACIÓN")
-                addLog("→ FLUJO: Calibración global ejecutada")
+                addLog("-> FLUJO: Calibración global ejecutada")
                 sendExecuteCommand(AppType.MANUFACTURA, "CALIBRATE_GLOBAL")
                 sendExecuteCommand(AppType.PLC, "CALIBRATE_GLOBAL")
                 sendExecuteCommand(AppType.CALIDAD, "CALIBRATE_GLOBAL")
             } catch (e: Exception) {
             Log.e("CIM", "Error: ${e.message}", e)
-                addLog("✗ Error calibración global: ${e.message}")
+                addLog("[ERR] Error calibración global: ${e.message}")
             }
         }
     }
@@ -387,10 +387,10 @@ class CoordinatorViewModel : ViewModel() {
                 listOf(AppType.MANUFACTURA, AppType.PLC, AppType.ALMACEN, AppType.CALIDAD).forEach { appType ->
                     sendExecuteCommand(appType, "E_STOP")
                 }
-                addLog("✖ E-STOP activado: se frenan rutinas Scorbot y pallets Omron")
+                addLog("[STOP] E-STOP activado: se frenan rutinas Scorbot y pallets Omron")
             } catch (e: Exception) {
             Log.e("CIM", "Error: ${e.message}", e)
-                addLog("✗ Error E-STOP: ${e.message}")
+                addLog("[ERR] Error E-STOP: ${e.message}")
             }
         }
     }
@@ -409,13 +409,13 @@ class CoordinatorViewModel : ViewModel() {
                 )
                 if (enabled) {
                     clearPendingPermissionRequest()
-                    addLog("✓ Modo AUTO activado: se aprobarán permisos automáticamente")
+                    addLog("[OK] Modo AUTO activado: se aprobarán permisos automáticamente")
                 } else {
-                    addLog("✗ Modo AUTO desactivado: autorizaciones manuales habilitadas")
+                    addLog("[ERR] Modo AUTO desactivado: autorizaciones manuales habilitadas")
                 }
             } catch (e: Exception) {
             Log.e("CIM", "Error: ${e.message}", e)
-                addLog("✗ Error cambiando modo AUTO: ${e.message}")
+                addLog("[ERR] Error cambiando modo AUTO: ${e.message}")
             }
         }
     }
@@ -451,7 +451,7 @@ class CoordinatorViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
             Log.e("CIM", "Error: ${e.message}", e)
-                addLog("✗ Error enviando comando $command: ${e.message}")
+                addLog("[ERR] Error enviando comando $command: ${e.message}")
             }
         }
     }
@@ -461,7 +461,7 @@ class CoordinatorViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val cmd = "DELIVER:$fromStation:$toStation"
-                addLog("→ CINTA DELIVER: $fromStation → $toStation")
+                addLog("-> CINTA DELIVER: $fromStation -> $toStation")
                 // Enviar comando via CommandBroker si está disponible
                 val broker = commandBroker
                 if (broker != null) {
@@ -477,7 +477,7 @@ class CoordinatorViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
             Log.e("CIM", "Error: ${e.message}", e)
-                addLog("✗ Error Cinta: ${e.message}")
+                addLog("[ERR] Error Cinta: ${e.message}")
             }
         }
     }
@@ -486,7 +486,7 @@ class CoordinatorViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val cmd = "FREE:$fromStation:$toStation"
-                addLog("→ CINTA FREE: $fromStation → $toStation")
+                addLog("-> CINTA FREE: $fromStation -> $toStation")
                 val broker = commandBroker
                 if (broker != null) {
                     val appId = AppIdentifier.getInstance()
@@ -501,7 +501,7 @@ class CoordinatorViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
             Log.e("CIM", "Error: ${e.message}", e)
-                addLog("✗ Error: ${e.message}")
+                addLog("[ERR] Error: ${e.message}")
             }
         }
     }
@@ -512,10 +512,10 @@ class CoordinatorViewModel : ViewModel() {
                 addLog("⟳ Conectando Cinta...")
                 val newCintaState = _uiState.value.cintaState.copy(isConnected = true)
                 _uiState.value = _uiState.value.copy(cintaState = newCintaState)
-                addLog("✓ Cinta conectada")
+                addLog("[OK] Cinta conectada")
             } catch (e: Exception) {
             Log.e("CIM", "Error: ${e.message}", e)
-                addLog("✗ Error conexión Cinta: ${e.message}")
+                addLog("[ERR] Error conexión Cinta: ${e.message}")
             }
         }
     }
@@ -525,10 +525,10 @@ class CoordinatorViewModel : ViewModel() {
             try {
                 val newCintaState = _uiState.value.cintaState.copy(isConnected = false)
                 _uiState.value = _uiState.value.copy(cintaState = newCintaState)
-                addLog("✗ Cinta desconectada")
+                addLog("[ERR] Cinta desconectada")
             } catch (e: Exception) {
             Log.e("CIM", "Error: ${e.message}", e)
-                addLog("✗ Error desconexión: ${e.message}")
+                addLog("[ERR] Error desconexión: ${e.message}")
             }
         }
     }
@@ -537,27 +537,27 @@ class CoordinatorViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 addLog("⟳ Reseteando Cinta...")
-                addLog("✓ Cinta reseteada")
+                addLog("[OK] Cinta reseteada")
             } catch (e: Exception) {
             Log.e("CIM", "Error: ${e.message}", e)
-                addLog("✗ Error reset: ${e.message}")
+                addLog("[ERR] Error reset: ${e.message}")
             }
         }
     }
 
     // ============= ROBOT & LASER =============
     fun sendRobotCommand(command: String) {
-        addLog("→ ROBOT: $command")
+        addLog("-> ROBOT: $command")
         sendExecuteCommand(AppType.MANUFACTURA, command)
     }
 
     fun sendLaserCommand(command: String) {
-        addLog("→ LASER: $command")
+        addLog("-> LASER: $command")
         sendExecuteCommand(AppType.MANUFACTURA, command)
     }
 
     fun sendLaserLoadFile(filename: String, base64Content: String) {
-        addLog("→ LASER LOAD: $filename")
+        addLog("-> LASER LOAD: $filename")
         sendExecuteCommand(AppType.MANUFACTURA, "LASER_LOAD:$filename:$base64Content")
     }
 
@@ -567,10 +567,10 @@ class CoordinatorViewModel : ViewModel() {
             try {
                 addLog("⟳ Generando ArUco: $seed")
                 sendExecuteCommand(AppType.MANUFACTURA, "ARUCO_GENERATE:$seed")
-                addLog("✓ Solicitud ArUco enviada")
+                addLog("[OK] Solicitud ArUco enviada")
             } catch (e: Exception) {
             Log.e("CIM", "Error: ${e.message}", e)
-                addLog("✗ Error ArUco: ${e.message}")
+                addLog("[ERR] Error ArUco: ${e.message}")
             }
         }
     }
@@ -581,10 +581,10 @@ class CoordinatorViewModel : ViewModel() {
                 addLog("⟳ ArUco detectado: ID=${aruco.id} centro=(${aruco.center.first.toInt()},${aruco.center.second.toInt()}) rot=${aruco.rotation.toInt()}°")
                 val payload = "ARUCO_DETECTED:${aruco.id}|X:${aruco.center.first.toInt()}|Y:${aruco.center.second.toInt()}|R:${aruco.rotation.toInt()}"
                 sendExecuteCommand(AppType.MANUFACTURA, payload)
-                addLog("✓ Enviado evento ArUco detectado")
+                addLog("[OK] Enviado evento ArUco detectado")
             } catch (e: Exception) {
             Log.e("CIM", "Error: ${e.message}", e)
-                addLog("✗ Error enviando ArUco detectado: ${e.message}")
+                addLog("[ERR] Error enviando ArUco detectado: ${e.message}")
             }
         }
     }
@@ -595,7 +595,7 @@ class CoordinatorViewModel : ViewModel() {
             _uiState.value = _uiState.value.copy(
                 trackingState = _uiState.value.trackingState.copy(isTracking = true)
             )
-            addLog("✓ Tracking activo: esperando eventos de estaciones")
+            addLog("[OK] Tracking activo: esperando eventos de estaciones")
         }
     }
 
@@ -620,12 +620,12 @@ class CoordinatorViewModel : ViewModel() {
             }
             val event = runCatching { PalletEvent.valueOf(eventName.uppercase()) }.getOrNull()
             if (event == null) {
-                addLog("⚠ Evento de pallet inválido: $eventName")
+                addLog("[WARN] Evento de pallet inválido: $eventName")
                 return@launch
             }
             val result = palletWorkflow.apply(palletId, event, rawEvent)
             refreshPalletTracking()
-            addLog("${if (result.accepted) "✓" else "✗"} PALLET $palletId: ${result.snapshot.stage}")
+            addLog("${if (result.accepted) "[OK]" else "[ERR]"} PALLET $palletId: ${result.snapshot.stage}")
         }
     }
 
@@ -636,9 +636,9 @@ class CoordinatorViewModel : ViewModel() {
                 ubicacion = when (snapshot.stage) {
                     PalletStage.REGISTERED -> "Registro / Almacén"
                     PalletStage.STORAGE_RELEASED -> "Salida de Almacén"
-                    PalletStage.CONVEYOR_TO_MANUFACTURING -> "Cinta → Manufactura"
+                    PalletStage.CONVEYOR_TO_MANUFACTURING -> "Cinta a Manufactura"
                     PalletStage.MANUFACTURING -> "Manufactura"
-                    PalletStage.CONVEYOR_TO_QUALITY -> "Cinta → Calidad"
+                    PalletStage.CONVEYOR_TO_QUALITY -> "Cinta a Calidad"
                     PalletStage.QUALITY_INSPECTION -> "Calidad"
                     PalletStage.APPROVED -> "Aprobado, esperando almacenamiento"
                     PalletStage.REJECTED -> "Rechazado, esperando almacenamiento"
@@ -660,10 +660,10 @@ class CoordinatorViewModel : ViewModel() {
                 _uiState.value = _uiState.value.copy(
                     trackingState = _uiState.value.trackingState.copy(isTracking = false)
                 )
-                addLog("✗ Tracking detenido")
+                addLog("[ERR] Tracking detenido")
             } catch (e: Exception) {
             Log.e("CIM", "Error: ${e.message}", e)
-                addLog("✗ Error: ${e.message}")
+                addLog("[ERR] Error: ${e.message}")
             }
         }
     }
@@ -681,10 +681,10 @@ class CoordinatorViewModel : ViewModel() {
                 addLog("⟳ Iniciando TCP Server (Puerto 8888)...")
                 val newNetworkState = _uiState.value.networkState.copy(isServerRunning = true)
                 _uiState.value = _uiState.value.copy(networkState = newNetworkState)
-                addLog("✓ TCP Server activo")
+                addLog("[OK] TCP Server activo")
             } catch (e: Exception) {
             Log.e("CIM", "Error: ${e.message}", e)
-                addLog("✗ Error TCP: ${e.message}")
+                addLog("[ERR] Error TCP: ${e.message}")
             }
         }
     }
@@ -719,10 +719,10 @@ class CoordinatorViewModel : ViewModel() {
                     )
                 )
                 updateExecutiveStation("CINTA", ExecutiveStationStatus.READY, "Conectada (demo)", "Estación demo en línea")
-                addLog("✓ Estación demo conectada (1 dispositivo simulado) — modo presentación listo")
+                addLog("[OK] Estación demo conectada (1 dispositivo simulado) — modo presentación listo")
             } catch (e: Exception) {
                 Log.e("CIM", "Error: ${e.message}", e)
-                addLog("⚠ Error simulando estación: ${e.message}")
+                addLog("[WARN] Error simulando estación: ${e.message}")
             }
         }
     }
@@ -732,10 +732,10 @@ class CoordinatorViewModel : ViewModel() {
             try {
                 val newNetworkState = _uiState.value.networkState.copy(isServerRunning = false)
                 _uiState.value = _uiState.value.copy(networkState = newNetworkState)
-                addLog("✗ TCP Server detenido")
+                addLog("[ERR] TCP Server detenido")
             } catch (e: Exception) {
             Log.e("CIM", "Error: ${e.message}", e)
-                addLog("✗ Error: ${e.message}")
+                addLog("[ERR] Error: ${e.message}")
             }
         }
     }
@@ -743,7 +743,7 @@ class CoordinatorViewModel : ViewModel() {
     fun sendNetworkMessage(message: String) {
         viewModelScope.launch {
             try {
-                addLog("→ RED MSG: $message")
+                addLog("-> RED MSG: $message")
                 val broker = commandBroker
                 if (broker != null) {
                     val appId = AppIdentifier.getInstance()
@@ -758,7 +758,7 @@ class CoordinatorViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
             Log.e("CIM", "Error: ${e.message}", e)
-                addLog("✗ Error: ${e.message}")
+                addLog("[ERR] Error: ${e.message}")
             }
         }
     }
@@ -774,10 +774,10 @@ class CoordinatorViewModel : ViewModel() {
                     )
                 )
                 updateDeviceList()
-                addLog("✓ Bluetooth actualizado")
+                addLog("[OK] Bluetooth actualizado")
             } catch (e: Exception) {
             Log.e("CIM", "Error: ${e.message}", e)
-                addLog("✗ Error Bluetooth: ${e.message}")
+                addLog("[ERR] Error Bluetooth: ${e.message}")
             } finally {
                 _uiState.value = _uiState.value.copy(
                     networkState = _uiState.value.networkState.copy(isScanning = false)
@@ -791,14 +791,14 @@ class CoordinatorViewModel : ViewModel() {
             try {
                 val csv = buildTrackingCsv()
                 if (csv.isBlank()) {
-                    addLog("⚠ No hay datos de tracking para exportar")
+                    addLog("[WARN] No hay datos de tracking para exportar")
                     return@launch
                 }
-                addLog("✓ Tracking exportado como CSV")
+                addLog("[OK] Tracking exportado como CSV")
                 addLog(csv)
             } catch (e: Exception) {
             Log.e("CIM", "Error: ${e.message}", e)
-                addLog("✗ Error exportando CSV: ${e.message}")
+                addLog("[ERR] Error exportando CSV: ${e.message}")
             }
         }
     }
@@ -828,32 +828,32 @@ class CoordinatorViewModel : ViewModel() {
                                 // small delay to avoid flooding
                                 kotlinx.coroutines.delay(200)
                             } else {
-                                addLog("⚠ SEND_CINTA requiere 2 parámetros: from to")
+                                addLog("[WARN] SEND_CINTA requiere 2 parámetros: from to")
                             }
                         }
                         "SEND_ROBOT" -> {
                             val cmd = parts.drop(1).joinToString(" ")
-                            if (cmd.isNotBlank()) sendRobotCommand(cmd) else addLog("⚠ SEND_ROBOT sin comando")
+                            if (cmd.isNotBlank()) sendRobotCommand(cmd) else addLog("[WARN] SEND_ROBOT sin comando")
                         }
                         "SEND_LASER" -> {
                             val cmd = parts.drop(1).joinToString(" ")
-                            if (cmd.isNotBlank()) sendLaserCommand(cmd) else addLog("⚠ SEND_LASER sin comando")
+                            if (cmd.isNotBlank()) sendLaserCommand(cmd) else addLog("[WARN] SEND_LASER sin comando")
                         }
                         "WAIT" -> {
                             val ms = parts.getOrNull(1)?.toLongOrNull() ?: 0L
                             if (ms > 0) kotlinx.coroutines.delay(ms)
                         }
                         "STOP" -> {
-                            addLog("✗ Script detenido por comando STOP")
+                            addLog("[ERR] Script detenido por comando STOP")
                             break
                         }
-                        else -> addLog("⚠ Línea de script desconocida: $line")
+                        else -> addLog("[WARN] Línea de script desconocida: $line")
                     }
                 }
-                addLog("✓ Script finalizado")
+                addLog("[OK] Script finalizado")
             } catch (e: Exception) {
             Log.e("CIM", "Error: ${e.message}", e)
-                addLog("✗ Error ejecutando script: ${e.message}")
+                addLog("[ERR] Error ejecutando script: ${e.message}")
             }
         }
     }
@@ -877,9 +877,9 @@ class CoordinatorViewModel : ViewModel() {
     fun simulateFullCycle() {
         viewModelScope.launch {
             try {
-                addLog("╔════════════════════════════════════════════════════════════╗")
-                addLog("║     CICLO COMPLETO CIM v6.0 - CONTROL REAL                  ║")
-                addLog("╚════════════════════════════════════════════════════════════╝")
+                addLog("+============================================================+")
+                addLog("|     CICLO COMPLETO CIM v6.0 - CONTROL REAL                  |")
+                addLog("+============================================================+")
 
                 val broker = commandBroker
                 
@@ -887,7 +887,7 @@ class CoordinatorViewModel : ViewModel() {
                 // PASO 1: PLC - Iniciar cinta
                 // ============================================
                 updateExecutiveStation("CINTA", ExecutiveStationStatus.BUSY, "Cinta iniciada", "PLC:START")
-                addLog("[1/9] → PLC: Enviando PLC:START")
+                addLog("[1/9] -> PLC: Enviando PLC:START")
                 if (broker != null) {
                     sendExecuteCommand(AppType.PLC, "PLC:START")
                 } else {
@@ -899,7 +899,7 @@ class CoordinatorViewModel : ViewModel() {
                 // PASO 2: Simular detección de pallet
                 // ============================================
                 updateExecutiveStation("CINTA", ExecutiveStationStatus.BUSY, "Pallet detectado POS:1", "SENSOR")
-                addLog("[2/9] → SENSOR: Pallet detectado en estación 1")
+                addLog("[2/9] -> SENSOR: Pallet detectado en estación 1")
                 if (broker != null) {
                     sendExecuteCommand(AppType.PLC, "SENSOR_ACTIVATED|POS:1")
                 }
@@ -909,14 +909,14 @@ class CoordinatorViewModel : ViewModel() {
                 // PASO 3: Enrutar a Manufactura
                 // ============================================
                 updateExecutiveStation("MANUFACTURA", ExecutiveStationStatus.BUSY, "Robot HOME", "R:HOME")
-                addLog("[3/9] → MANUFACTURA: Enviando R:HOME")
+                addLog("[3/9] -> MANUFACTURA: Enviando R:HOME")
                 sendExecuteCommand(AppType.MANUFACTURA, "R:HOME")
                 kotlinx.coroutines.delay(900)
 
                 // ============================================
                 // PASO 4: Ejecutar robot
                 // ============================================
-                addLog("[4/9] → MANUFACTURA: Ejecutando R:RUN")
+                addLog("[4/9] -> MANUFACTURA: Ejecutando R:RUN")
                 sendExecuteCommand(AppType.MANUFACTURA, "R:RUN")
                 updateExecutiveStation("MANUFACTURA", ExecutiveStationStatus.BUSY, "Procesando pieza", "R:RUN")
                 kotlinx.coroutines.delay(1300)
@@ -924,7 +924,7 @@ class CoordinatorViewModel : ViewModel() {
                 // ============================================
                 // PASO 5: Láser
                 // ============================================
-                addLog("[5/9] → MANUFACTURA: Láser CNC (L:START)")
+                addLog("[5/9] -> MANUFACTURA: Láser CNC (L:START)")
                 sendExecuteCommand(AppType.MANUFACTURA, "L:START")
                 kotlinx.coroutines.delay(1000)
 
@@ -932,49 +932,49 @@ class CoordinatorViewModel : ViewModel() {
                 // PASO 6: Enrutar a Calidad
                 // ============================================
                 updateExecutiveStation("CALIDAD", ExecutiveStationStatus.BUSY, "Analizando ArUco+YOLO", "ARUCO+YOLO")
-                addLog("[6/9] → CALIDAD: Enviando solicitud de validación")
+                addLog("[6/9] -> CALIDAD: Enviando solicitud de validación")
                 sendExecuteCommand(AppType.CALIDAD, "ARUCO:DETECT")
                 kotlinx.coroutines.delay(800)
 
                 // ============================================
                 // PASO 7: Validación exitosa
                 // ============================================
-                addLog("[7/9] → CALIDAD: PIEZA APROBADA (VAL:PASS)")
+                addLog("[7/9] -> CALIDAD: PIEZA APROBADA (VAL:PASS)")
                 sendExecuteCommand(AppType.CALIDAD, "VAL:PASS")
-                updateExecutiveStation("CALIDAD", ExecutiveStationStatus.READY, "Pieza VALIDADA ✓", "PASS")
+                updateExecutiveStation("CALIDAD", ExecutiveStationStatus.READY, "Pieza VALIDADA", "PASS")
                 kotlinx.coroutines.delay(700)
 
                 // ============================================
                 // PASO 8: Almacén
                 // ============================================
                 updateExecutiveStation("ALMACEN", ExecutiveStationStatus.BUSY, "Almacenando en rack 07", "STO:07")
-                addLog("[8/9] → ALMACEN: Enviando STO:07")
+                addLog("[8/9] -> ALMACEN: Enviando STO:07")
                 sendExecuteCommand(AppType.ALMACEN, "STO:07")
                 kotlinx.coroutines.delay(1100)
 
                 // ============================================
                 // PASO 9: Finalizar
                 // ============================================
-                addLog("[9/9] → PLC: Deteniendo cinta (PLC:STOP)")
+                addLog("[9/9] -> PLC: Deteniendo cinta (PLC:STOP)")
                 if (broker != null) {
                     sendExecuteCommand(AppType.PLC, "PLC:STOP")
                 }
-                updateExecutiveStation("CINTA", ExecutiveStationStatus.READY, "Ciclo completado ✓", "PLC:STOP")
+                updateExecutiveStation("CINTA", ExecutiveStationStatus.READY, "Ciclo completado", "PLC:STOP")
 
                 // Actualizar estados finales
                 updateExecutiveStation("MANUFACTURA", ExecutiveStationStatus.READY, "Listo para nuevo ciclo", "IDLE")
                 updateExecutiveStation("ALMACEN", ExecutiveStationStatus.READY, "Rack actualizado (pos 07)", "STO:07 OK")
 
-                addLog("════════════════════════════════════════════════════════════")
-                addLog("✅ CICLO COMPLETO FINALIZADO - PIEZA PROCESADA Y ALMACENADA")
-                addLog("════════════════════════════════════════════════════════════")
+                addLog("============================================================")
+                addLog("CICLO COMPLETO FINALIZADO - PIEZA PROCESADA Y ALMACENADA")
+                addLog("============================================================")
 
                 // Notificar a todas las estaciones conectadas
-                addLog("→ Notificación global enviada a estaciones conectadas")
+                addLog("-> Notificación global enviada a estaciones conectadas")
 
             } catch (e: Exception) {
             Log.e("CIM", "Error: ${e.message}", e)
-                addLog("✗ Error en ciclo completo: ${e.message}")
+                addLog("[ERR] Error en ciclo completo: ${e.message}")
                 updateExecutiveStation("CINTA", ExecutiveStationStatus.WARNING, "Error en ciclo", "ERROR")
             }
         }
@@ -984,7 +984,7 @@ class CoordinatorViewModel : ViewModel() {
     fun sendStorageCommand(command: String) {
         viewModelScope.launch {
             try {
-                addLog("→ STORAGE: $command")
+                addLog("-> STORAGE: $command")
                 val broker = commandBroker
                 if (broker != null) {
                     val appId = AppIdentifier.getInstance()
@@ -999,7 +999,7 @@ class CoordinatorViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
             Log.e("CIM", "Error: ${e.message}", e)
-                addLog("✗ Error Storage: ${e.message}")
+                addLog("[ERR] Error Storage: ${e.message}")
             }
         }
     }
@@ -1009,10 +1009,10 @@ class CoordinatorViewModel : ViewModel() {
             try {
                 GlobalDeviceRegistry.registry.authorize(mac)
                 GlobalPermissionManager.getInstance().approve(mac, rememberDecision = rememberDecision)
-                addLog("✓ Autorizado: $mac")
+                addLog("[OK] Autorizado: $mac")
             } catch (e: Exception) {
             Log.e("CIM", "Error: ${e.message}", e)
-                addLog("✗ Error autorizar: ${e.message}")
+                addLog("[ERR] Error autorizar: ${e.message}")
             }
         }
     }
@@ -1023,10 +1023,10 @@ class CoordinatorViewModel : ViewModel() {
                 GlobalPermissionManager.getInstance().ban(mac, "Rechazado desde Coordinador")
                 commandBroker?.disconnectBleDevice(mac)
                 GlobalDeviceRegistry.registry.disconnect(mac)
-                addLog("🚫 Bloqueado y desconectado: $mac")
+                addLog("Bloqueado y desconectado: $mac")
             } catch (e: Exception) {
             Log.e("CIM", "Error: ${e.message}", e)
-                addLog("✗ Error rechazar: ${e.message}")
+                addLog("[ERR] Error rechazar: ${e.message}")
             }
         }
     }
@@ -1036,10 +1036,10 @@ class CoordinatorViewModel : ViewModel() {
             try {
                 GlobalPermissionManager.getInstance().unban(mac)
                 updateDeviceList()
-                addLog("✓ Dispositivo desbloqueado: $mac; requiere autorización nueva")
+                addLog("[OK] Dispositivo desbloqueado: $mac; requiere autorización nueva")
             } catch (e: Exception) {
                 Log.e("Coordinator", "Error desbloqueando dispositivo", e)
-                addLog("✗ Error desbloqueando $mac: ${e.message}")
+                addLog("[ERR] Error desbloqueando $mac: ${e.message}")
             }
         }
     }
@@ -1049,10 +1049,10 @@ class CoordinatorViewModel : ViewModel() {
             try {
                 commandBroker?.disconnectBleDevice(mac)
                 GlobalDeviceRegistry.registry.disconnect(mac)
-                addLog("✗ Desconectado: $mac")
+                addLog("[ERR] Desconectado: $mac")
             } catch (e: Exception) {
             Log.e("CIM", "Error: ${e.message}", e)
-                addLog("✗ Error desconectar: ${e.message}")
+                addLog("[ERR] Error desconectar: ${e.message}")
             }
         }
     }
@@ -1071,10 +1071,10 @@ class CoordinatorViewModel : ViewModel() {
                     payload = "${AppType.COORDINADOR}|1.0"
                 )
                 commandBroker?.sendCommand(msg)
-                addLog("→ Forzando IDENTIFY a $mac")
+                addLog("-> Forzando IDENTIFY a $mac")
             } catch (e: Exception) {
             Log.e("CIM", "Error: ${e.message}", e)
-                addLog("✗ Error forzando IDENTIFY: ${e.message}")
+                addLog("[ERR] Error forzando IDENTIFY: ${e.message}")
             }
         }
     }
@@ -1102,13 +1102,13 @@ class CoordinatorViewModel : ViewModel() {
                                 bluetoothSummary = if (success) "Bluetooth: reconectado $mac" else "Bluetooth: reconexión fallida $mac"
                             )
                         )
-                        addLog(if (success) "✓ Reconectado $mac" else "✗ Falló reconexión $mac")
+                        addLog(if (success) "[OK] Reconectado $mac" else "[ERR] Falló reconexión $mac")
                         updateDeviceList()
                     }
                 }
             } catch (e: Exception) {
             Log.e("CIM", "Error: ${e.message}", e)
-                addLog("✗ Error reconectando: ${e.message}")
+                addLog("[ERR] Error reconectando: ${e.message}")
                 _uiState.value = _uiState.value.copy(
                     networkState = _uiState.value.networkState.copy(
                         isBluetoothReconnecting = false,

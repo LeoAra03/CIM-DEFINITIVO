@@ -31,7 +31,7 @@ import java.util.concurrent.Executors
 import android.util.Log
 import org.opencv.core.Point
 
-// 🎯 Estructura para almacenar un marcador detectado
+// Estructura para almacenar un marcador detectado
 data class DetectedArUco(
     val id: Int,
     val confidence: Float,
@@ -76,13 +76,13 @@ fun ArUcoDetectionTab(
         if (!cameraPermissionGranted) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 IndustrialCard("Permiso Requerido", Icons.Default.PhotoCamera) {
-                    Text("Se necesita acceso a la cámara para visión industrial.", color = Color.White, modifier = Modifier.padding(16.dp))
+                    Text("Se necesita acceso a la cámara para visión industrial.", color = IndustrialTheme.TextoPrincipal, modifier = Modifier.padding(16.dp))
                 }
             }
         } else {
             Column(modifier = Modifier.fillMaxSize()) {
                 // Zona de Cámara (60%)
-                Box(Modifier.weight(0.6f).fillMaxWidth().background(Color.Black)) {
+                Box(Modifier.weight(0.6f).fillMaxWidth().background(IndustrialTheme.Fondo)) {
                     CameraPreviewWithVision(
                         isDetecting = isDetecting,
                         onArucoFound = { results ->
@@ -97,7 +97,7 @@ fun ArUcoDetectionTab(
                     )
 
                     // Informes en pantalla
-                    Column(Modifier.align(Alignment.TopEnd).padding(16.dp).background(Color.Black.copy(0.6f), RoundedCornerShape(8.dp)).padding(8.dp)) {
+                    Column(Modifier.align(Alignment.TopEnd).padding(16.dp).background(IndustrialTheme.Fondo.copy(0.6f), RoundedCornerShape(8.dp)).padding(8.dp)) {
                         Text("FPS: $fps", color = IndustrialTheme.Exito, fontSize = 10.sp)
                         if (lastQrContent.isNotEmpty()) {
                             Text("QR: ${lastQrContent.take(15)}...", color = IndustrialTheme.Primario, fontSize = 10.sp)
@@ -148,8 +148,8 @@ fun ArUcoDetectionTab(
                         selectedAruco?.let { aruco ->
                             item {
                                 IndustrialCard("Acción sobre Marcador", Icons.Default.PrecisionManufacturing) {
-                                    Text("ID: ArUco-${aruco.id}", color = Color.White)
-                                    Text("Posición: ${aruco.center}", color = Color.Gray, fontSize = 11.sp)
+                                    Text("ID: ArUco-${aruco.id}", color = IndustrialTheme.TextoPrincipal)
+                                    Text("Posición: ${aruco.center}", color = IndustrialTheme.TextoSecundario, fontSize = 11.sp)
                                     Spacer(Modifier.height(8.dp))
                                     IndustrialActionButton("Enviar al Robot", Icons.Default.Send) {
                                         if (!enabled) return@IndustrialActionButton
@@ -175,7 +175,7 @@ fun ArucoMarkerCard(aruco: DetectedArUco, isSelected: Boolean, onSelect: () -> U
             Icon(Icons.Default.QrCode, null, tint = IndustrialTheme.Exito)
             Spacer(Modifier.width(12.dp))
             Column {
-                Text("ArUco #${aruco.id}", color = Color.White, fontWeight = FontWeight.Bold)
+                Text("ArUco #${aruco.id}", color = IndustrialTheme.TextoPrincipal, fontWeight = FontWeight.Bold)
                 Text("Detectado", color = IndustrialTheme.Exito, fontSize = 10.sp)
             }
         }

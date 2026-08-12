@@ -10,25 +10,26 @@
 <body>
 <div class="phone-frame"><div class="phone-notch"></div>
 <div class="phone-screen">
-<div style="padding:12px;background:#141414;border-bottom:1px solid #2a2a2a;display:flex;justify-content:space-between;align-items:center">
-<div><div style="font-weight:900;font-size:14px;color:#FF6D00">CIM HUB v6.0</div><div style="font-size:10px;color:#9E9E9E">SISTEMA DE COORDINACIÓN GLOBAL</div></div><div style="width:8px;height:8px;background:#4CAF50;border-radius:50%;box-shadow:0 0 6px #4CAF50"></div>
+<div class="app-bar">
+<div><div class="title">CIM HUB v6.0</div><div class="subtitle">Sistema de coordinación global</div></div><span class="chip chip-ok">Online</span>
 </div>
 <div class="tab-bar"><div class="tab active">EXEC</div><div class="tab">CINTA</div><div class="tab">ROBOT</div><div class="tab">ARUCO</div><div class="tab">MAPA</div><div class="tab">NODOS</div><div class="tab">RACKS</div></div>
 <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-<button class="btn btn-error btn-sm" style="height:44px">⚠ E-STOP</button><button class="btn btn-primary btn-sm" style="height:44px">▶ SIMULAR CICLO</button>
+<button class="btn btn-error" style="height:46px">E-STOP</button><button class="btn btn-primary" style="height:46px">SIMULAR CICLO</button>
 </div>
-<div style="font-weight:800;font-size:12px">Dashboard ejecutivo</div><div style="font-size:11px;color:#9E9E9E">Estado en tiempo real de las estaciones</div>
+<div><div style="font-weight:800;font-size:12px;color:var(--text)">Dashboard ejecutivo</div><div style="font-size:10px;color:var(--text-sec);letter-spacing:0.6px;text-transform:uppercase;margin-top:2px">Estado en tiempo real de las estaciones</div></div>
 <div class="exec-grid">
-<div class="exec-card" style="border-left:3px solid #2E7D32"><h4>Manufactura</h4><p>Listo para operar</p><p style="font-size:9px">Último: Sin eventos</p></div>
-<div class="exec-card" style="border-left:3px solid #2196F3"><h4>Calidad</h4><p>Cámara y validación OK</p><p style="font-size:9px">Último: ArUco #12</p></div>
+<div class="exec-card" style="border-left:3px solid #3B8E35"><h4>Manufactura</h4><p>Listo para operar</p><p style="font-size:9px">Último: Sin eventos</p></div>
+<div class="exec-card" style="border-left:3px solid #2F86E8"><h4>Calidad</h4><p>Cámara y validación OK</p><p style="font-size:9px">Último: ArUco #12</p></div>
 <div class="exec-card" style="border-left:3px solid #4CAF50"><h4>Almacén</h4><p>Pallets disponibles</p><p style="font-size:9px">Último: STORE POS2</p></div>
-<div class="exec-card" style="border-left:3px solid #FFC107"><h4>Cinta</h4><p>Transportador disponible</p><p style="font-size:9px">Último: DELIVER 1→3</p></div>
+<div class="exec-card" style="border-left:3px solid #E0A526"><h4>Cinta</h4><p>Transportador disponible</p><p style="font-size:9px">Último: DELIVER 13</p></div>
 </div>
-<div style="margin-top:8px"><div style="font-size:11px;color:#FF6D00;font-weight:700">Flujo activo: CICLO COMPLETADO</div><div style="font-size:10px;color:#9E9E9E;margin-top:8px">Logs:</div><div class="terminal" style="height:120px;margin-top:4px"><div class="line ok">[10:23:15] ✓ Dispositivo agregado: MANUFACTURA [AA:BB:CC:01]</div><div class="line ok">[10:23:16] ✓ Autorización: AA:BB:CC:01</div><div class="line cmd">[10:23:20] → CINTA DELIVER: 1 → 3</div><div class="line ok">[10:23:21] ← CALIDAD: ARUCO_DETECTED:12</div></div></div>
+<div style="margin-top:8px"><div style="font-size:11px;color:#F2F4F6;font-weight:700">Flujo activo: CICLO COMPLETADO</div><div style="font-size:10px;color:#8A939E;margin-top:8px">Logs:</div><div class="terminal" style="height:120px;margin-top:4px"><div class="line ok">[10:23:15] [OK] Dispositivo agregado: MANUFACTURA [AA:BB:CC:01]</div><div class="line ok">[10:23:16] [OK] Autorización: AA:BB:CC:01</div><div class="line cmd">[10:23:20] -> CINTA DELIVER: 1 -> 3</div><div class="line ok">[10:23:21] <- CALIDAD: ARUCO_DETECTED:12</div></div></div>
 </div>
 </div>
+<div class="bottom-nav"><div class="item active"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M7 13h5M7 16.5h9"/></svg></span>Exec</div><div class="item"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6.5" cy="15" r="3"/><circle cx="17.5" cy="15" r="3"/><path d="M6.5 12h11M8 8.5h8l-1.5-3h-5z"/></svg></span>Cinta</div><div class="item"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="9" width="14" height="9" rx="2"/><path d="M12 9V5.5M9.5 13h.01M14.5 13h.01M9 18v2M15 18v2"/><circle cx="12" cy="4.2" r="1.3"/></svg></span>Robot</div><div class="item"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v2.6M12 18.6v2.6M21.2 12h-2.6M5.4 12H2.8M18.5 5.5l-1.8 1.8M7.3 16.7l-1.8 1.8M18.5 18.5l-1.8-1.8M7.3 7.3 5.5 5.5"/></svg></span>Sistema</div></div>
 </div>
-<div style="position:fixed;top:12px;left:12px"><a href="../index.html" class="btn btn-ghost btn-sm">← Volver al Hub Visual</a></div>
+<div style="position:fixed;top:12px;left:12px"><a href="../index.html" class="btn btn-ghost btn-sm">Volver al Hub Visual</a></div>
 </body>
 </html>

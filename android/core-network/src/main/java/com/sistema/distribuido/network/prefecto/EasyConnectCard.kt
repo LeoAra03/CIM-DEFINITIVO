@@ -10,7 +10,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -35,8 +34,9 @@ fun EasyConnectCard(
     modifier: Modifier = Modifier
 ) {
     IndustrialCard(
-        titulo = "🔗 Conexión Fácil al Hub",
+        titulo = "Conexión Fácil al Hub",
         icono = Icons.Default.Lan,
+        subtitulo = "Vinculación en 1 clic con el coordinador",
         headerColor = if (isConnectedNet && isAuthorized) IndustrialTheme.Exito else IndustrialTheme.Primario,
         modifier = modifier
     ) {
@@ -46,9 +46,9 @@ fun EasyConnectCard(
                 .fillMaxWidth()
                 .background(
                     when {
-                        !isConnectedNet -> Color(0xFF1A1A1A)
-                        isAuthorized -> Color(0xFF0D2A12)
-                        else -> Color(0xFF2A1F0D)
+                        !isConnectedNet -> IndustrialTheme.TarjetaAlta
+                        isAuthorized -> IndustrialTheme.Exito.copy(alpha = 0.12f)
+                        else -> IndustrialTheme.Advertencia.copy(alpha = 0.10f)
                     },
                     RoundedCornerShape(8.dp)
                 )
@@ -70,9 +70,9 @@ fun EasyConnectCard(
                             .size(12.dp)
                             .background(
                                 when {
-                                    !isConnectedNet -> Color.Gray
-                                    isAuthorized -> Color.Green
-                                    else -> Color.Yellow
+                                    !isConnectedNet -> IndustrialTheme.TextoTenue
+                                    isAuthorized -> IndustrialTheme.Primario
+                                    else -> IndustrialTheme.Advertencia
                                 },
                                 shape = androidx.compose.foundation.shape.CircleShape
                             )
@@ -80,16 +80,17 @@ fun EasyConnectCard(
                     Text(
                         text = when {
                             !isConnectedNet -> "DESCONECTADO"
-                            isAuthorized -> "● VINCULADO Y AUTORIZADO"
-                            else -> "◐ CONECTADO - Esperando autorización Hub"
+                            isAuthorized -> "VINCULADO Y AUTORIZADO"
+                            else -> "CONECTADO — ESPERANDO AUTORIZACIÓN DEL HUB"
                         },
                         color = when {
                             !isConnectedNet -> IndustrialTheme.TextoSecundario
-                            isAuthorized -> IndustrialTheme.Exito
+                            isAuthorized -> IndustrialTheme.Primario
                             else -> IndustrialTheme.Advertencia
                         },
                         fontWeight = FontWeight.Bold,
-                        fontSize = 12.sp
+                        fontSize = 11.sp,
+                        letterSpacing = 0.5.sp
                     )
                 }
                 Spacer(modifier = Modifier.height(6.dp))
@@ -112,14 +113,14 @@ fun EasyConnectCard(
         IndustrialTextField(
             valor = ipCoordinator,
             onValueChange = onIpChange,
-            label = if (discoveredIp != null) "IP Coordinador (✓ Auto-detectado: $discoveredIp)" else "IP Coordinador (NSD auto)"
+            label = if (discoveredIp != null) "IP Coordinador (Auto-detectado: $discoveredIp)" else "IP Coordinador (NSD auto)"
         )
 
         if (discoveredIp != null && discoveredIp != ipCoordinator) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color(0xFF0D1F2D), RoundedCornerShape(6.dp))
+                    .background(IndustrialTheme.Secundario.copy(alpha = 0.12f), RoundedCornerShape(6.dp))
                     .padding(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -144,7 +145,7 @@ fun EasyConnectCard(
         val tokenOk = !CimProtocol.isDefaultTokenInUse() && CimProtocol.validateTokenStrength(CimProtocol.PASSWORD_ACTUAL)
         IndustrialStatusRow(
             "Token Seguridad",
-            if (tokenOk) "Fuerte ✓" else "⚠ Default - Cambiar para producción",
+            if (tokenOk) "FUERTE" else "DEFAULT — CAMBIAR EN PRODUCCIÓN",
             tokenOk
         )
 
@@ -152,7 +153,7 @@ fun EasyConnectCard(
 
         // Big connect button
         IndustrialActionButton(
-            texto = if (!isConnectedNet) "🔍 Buscar Hub y Conectar (1-click)" else if (!isAuthorized) "⏳ Esperando Autorización..." else "✓ Conectado",
+            texto = if (!isConnectedNet) "Buscar Hub y conectar" else if (!isAuthorized) "Esperando autorización..." else "Conectado",
             icono = if (!isConnectedNet) Icons.Default.WifiFind else if (isAuthorized) Icons.Default.CheckCircle else Icons.Default.HourglassTop,
             colorFondo = when {
                 !isConnectedNet -> IndustrialTheme.Primario
@@ -166,14 +167,14 @@ fun EasyConnectCard(
         Spacer(modifier = Modifier.height(8.dp))
 
         // Modo autónomo con explicación
-        IndustrialCard("Modo Autónomo (Laboratorio sin Hub)", Icons.Default.Engineering, headerColor = IndustrialTheme.Tarjeta) {
+        IndustrialCard("Modo Autónomo (Laboratorio sin Hub)", Icons.Default.Engineering, headerColor = IndustrialTheme.TextoSecundario) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("Activar modo sin coordinador", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Text("Activar modo sin coordinador", color = IndustrialTheme.TextoPrincipal, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                     Text(
                         "Usa hardware directo sin VALIDADO - Solo para pruebas sin red",
                         color = IndustrialTheme.TextoSecundario,
@@ -183,7 +184,13 @@ fun EasyConnectCard(
                 Switch(
                     checked = independentMode,
                     onCheckedChange = onIndependentChange,
-                    colors = SwitchDefaults.colors(checkedThumbColor = IndustrialTheme.Exito)
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = IndustrialTheme.Fondo,
+                        checkedTrackColor = IndustrialTheme.Primario,
+                        uncheckedThumbColor = IndustrialTheme.TextoSecundario,
+                        uncheckedTrackColor = IndustrialTheme.TarjetaAlta,
+                        uncheckedBorderColor = IndustrialTheme.Borde
+                    )
                 )
             }
         }

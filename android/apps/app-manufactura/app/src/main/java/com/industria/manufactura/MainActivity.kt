@@ -15,6 +15,7 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.draw.clip
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -26,7 +27,6 @@ import kotlinx.coroutines.launch
 import android.util.Base64
 import android.content.Context
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -108,7 +108,7 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
 
     fun sendAuthorizedHardwareCommand(command: String, logText: String) {
         if (!isAuthorized && !independentMode) {
-            addLog("✗ No autorizado - activar modo autónomo o esperar VALIDADO por coordinador")
+            addLog("[ERR] No autorizado - activar modo autónomo o esperar VALIDADO por coordinador")
             return
         }
         bt.send(command, requireAuthorization = !independentMode, authorized = isAuthorized)
@@ -121,12 +121,12 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
     }
 
     fun handleIncomingCoordinatorCommand(command: String) {
-        addLog("← COORDINADOR: $command")
+        addLog("<- COORDINADOR: $command")
         when {
             command.startsWith("ARUCO_GENERATE:") -> {
                 val payload = command.removePrefix("ARUCO_GENERATE:")
                 pendingArucoGenerate.value = payload
-                addLog("✓ Solicitud ArUco recibida: $payload")
+                addLog("[OK] Solicitud ArUco recibida: $payload")
             }
             command.startsWith("LASER_LOAD:") -> {
                 val parts = command.split(":", limit = 3)
@@ -140,13 +140,13 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                         context.openFileOutput(safeName, Context.MODE_PRIVATE).use { output ->
                             output.write(bytes)
                         }
-                        addLog("✓ G-code recibido: $safeName (${bytes.size} bytes)")
+                        addLog("[OK] G-code recibido: $safeName (${bytes.size} bytes)")
                     } catch (e: Exception) {
             Log.e("CIM", "Error: ${e.message}", e)
-                        addLog("✗ Error guardando G-code: ${e.message ?: "desconocido"}")
+                        addLog("[ERR] Error guardando G-code: ${e.message ?: "desconocido"}")
                     }
                 } else {
-                    addLog("⚠ Formato LASER_LOAD inválido")
+                    addLog("[WARN] Formato LASER_LOAD inválido")
                 }
             }
             command.startsWith("GCODE_LOAD;") -> {
@@ -161,20 +161,20 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                         context.openFileOutput(safeName, Context.MODE_PRIVATE).use { output ->
                             output.write(bytes)
                         }
-                        addLog("✓ G-code recibido (legacy): $safeName (${bytes.size} bytes)")
+                        addLog("[OK] G-code recibido (legacy): $safeName (${bytes.size} bytes)")
                     } catch (e: Exception) {
             Log.e("CIM", "Error: ${e.message}", e)
-                        addLog("✗ Error guardando G-code legacy: ${e.message ?: "desconocido"}")
+                        addLog("[ERR] Error guardando G-code legacy: ${e.message ?: "desconocido"}")
                     }
                 } else {
-                    addLog("⚠ Formato GCODE_LOAD inválido")
+                    addLog("[WARN] Formato GCODE_LOAD inválido")
                 }
             }
             command.startsWith("L:") || command.startsWith("R:") || command.startsWith("M:") || command.startsWith("C:") -> {
                 sendAuthorizedHardwareCommand(command, "CMD RECIBIDO: $command")
             }
             else -> {
-                addLog("⚠ Comando desconocido: $command")
+                addLog("[WARN] Comando desconocido: $command")
             }
         }
     }
@@ -219,13 +219,13 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                                 val b64 = Base64.encodeToString(gcode.toByteArray(), Base64.NO_WRAP)
                                 val payload = "LASER_LOAD:$safeName:$b64"
                                 stationClient.sendEventSafe(payload)
-                                addLog("✓ Imagen → G-code: $safeName (${gcode.length} chars, ${gcode.lines().size} líneas)")
+                                addLog("[OK] Imagen -> G-code: $safeName (${gcode.length} chars, ${gcode.lines().size} líneas)")
                             } else {
-                                addLog("✗ No se pudo decodificar imagen")
+                                addLog("[ERR] No se pudo decodificar imagen")
                             }
                         } catch (e: Exception) {
                             Log.e("CIM", "Error procesando imagen: ${e.message}", e)
-                            addLog("✗ Error imagen→G-code: ${e.message}")
+                            addLog("[ERR] Error imagen->G-code: ${e.message}")
                         }
                     } else {
                         // G-code directo
@@ -250,6 +250,36 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
     IndustrialScaffold(
         titulo = "Manufactura Pro v6.0", 
         subtitulo = "ESTACIÓN DE MECANIZADO INTEGRADA",
+        estado = {
+            // Chip de estado en cabecera (punto + texto), como en los mockups HMI.
+            val enLinea = isConnectedBt || isConnectedNet
+            IndustrialStatusChip(
+                texto = when {
+                    independentMode -> "AUTONOMO"
+                    enLinea -> "READY"
+                    else -> "OFFLINE"
+                },
+                color = when {
+                    independentMode -> IndustrialTheme.Advertencia
+                    enLinea -> IndustrialTheme.Primario
+                    else -> IndustrialTheme.Error
+                },
+                parpadeo = !enLinea && !independentMode
+            )
+        },
+        bottomBar = {
+            // Bottom-nav de la figura de referencia (CONTROL / LÁSER / IMAGEN / SINCRO).
+            IndustrialBottomNav(
+                items = listOf(
+                    IndustrialNavItem("CONTROL", Icons.Default.ControlCamera),
+                    IndustrialNavItem("LÁSER", Icons.Default.FlashOn),
+                    IndustrialNavItem("IMAGEN", Icons.Default.Image),
+                    IndustrialNavItem("SINCRO", Icons.Default.Wifi)
+                ),
+                seleccion = selectedTab,
+                onSelect = { selectedTab = it }
+            )
+        },
         floatingActionButton = { BluetoothConnectionFAB() },
         navigationIcon = {
             Box(Modifier.testModeSecretGesture(context) { enabled ->
@@ -260,13 +290,6 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
         }
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
-            ScrollableTabRow(selectedTabIndex = selectedTab, containerColor = Color.Black, contentColor = IndustrialTheme.Primario, edgePadding = 16.dp, divider = {}) {
-                Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 }, text = { Text("ROBOT", fontSize = 11.sp) })
-                Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 }, text = { Text("LÁSER", fontSize = 11.sp) })
-                Tab(selected = selectedTab == 2, onClick = { selectedTab = 2 }, text = { Text("IMAGEN", fontSize = 11.sp) })
-                Tab(selected = selectedTab == 3, onClick = { selectedTab = 3 }, text = { Text("SINCRO", fontSize = 11.sp) })
-            }
-
             Column(Modifier.weight(1f).padding(16.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 when (selectedTab) {
                     0 -> {
@@ -275,16 +298,45 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                                 IndustrialActionButton("HOME", Icons.Default.Home, Modifier.weight(1f), enabled = isOperationalReady, onClick = { sendAuthorizedHardwareCommand("R:HOME", "CMD: HOME") })
                                 IndustrialActionButton("READY", Icons.Default.Check, Modifier.weight(1f), enabled = isOperationalReady, onClick = { sendAuthorizedHardwareCommand("R:READY", "CMD: READY") })
                             }
-                            Spacer(Modifier.height(12.dp))
-                            Text("MOVIMIENTO MANUAL (JOGGING)", color = IndustrialTheme.TextoSecundario, fontSize = 10.sp)
-                            repeat(2) { axis ->
-                                Row(Modifier.fillMaxWidth().padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    val axisName = if(axis == 0) "X" else "Y"
-                                    Text(axisName, modifier = Modifier.width(20.dp), color = Color.White, fontWeight = FontWeight.Bold)
-                                    IndustrialActionButton("-", Icons.Default.Remove, Modifier.weight(1f).height(36.dp), enabled = isOperationalReady, onClick = { sendAuthorizedHardwareCommand("R:MOVE:$axisName:-10", "CMD: MOVE $axisName -10") })
-                                    IndustrialActionButton("+", Icons.Default.Add, Modifier.weight(1f).height(36.dp), enabled = isOperationalReady, onClick = { sendAuthorizedHardwareCommand("R:MOVE:$axisName:+10", "CMD: MOVE $axisName +10") })
-                                }
+                            Spacer(Modifier.height(14.dp))
+                            Text("JOGGING", color = IndustrialTheme.Primario, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                            Spacer(Modifier.height(8.dp))
+
+                            // D-pad XY de la figura de referencia: cruceta con lectura central.
+                            var jogStep by remember { mutableStateOf("10") }
+                            fun jog(axis: String, signo: String) {
+                                sendAuthorizedHardwareCommand("R:MOVE:$axis:$signo$jogStep", "CMD: MOVE $axis $signo$jogStep")
                             }
+
+                            Column(Modifier.fillMaxWidth(), horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally) {
+                                JogButton(Icons.Default.KeyboardArrowUp, isOperationalReady) { jog("Y", "+") }
+                                Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                                    JogButton(Icons.Default.KeyboardArrowLeft, isOperationalReady) { jog("X", "-") }
+                                    Column(
+                                        Modifier.width(96.dp).padding(horizontal = 6.dp),
+                                        horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
+                                    ) {
+                                        Text("X", color = IndustrialTheme.Primario, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                                        Text("0.00 mm", color = IndustrialTheme.TextoSecundario, fontSize = 10.sp)
+                                        Spacer(Modifier.height(6.dp))
+                                        Box(Modifier.fillMaxWidth().height(1.dp).background(IndustrialTheme.Borde))
+                                        Spacer(Modifier.height(6.dp))
+                                        Text("Y", color = IndustrialTheme.Primario, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                                        Text("0.00 mm", color = IndustrialTheme.TextoSecundario, fontSize = 10.sp)
+                                    }
+                                    JogButton(Icons.Default.KeyboardArrowRight, isOperationalReady) { jog("X", "+") }
+                                }
+                                JogButton(Icons.Default.KeyboardArrowDown, isOperationalReady) { jog("Y", "-") }
+                            }
+
+                            Spacer(Modifier.height(12.dp))
+                            Text("STEP", color = IndustrialTheme.TextoSecundario, fontSize = 10.sp, letterSpacing = 0.5.sp)
+                            Spacer(Modifier.height(6.dp))
+                            IndustrialChipRow(
+                                opciones = listOf("0.1", "1", "10", "100"),
+                                seleccion = jogStep,
+                                onSelect = { jogStep = it }
+                            )
                             Spacer(Modifier.height(12.dp))
                             IndustrialActionButton("GUARDAR PUNTO", Icons.Default.Save, colorFondo = IndustrialTheme.Exito, enabled = isOperationalReady, onClick = { sendAuthorizedHardwareCommand("R:SAVE", "CMD: SAVE") })
                         }
@@ -298,31 +350,90 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                         )
                     }
                     1 -> {
-                        IndustrialCard("Grabado Láser CNC", Icons.Default.FlashOn, headerColor = IndustrialTheme.Advertencia) {
-                            IndustrialActionButton("INICIAR GRABADO", Icons.Default.PlayArrow, colorFondo = IndustrialTheme.Exito, enabled = isOperationalReady, onClick = { sendAuthorizedHardwareCommand("L:START", "CMD: L:START") })
-                            Spacer(Modifier.height(8.dp))
-                            IndustrialActionButton("STOP EMERGENCIA", Icons.Default.Stop, colorFondo = IndustrialTheme.Error, enabled = isOperationalReady, onClick = { sendAuthorizedHardwareCommand("L:STOP", "CMD: L:STOP") })
-                            Spacer(Modifier.height(16.dp))
-                            Text("PARÁMETROS", color = IndustrialTheme.TextoSecundario, fontSize = 10.sp)
-                            IndustrialTextField(
-                                valor = "$laserPower%",
-                                onValueChange = { laserPower = it.filter { char -> char.isDigit() }.take(3) },
-                                label = "Potencia Láser"
+                        // Panel de láser con el lenguaje de la figura de referencia:
+                        // steppers -/+ con valor grande y barra, presets y START/STOP pareados.
+                        val powerValue = laserPower.toIntOrNull() ?: 80
+                        val speedValue = laserSpeed.toIntOrNull() ?: 1200
+                        val presetActual = when {
+                            powerValue <= 35 && speedValue <= 700 -> "LOW"
+                            powerValue in 36..70 -> "MEDIUM"
+                            powerValue >= 71 && speedValue >= 1500 -> "HIGH"
+                            else -> "CUSTOM"
+                        }
+
+                        IndustrialCard(
+                            titulo = "Control Láser",
+                            icono = Icons.Default.FlashOn,
+                            headerColor = IndustrialTheme.Advertencia,
+                            subtitulo = "Grabado CNC",
+                            trailing = {
+                                IndustrialStatusChip(
+                                    if (isOperationalReady) "ON" else "OFF",
+                                    if (isOperationalReady) IndustrialTheme.Primario else IndustrialTheme.TextoTenue
+                                )
+                            }
+                        ) {
+                            IndustrialStepper(
+                                label = "Power",
+                                valor = powerValue.toFloat(),
+                                unidad = "%",
+                                paso = 5f,
+                                minimo = 0f,
+                                maximo = 100f,
+                                onValorChange = { laserPower = it.toInt().toString() }
                             )
-                            IndustrialTextField(
-                                valor = laserSpeed,
-                                onValueChange = { laserSpeed = it.filter { char -> char.isDigit() }.take(5) },
-                                label = "Velocidad (mm/min)"
+                            IndustrialStepper(
+                                label = "Speed",
+                                valor = speedValue.toFloat(),
+                                unidad = "mm/min",
+                                paso = 100f,
+                                minimo = 100f,
+                                maximo = 3000f,
+                                onValorChange = { laserSpeed = it.toInt().toString() }
                             )
-                            Spacer(Modifier.height(12.dp))
+
+                            Spacer(Modifier.height(10.dp))
+                            Text("PRESETS", color = IndustrialTheme.TextoSecundario, fontSize = 10.sp, letterSpacing = 0.5.sp)
+                            Spacer(Modifier.height(6.dp))
+                            IndustrialChipRow(
+                                opciones = listOf("LOW", "MEDIUM", "HIGH", "CUSTOM"),
+                                seleccion = presetActual,
+                                onSelect = { preset ->
+                                    when (preset) {
+                                        "LOW" -> { laserPower = "30"; laserSpeed = "600" }
+                                        "MEDIUM" -> { laserPower = "60"; laserSpeed = "1200" }
+                                        "HIGH" -> { laserPower = "90"; laserSpeed = "1800" }
+                                    }
+                                    addLog("LÁSER: preset $preset seleccionado")
+                                }
+                            )
+
+                            Spacer(Modifier.height(14.dp))
+                            Row(Modifier.fillMaxWidth(), Arrangement.spacedBy(10.dp)) {
+                                IndustrialActionButton(
+                                    texto = "START",
+                                    icono = Icons.Default.PlayArrow,
+                                    modifier = Modifier.weight(1f),
+                                    colorFondo = IndustrialTheme.Primario,
+                                    enabled = isOperationalReady,
+                                    onClick = { sendAuthorizedHardwareCommand("L:START", "CMD: L:START") }
+                                )
+                                IndustrialActionButton(
+                                    texto = "STOP",
+                                    icono = Icons.Default.Stop,
+                                    modifier = Modifier.weight(1f),
+                                    colorFondo = IndustrialTheme.Error,
+                                    enabled = isOperationalReady,
+                                    onClick = { sendAuthorizedHardwareCommand("L:STOP", "CMD: L:STOP") }
+                                )
+                            }
+                            Spacer(Modifier.height(10.dp))
                             IndustrialActionButton(
                                 texto = "APLICAR PARÁMETROS",
                                 icono = Icons.Default.Settings,
-                                colorFondo = IndustrialTheme.Primario,
+                                colorFondo = IndustrialTheme.TarjetaAlta,
                                 enabled = isOperationalReady,
                                 onClick = {
-                                    val powerValue = laserPower.toIntOrNull() ?: 80
-                                    val speedValue = laserSpeed.toIntOrNull() ?: 1200
                                     sendAuthorizedHardwareCommand("L:POWER:$powerValue", "CMD: POWER $powerValue")
                                     sendAuthorizedHardwareCommand("L:SPEED:$speedValue", "CMD: SPEED $speedValue")
                                 }
@@ -367,8 +478,15 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
 
                         IndustrialCard("Procesamiento de Imagen", Icons.Default.Image) {
                             if (!showArucoGenerator) {
-                                Box(Modifier.fillMaxWidth().height(150.dp).background(Color.DarkGray).border(1.dp, Color.Gray), contentAlignment = androidx.compose.ui.Alignment.Center) {
-                                    Text("VISTA PREVIA G-CODE", color = Color.Gray, fontSize = 12.sp)
+                                Box(
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .height(150.dp)
+                                        .background(IndustrialTheme.TarjetaAlta, androidx.compose.foundation.shape.RoundedCornerShape(IndustrialTheme.RadioControl))
+                                        .border(1.dp, IndustrialTheme.Borde, androidx.compose.foundation.shape.RoundedCornerShape(IndustrialTheme.RadioControl)),
+                                    contentAlignment = androidx.compose.ui.Alignment.Center
+                                ) {
+                                    Text("VISTA PREVIA G-CODE", color = IndustrialTheme.TextoSecundario, fontSize = 12.sp, letterSpacing = 0.8.sp)
                                 }
                                 Spacer(Modifier.height(12.dp))
                                 CameraPreviewWithVision(
@@ -397,7 +515,7 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                                     ) {
                                         Column(Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                                             Text("ARUCO IDENTIFICADO", color = IndustrialTheme.Exito, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
-                                            Text("#${lastDetectedArucoId}", color = Color.White, fontSize = 56.sp, fontWeight = FontWeight.ExtraBold)
+                                            Text("#${lastDetectedArucoId}", color = IndustrialTheme.TextoPrincipal, fontSize = 56.sp, fontWeight = FontWeight.ExtraBold)
                                             Text("Marcador ArUco ${selectedDictionary.label} · listo para grabado", color = IndustrialTheme.TextoSecundario, fontSize = 11.sp)
                                         }
                                     }
@@ -502,7 +620,7 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .height(200.dp)
-                                            .background(Color.White, androidx.compose.foundation.shape.RoundedCornerShape(4.dp))
+                                            .background(IndustrialTheme.TextoPrincipal, androidx.compose.foundation.shape.RoundedCornerShape(4.dp))
                                             .padding(8.dp),
                                         contentAlignment = Alignment.Center
                                     ) {
@@ -590,5 +708,31 @@ private fun isValidGcode(content: String): Boolean {
         trimmed.isEmpty() || 
         trimmed.startsWith(";") || 
         validCommands.any { trimmed.startsWith(it) }
+    }
+}
+
+
+/** Botón redondo del D-pad de jogging (figura `ui_app_manufactura.png`). */
+@Composable
+private fun JogButton(
+    icono: androidx.compose.ui.graphics.vector.ImageVector,
+    enabled: Boolean,
+    onClick: () -> Unit
+) {
+    Box(
+        Modifier
+            .size(54.dp)
+            .clip(androidx.compose.foundation.shape.CircleShape)
+            .background(IndustrialTheme.TarjetaAlta)
+            .border(1.dp, IndustrialTheme.Borde, androidx.compose.foundation.shape.CircleShape)
+            .clickable(enabled = enabled, onClick = onClick),
+        contentAlignment = androidx.compose.ui.Alignment.Center
+    ) {
+        Icon(
+            icono,
+            null,
+            Modifier.size(26.dp),
+            tint = if (enabled) IndustrialTheme.TextoPrincipal else IndustrialTheme.TextoTenue
+        )
     }
 }

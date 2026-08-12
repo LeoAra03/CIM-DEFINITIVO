@@ -21,7 +21,7 @@ object PerformanceProfiler {
         } finally {
             val time = System.currentTimeMillis() - start
             if (time > THRESHOLD_MS) {
-                safeWarn("⚠️ LATENCIA DETECTADA: $name tomó ${time}ms")
+                safeWarn("LATENCIA DETECTADA: $name tomó ${time}ms")
             } else {
                 safeDebug("PROF: $name -> ${time}ms")
             }

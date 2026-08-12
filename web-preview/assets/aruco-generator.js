@@ -14,7 +14,7 @@ class ArucoGenerator {
       const res = await fetch('./assets/dict/aruco_dicts.json');
       this.dicts = await res.json();
       this.loaded = true;
-      console.log('✓ Aruco dicts loaded', Object.keys(this.dicts).length);
+      console.log('[OK] Aruco dicts loaded', Object.keys(this.dicts).length);
     } catch (e) {
       console.error('Error loading dicts', e);
       // fallback small dict

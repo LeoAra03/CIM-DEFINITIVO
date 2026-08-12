@@ -9,7 +9,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -101,7 +100,7 @@ private fun StorageUnit(id: Int, onCommand: (String) -> Unit, enabled: Boolean) 
             androidx.compose.ui.window.Dialog(onDismissRequest = { expanded = false }) {
                 Card(colors = CardDefaults.cardColors(containerColor = IndustrialTheme.Tarjeta)) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Text("ACCIONES POSICIÓN $id", color = Color.White, fontWeight = FontWeight.Bold)
+                        Text("ACCIONES POSICIÓN $id", color = IndustrialTheme.TextoPrincipal, fontWeight = FontWeight.Bold)
                         IndustrialActionButton(texto = "Almacenar (STO)", icono = Icons.Default.AddBox, enabled = enabled, onClick = { onCommand("STO:$id"); expanded = false })
                         IndustrialActionButton(texto = "Liberar (FREE)", icono = Icons.Default.Output, colorFondo = IndustrialTheme.Advertencia, enabled = enabled, onClick = { onCommand("FREE:$id"); expanded = false })
                         IndustrialActionButton(texto = "Verificar (CHK)", icono = Icons.Default.Search, colorFondo = IndustrialTheme.Secundario, enabled = enabled, onClick = { onCommand("CHK:$id"); expanded = false })

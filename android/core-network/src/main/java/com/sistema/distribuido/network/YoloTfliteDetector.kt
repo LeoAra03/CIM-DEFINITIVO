@@ -59,7 +59,7 @@ class YoloTfliteDetector(context: Context) {
             require(outputChannels == labels.size + 4) {
                 "Modelo tiene ${outputChannels - 4} clases; se esperaban ${labels.size}"
             }
-            Log.i(TAG, "✓ YOLO TFLite cargado: $MODEL_ASSET (${labels.size} clases, ${inputSize}px)")
+            Log.i(TAG, "[OK] YOLO TFLite cargado: $MODEL_ASSET (${labels.size} clases, ${inputSize}px)")
         } catch (e: Exception) {
             Log.w(TAG, "YOLO TFLite no disponible (${e.message}) — usar fallback OpenCV")
         }

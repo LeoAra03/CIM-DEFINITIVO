@@ -1,64 +1,63 @@
-<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>PLC Cinta - Arcade - CIM</title><link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&family=JetBrains+Mono:wght@400;700&family=Press+Start+2P&display=swap" rel="stylesheet"><link rel="stylesheet" href="../assets/style.css">
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>PLC Cinta - CIM</title><link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="../assets/style.css">
 <style>
-body{padding:12px;display:flex;justify-content:center;background:#080808;min-height:100vh}
+body{padding:12px;display:flex;justify-content:center;background:var(--bg);min-height:100vh}
 .phone-frame{width:430px;max-width:95vw}
 .arcade-screen{
-  background:linear-gradient(180deg, #0a0a1a 0%, #000 100%);
-  border:2px solid #333;border-radius:12px;padding:12px;
-  position:relative;overflow:hidden;box-shadow:0 0 30px rgba(0,255,255,0.1), inset 0 0 20px rgba(0,0,0,0.8);
+  background:var(--card);
+  border:1px solid var(--border);border-radius:12px;padding:12px;
+  position:relative;overflow:hidden;
 }
-.arcade-title{font-family:'Press Start 2P', monospace;font-size:10px;color:#0ff;text-align:center;text-shadow:0 0 10px #0ff;margin-bottom:10px;letter-spacing:1px}
+.arcade-title{font-size:10px;font-weight:800;color:var(--text-sec);text-align:center;margin-bottom:10px;letter-spacing:1.2px;text-transform:uppercase}
 .belt-container{
-  position:relative;height:220px;background:#111;
-  border:2px solid #333;border-radius:8px;overflow:hidden;
-  background-image: repeating-linear-gradient(90deg, #1a1a1a 0px, #1a1a1a 20px, #222 20px, #222 40px);
-  animation:beltMove 1s linear infinite;
+  position:relative;height:220px;background:var(--terminal);
+  border:1px solid var(--border);border-radius:10px;overflow:hidden;
+  background-image: repeating-linear-gradient(90deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 20px, transparent 20px, transparent 40px);
+  animation:beltMove 1.6s linear infinite;
 }
 @keyframes beltMove{0%{background-position:0 0}100%{background-position:80px 0}}
 .station{
   position:absolute;top:50%;transform:translateY(-50%);
   width:70px;height:70px;border-radius:50%;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  border:3px solid #333;background:#1a1a1a;transition:all 0.3s;cursor:pointer;z-index:2;
+  border:2px solid var(--border);background:var(--card-3);transition:all 0.25s;cursor:pointer;z-index:2;
 }
-.station.active{border-color:#0f0;box-shadow:0 0 20px #0f0, inset 0 0 10px rgba(0,255,0,0.2);transform:translateY(-50%) scale(1.1)}
-.station.has-pallet{border-color:#ff0;box-shadow:0 0 20px #ff0;background:#2a2a00}
-.station.occupied{border-color:#f00;box-shadow:0 0 20px #f00;animation:pulseRed 1s infinite}
-@keyframes pulseRed{0%,100%{box-shadow:0 0 20px #f00}50%{box-shadow:0 0 30px #f00, 0 0 40px #f00}}
-.station-label{font-size:9px;font-weight:800;color:#fff;margin-top:2px}
-.station-id{font-family:'Press Start 2P',monospace;font-size:10px;color:#0ff}
+.station.active{border-color:var(--primary);box-shadow:0 0 16px rgba(76,175,80,0.35);transform:translateY(-50%) scale(1.06)}
+.station.has-pallet{border-color:var(--warning);background:rgba(224,165,38,0.10)}
+.station.occupied{border-color:var(--error);animation:pulseRed 1.2s infinite}
+@keyframes pulseRed{0%,100%{box-shadow:0 0 10px rgba(210,57,54,0.35)}50%{box-shadow:0 0 22px rgba(210,57,54,0.6)}}
+.station-label{font-size:9px;font-weight:800;color:var(--text-sec);margin-top:2px;letter-spacing:0.4px}
+.station-id{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--text)}
 .pallet{
   position:absolute;top:50%;transform:translateY(-50%);
-  width:36px;height:36px;background:linear-gradient(135deg, #ff6d00, #ff3c00);
-  border:2px solid #fff;border-radius:6px;display:flex;align-items:center;justify-content:center;
-  font-size:10px;font-weight:900;color:#fff;box-shadow:0 2px 10px rgba(255,109,0,0.6);
-  transition:all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);z-index:5;
+  width:36px;height:36px;background:var(--primary);
+  border:1px solid rgba(255,255,255,0.25);border-radius:8px;display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:900;color:#08130A;box-shadow:0 2px 10px rgba(76,175,80,0.35);
+  transition:left 0.6s cubic-bezier(0.4,0,0.2,1);z-index:5;
 }
-.pallet.moving{animation:bounce 0.3s infinite alternate}
-@keyframes bounce{0%{transform:translateY(-50%)}100%{transform:translateY(-60%)}}
-.omron-cmd{font-family:'JetBrains Mono',monospace;font-size:9px;color:#0f0;background:#001100;border:1px solid #0f0;padding:2px 6px;border-radius:4px;margin:2px;display:inline-block}
-.pixel-grid{position:absolute;inset:0;background-image:radial-gradient(rgba(0,255,255,0.03) 1px, transparent 1px);background-size:20px 20px;pointer-events:none}
-.scanline{position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg, transparent, #0ff, transparent);animation:scan 3s linear infinite;opacity:0.5}
-@keyframes scan{0%{top:0}100%{top:100%}}
+.pallet.moving{animation:bounce 0.4s infinite alternate}
+@keyframes bounce{0%{transform:translateY(-50%)}100%{transform:translateY(-56%)}}
+.omron-cmd{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--success-bright);background:rgba(76,175,80,0.08);border:1px solid rgba(76,175,80,0.22);padding:3px 7px;border-radius:6px;margin:2px;display:inline-block}
+.pixel-grid{display:none}
+.scanline{display:none}
 </style>
 </head>
 <body>
 <div class="phone-frame"><div class="phone-notch"></div><div class="phone-screen">
-<div style="padding:12px;background:#141414;border-bottom:1px solid #2a2a2a;display:flex;justify-content:space-between;align-items:center">
-<div><div style="font-weight:900;font-size:14px;color:#FFC107;font-family:'Press Start 2P',monospace;font-size:10px">PLC CINTA ARCADE v6.0</div><div style="font-size:9px;color:#0ff;margin-top:4px">ARCADE MODE • Port integrated_panel.py</div></div>
+<div style="padding:14px 12px;background:linear-gradient(180deg,#101317 0%, var(--bg) 100%);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+<div><div style="font-weight:900;font-size:14px;color:var(--text);letter-spacing:0.5px">PLC CINTA v6.0</div><div style="font-size:10px;color:var(--text-sec);margin-top:3px">Control de transporte Omron DELIVER</div></div>
 <div style="display:flex;gap:6px"><a href="../index.html" class="btn btn-ghost btn-sm" style="font-size:8px;padding:3px 6px">Hub</a></div>
 </div>
 
-<div class="tab-bar"><div class="tab active" onclick="switchTab('control')">CONTROL</div><div class="tab" onclick="switchTab('arcade')">ARCADE</div><div class="tab" onclick="switchTab('tracking')">TRACKING</div><div class="tab" onclick="switchTab('sincro')">SINCRO</div></div>
+<div class="tab-bar"><div class="tab active" onclick="switchTab('control')">CONTROL</div><div class="tab" onclick="switchTab('arcade')">CINTA</div><div class="tab" onclick="switchTab('tracking')">TRACKING</div><div class="tab" onclick="switchTab('sincro')">SINCRO</div></div>
 
 <div id="tab-control" style="padding:12px;display:flex;flex-direction:column;gap:12px">
-  <div class="card"><div class="card-header"><h3>⚡ Energía y Sistema</h3></div><div class="card-body">
+  <div class="card"><div class="card-header"><h3>Energía y sistema</h3></div><div class="card-body">
     <div class="status-row"><span class="status-label">Estado Operativo</span><span class="status-value"><span class="dot dot-green"></span> SISTEMA VINCULADO</span></div>
-    <div style="display:flex;gap:8px;margin-top:8px"><button class="btn btn-success btn-sm" style="flex:1" onclick="startBelt()">▶ Arranque</button><button class="btn btn-error btn-sm" style="flex:1" onclick="stopBelt()">■ Parada</button></div>
+    <div style="display:flex;gap:8px;margin-top:8px"><button class="btn btn-success btn-sm" style="flex:1" onclick="startBelt()">Arranque</button><button class="btn btn-error btn-sm" style="flex:1" onclick="stopBelt()">Parada</button></div>
   </div></div>
 
-  <div class="card"><div class="card-header"><h3>🔢 Matriz 3x10 DELIVER (Omron)</h3></div><div class="card-body">
-    <div style="font-size:9px;color:#0f0;font-family:'JetBrains Mono',monospace;margin-bottom:6px">Comandos: @00WD0009... (PLC Omron) • Port de integrated_panel.py DELIVER_COMMANDS</div>
+  <div class="card"><div class="card-header"><h3>Matriz 3x10 DELIVER (Omron)</h3></div><div class="card-body">
+    <div style="font-size:9px;color:var(--text-sec);font-family:'JetBrains Mono',monospace;margin-bottom:6px">Comandos: @00WD0009... (PLC Omron) Port de integrated_panel.py DELIVER_COMMANDS</div>
     <div class="station-matrix">
       <script>document.write(Array.from({length:30},(_,i)=>{const f=Math.floor(i/10)+1,t=(i%10)+1;return `<div class=\"matrix-btn\" onclick=\"deliver(${f},${t})\" title=\"@00WD...\">${f}>${t}</div>`}).join(''))</script>
     </div>
@@ -68,7 +67,7 @@ body{padding:12px;display:flex;justify-content:center;background:#080808;min-hei
 
 <div id="tab-arcade" style="padding:12px;display:none;flex-direction:column;gap:12px">
   <div class="arcade-screen">
-    <div class="arcade-title">★ CINTA TRANSPORTADORA ARCADE ★</div>
+    <div class="arcade-title">Cinta transportadora</div>
     <div class="pixel-grid"></div><div class="scanline"></div>
     <div class="belt-container" id="belt">
       <div class="station" style="left:10%" id="st1"><div class="station-id">01</div><div class="station-label">ALMACEN</div></div>
@@ -76,34 +75,34 @@ body{padding:12px;display:flex;justify-content:center;background:#080808;min-hei
       <div class="station" style="left:66%" id="st3"><div class="station-id">03</div><div class="station-label">CALIDAD</div></div>
       <div class="pallet" id="pallet" style="left:10%">P1</div>
     </div>
-    <div style="display:flex;justify-content:space-between;margin-top:10px;font-family:'Press Start 2P',monospace;font-size:8px;color:#0ff">
-      <span>SCORE: <span id="score" style="color:#ff0">1240</span></span><span>LEVEL: 3</span><span>LIVES: ♥♥♥</span>
+    <div style="display:flex;justify-content:space-between;margin-top:10px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-sec)">
+      <span>CICLOS: <span id="score" style="color:var(--text);font-weight:700">1240</span></span><span>TURNO: 3</span><span>MODO: AUTO</span>
     </div>
     <div style="margin-top:8px;display:flex;gap:6px">
-      <button class="btn btn-primary btn-sm" style="flex:1;font-family:'Press Start 2P',monospace;font-size:8px" onclick="movePalletArcade()">▶ MOVER PALLET</button>
-      <button class="btn btn-ghost btn-sm" style="flex:1;font-family:'Press Start 2P',monospace;font-size:8px" onclick="randomDeliver()">🎲 RANDOM DELIVER</button>
+      <button class="btn btn-primary btn-sm" style="flex:1" onclick="movePalletArcade()">Mover pallet</button>
+      <button class="btn btn-ghost btn-sm" style="flex:1" onclick="randomDeliver()">Deliver aleatorio</button>
     </div>
   </div>
 
-  <div class="card"><div class="card-header"><h3>🎮 Arcade Controls • Port integrated_panel.py</h3></div><div class="card-body">
+  <div class="card"><div class="card-header"><h3>Controles manuales</h3></div><div class="card-body">
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
-      <button class="btn btn-ghost btn-sm" onclick="arcadeAction('SENSOR')">📡 SENSOR</button>
-      <button class="btn btn-ghost btn-sm" onclick="arcadeAction('FREE')">🆓 FREE</button>
-      <button class="btn btn-ghost btn-sm" onclick="arcadeAction('STOP')">🛑 STOP</button>
+      <button class="btn btn-ghost btn-sm" onclick="arcadeAction('SENSOR')">SENSOR</button>
+      <button class="btn btn-ghost btn-sm" onclick="arcadeAction('FREE')">FREE</button>
+      <button class="btn btn-ghost btn-sm" onclick="arcadeAction('STOP')">STOP</button>
     </div>
-    <div style="margin-top:8px;font-size:10px;color:#9E9E9E">Inspirado en _build_cinta_panel() + _detect_pallet_status() del integrated_panel.py original. Cada estación cambia color: rojo vacío, amarillo con pallet, verde OK, azul busy.</div>
+    <div style="margin-top:8px;font-size:10px;color:var(--text-sec)">Inspirado en _build_cinta_panel() + _detect_pallet_status() del integrated_panel.py original. Cada estación cambia color: rojo vacío, amarillo con pallet, verde OK, azul busy.</div>
     <div id="arcadeLog" class="terminal" style="height:100px;margin-top:8px"></div>
   </div></div>
 </div>
 
 <div id="tab-tracking" style="padding:12px;display:none">
-  <div class="card"><div class="card-header"><h3>📦 Tracking Pallets Arcade</h3></div><div class="card-body">
+  <div class="card"><div class="card-header"><h3>Tracking de pallets</h3></div><div class="card-body">
     <div style="display:flex;flex-direction:column;gap:8px" id="trackingList"></div>
   </div></div>
 </div>
 
 <div id="tab-sincro" style="padding:12px;display:none">
-  <div class="card"><div class="card-header"><h3>🌐 EasyConnect</h3></div><div class="card-body"><div style="background:#0D1F2D;border:1px solid #2196F3;border-radius:8px;padding:8px;font-size:11px">Hub auto-detectado • 1-click</div><button class="btn btn-primary btn-block" style="margin-top:8px" onclick="connectHub()">🔗 Vincular al Hub</button></div></div>
+  <div class="card"><div class="card-header"><h3>EasyConnect</h3></div><div class="card-body"><div style="background:rgba(47,134,232,0.10);border:1px solid rgba(47,134,232,0.30);border-radius:10px;padding:10px;font-size:11px;color:var(--text)">Hub auto-detectado vinculación en 1 clic</div><button class="btn btn-primary btn-block" style="margin-top:8px" onclick="connectHub()">Vincular al Hub</button></div></div>
 </div>
 
 </div></div>
@@ -120,7 +119,7 @@ let stations = {
 
 function deliver(from,to){
   const cmd = `@00WD${String(from).padStart(4,'0')}...${to}*`;
-  logOmron(`DELIVER ${from}→${to}: ${cmd}`, from, to);
+  logOmron(`DELIVER ${from}->${to}: ${cmd}`, from, to);
   movePalletTo(to);
   updateScore(10);
   if(window.parent && window.parent.sendCommand){
@@ -135,7 +134,7 @@ function logOmron(msg, from, to){
   el.textContent=msg;
   container.appendChild(el);
   if(container.children.length>6) container.removeChild(container.firstChild);
-  arcadeLog(`→ ${msg}`);
+  arcadeLog(`-> ${msg}`);
 }
 
 function movePalletTo(stationId){
@@ -172,10 +171,10 @@ function renderTracking(){
   const container = document.getElementById('trackingList');
   if(!container) return;
   container.innerHTML = Object.entries(stations).map(([id, info])=>`
-    <div style="display:flex;justify-content:space-between;align-items:center;background:#111;border:1px solid #2a2a2a;border-radius:8px;padding:8px">
-      <div><span style="font-family:'Press Start 2P';font-size:9px;color:#0ff">${id}</span> <span style="font-size:11px;font-weight:700">${['ALMACEN','MANUFACTURA','CALIDAD'][id-1]}</span></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;background:var(--card-3);border:1px solid var(--border);border-radius:10px;padding:10px">
+      <div><span style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:var(--text)">${id}</span> <span style="font-size:11px;font-weight:700;color:var(--text)">${['ALMACEN','MANUFACTURA','CALIDAD'][id-1]}</span></div>
       <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-size:10px;color:${info.hasPallet?'#ff0':'#666'}">${info.hasPallet?'● PALLET P'+info.palletId:'○ vacío'}</span>
+        <span style="font-size:10px;color:${info.hasPallet?'#E0A526':'#5B646E'}">${info.hasPallet?'PALLET P'+info.palletId:'vacío'}</span>
         <button class="btn btn-ghost btn-sm" style="font-size:8px;padding:2px 6px" onclick="stations[${id}].hasPallet=false;renderStations();renderTracking()">FREE</button>
       </div>
     </div>
@@ -196,14 +195,14 @@ function randomDeliver(){
 
 function arcadeAction(type){
   if(type==='SENSOR'){
-    arcadeLog('📡 SENSOR_ACTIVATED|POS:'+palletPos);
+    arcadeLog('SENSOR_ACTIVATED | POS:'+palletPos);
     movePalletTo(palletPos);
   } else if(type==='FREE'){
-    arcadeLog('🆓 FREE station '+palletPos);
+    arcadeLog('FREE station '+palletPos);
     stations[palletPos].hasPallet=false;
     renderStations(); renderTracking();
   } else if(type==='STOP'){
-    arcadeLog('🛑 STOP station '+palletPos);
+    arcadeLog('STOP station '+palletPos);
     document.getElementById('st'+palletPos).classList.add('occupied');
     setTimeout(()=>document.getElementById('st'+palletPos).classList.remove('occupied'), 1500);
   }
@@ -227,13 +226,13 @@ function updateScore(pts){
 function startBelt(){
   beltRunning=true;
   document.getElementById('belt').style.animationPlayState='running';
-  arcadeLog('▶ Cinta START');
+  arcadeLog('Cinta START');
 }
 
 function stopBelt(){
   beltRunning=false;
   document.getElementById('belt').style.animationPlayState='paused';
-  arcadeLog('■ Cinta STOP');
+  arcadeLog('Cinta STOP');
 }
 
 function switchTab(name){
@@ -244,8 +243,8 @@ function switchTab(name){
 }
 
 function connectHub(){
-  arcadeLog('🔗 Vinculando al Hub...');
-  setTimeout(()=>arcadeLog('✓ VALIDADO'), 800);
+  arcadeLog('Vinculando al Hub...');
+  setTimeout(()=>arcadeLog('[OK] VALIDADO'), 800);
 }
 
 // init

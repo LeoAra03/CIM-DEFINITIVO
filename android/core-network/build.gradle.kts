@@ -57,16 +57,16 @@ dependencies {
     implementation("androidx.compose.foundation:foundation")
     implementation("androidx.compose.material:material-icons-extended")
 
-    // 📸 CameraX
+    // CameraX
     val camerax_version = "1.3.0"
     implementation("androidx.camera:camera-camera2:$camerax_version")
     implementation("androidx.camera:camera-lifecycle:$camerax_version")
     implementation("androidx.camera:camera-view:$camerax_version")
 
-    // 🎯 ML Kit para QR
+    // ML Kit para QR
     implementation("com.google.mlkit:barcode-scanning:17.2.0")
 
-    // 👁️ OpenCV para ArUco (Official Maven artifact)
+    // OpenCV para ArUco (Official Maven artifact)
     api("org.opencv:opencv:4.9.0")
 
     implementation("com.google.dagger:hilt-android:2.47")

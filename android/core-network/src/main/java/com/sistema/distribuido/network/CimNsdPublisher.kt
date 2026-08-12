@@ -29,12 +29,12 @@ class CimNsdPublisher(
         registrationListener = object : NsdManager.RegistrationListener {
             override fun onServiceRegistered(info: NsdServiceInfo) {
                 isRegistered = true
-                onLog("✓ NSD publicado: ${info.serviceName} puerto ${info.port}")
+                onLog("NSD publicado: ${info.serviceName} puerto ${info.port}")
                 Log.i(TAG, "NSD registered: ${info.serviceName}")
             }
 
             override fun onRegistrationFailed(info: NsdServiceInfo, errorCode: Int) {
-                onLog("✗ NSD registro fallido: código $errorCode")
+                onLog("NSD registro fallido: código $errorCode")
                 Log.e(TAG, "NSD registration failed: $errorCode")
             }
 

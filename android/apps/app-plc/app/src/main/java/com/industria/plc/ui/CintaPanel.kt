@@ -36,7 +36,7 @@ fun CintaPanel(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         IndustrialCard(titulo = "Cinta Transportadora PLC", icono = Icons.Default.DirectionsRun) {
-            IndustrialStatusRow("Estado", if (state.isConnected) "✓ Conectado" else "✗ Desconectado", state.isConnected)
+            IndustrialStatusRow("Estado", if (state.isConnected) "Conectado" else "Desconectado", state.isConnected)
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 if (state.isConnected) {
                     IndustrialActionButton(texto = "Desconectar", icono = Icons.Default.PowerSettingsNew, modifier = Modifier.weight(1f).height(40.dp), colorFondo = IndustrialTheme.Error, onClick = onDisconnectClick)
@@ -51,7 +51,7 @@ fun CintaPanel(
                 repeat(3) { fromIdx ->
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         repeat(10) { toIdx ->
-                            val buttonText = "${fromIdx + 1}→${toIdx + 1}"
+                            val buttonText = "${fromIdx + 1} a ${toIdx + 1}"
                             IndustrialActionButton(
                                 texto = buttonText,
                                 icono = Icons.Default.Send,

@@ -154,7 +154,7 @@ fun ArcadeConveyor(
             stations.forEach { (name, pos) ->
                 val present = palletPresent[pos] == true
                 Text(
-                    text = "${if (present) "●" else "○"} $pos $name",
+                    text = "$pos $name",
                     color = if (present) IndustrialTheme.Primario else IndustrialTheme.TextoSecundario,
                     fontSize = 10.sp,
                     fontWeight = if (present) FontWeight.Bold else FontWeight.Normal

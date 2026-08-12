@@ -44,7 +44,7 @@ body{padding:12px;display:flex;justify-content:center;background:var(--bg);min-h
 <body>
 <div class="phone-frame"><div class="phone-notch"></div><div class="phone-screen">
 <div style="padding:14px 12px;background:linear-gradient(180deg,#101317 0%, var(--bg) 100%);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
-<div><div style="font-weight:900;font-size:14px;color:var(--text);letter-spacing:0.5px">PLC CINTA v6.0</div><div style="font-size:10px;color:var(--text-sec);margin-top:3px">Control de transporte • Omron DELIVER</div></div>
+<div><div style="font-weight:900;font-size:14px;color:var(--text);letter-spacing:0.5px">PLC CINTA v6.0</div><div style="font-size:10px;color:var(--text-sec);margin-top:3px">Control de transporte Omron DELIVER</div></div>
 <div style="display:flex;gap:6px"><a href="../index.html" class="btn btn-ghost btn-sm" style="font-size:8px;padding:3px 6px">Hub</a></div>
 </div>
 
@@ -53,11 +53,11 @@ body{padding:12px;display:flex;justify-content:center;background:var(--bg);min-h
 <div id="tab-control" style="padding:12px;display:flex;flex-direction:column;gap:12px">
   <div class="card"><div class="card-header"><h3>Energía y sistema</h3></div><div class="card-body">
     <div class="status-row"><span class="status-label">Estado Operativo</span><span class="status-value"><span class="dot dot-green"></span> SISTEMA VINCULADO</span></div>
-    <div style="display:flex;gap:8px;margin-top:8px"><button class="btn btn-success btn-sm" style="flex:1" onclick="startBelt()">▶ Arranque</button><button class="btn btn-error btn-sm" style="flex:1" onclick="stopBelt()">■ Parada</button></div>
+    <div style="display:flex;gap:8px;margin-top:8px"><button class="btn btn-success btn-sm" style="flex:1" onclick="startBelt()">Arranque</button><button class="btn btn-error btn-sm" style="flex:1" onclick="stopBelt()">Parada</button></div>
   </div></div>
 
   <div class="card"><div class="card-header"><h3>Matriz 3x10 DELIVER (Omron)</h3></div><div class="card-body">
-    <div style="font-size:9px;color:var(--text-sec);font-family:'JetBrains Mono',monospace;margin-bottom:6px">Comandos: @00WD0009... (PLC Omron) • Port de integrated_panel.py DELIVER_COMMANDS</div>
+    <div style="font-size:9px;color:var(--text-sec);font-family:'JetBrains Mono',monospace;margin-bottom:6px">Comandos: @00WD0009... (PLC Omron) Port de integrated_panel.py DELIVER_COMMANDS</div>
     <div class="station-matrix">
       <script>document.write(Array.from({length:30},(_,i)=>{const f=Math.floor(i/10)+1,t=(i%10)+1;return `<div class=\"matrix-btn\" onclick=\"deliver(${f},${t})\" title=\"@00WD...\">${f}>${t}</div>`}).join(''))</script>
     </div>
@@ -102,7 +102,7 @@ body{padding:12px;display:flex;justify-content:center;background:var(--bg);min-h
 </div>
 
 <div id="tab-sincro" style="padding:12px;display:none">
-  <div class="card"><div class="card-header"><h3>EasyConnect</h3></div><div class="card-body"><div style="background:rgba(47,134,232,0.10);border:1px solid rgba(47,134,232,0.30);border-radius:10px;padding:10px;font-size:11px;color:var(--text)">Hub auto-detectado • vinculación en 1 clic</div><button class="btn btn-primary btn-block" style="margin-top:8px" onclick="connectHub()">Vincular al Hub</button></div></div>
+  <div class="card"><div class="card-header"><h3>EasyConnect</h3></div><div class="card-body"><div style="background:rgba(47,134,232,0.10);border:1px solid rgba(47,134,232,0.30);border-radius:10px;padding:10px;font-size:11px;color:var(--text)">Hub auto-detectado vinculación en 1 clic</div><button class="btn btn-primary btn-block" style="margin-top:8px" onclick="connectHub()">Vincular al Hub</button></div></div>
 </div>
 
 </div></div>
@@ -119,7 +119,7 @@ let stations = {
 
 function deliver(from,to){
   const cmd = `@00WD${String(from).padStart(4,'0')}...${to}*`;
-  logOmron(`DELIVER ${from}→${to}: ${cmd}`, from, to);
+  logOmron(`DELIVER ${from}->${to}: ${cmd}`, from, to);
   movePalletTo(to);
   updateScore(10);
   if(window.parent && window.parent.sendCommand){
@@ -134,7 +134,7 @@ function logOmron(msg, from, to){
   el.textContent=msg;
   container.appendChild(el);
   if(container.children.length>6) container.removeChild(container.firstChild);
-  arcadeLog(`→ ${msg}`);
+  arcadeLog(`-> ${msg}`);
 }
 
 function movePalletTo(stationId){
@@ -174,7 +174,7 @@ function renderTracking(){
     <div style="display:flex;justify-content:space-between;align-items:center;background:var(--card-3);border:1px solid var(--border);border-radius:10px;padding:10px">
       <div><span style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:var(--text)">${id}</span> <span style="font-size:11px;font-weight:700;color:var(--text)">${['ALMACEN','MANUFACTURA','CALIDAD'][id-1]}</span></div>
       <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-size:10px;color:${info.hasPallet?'#E0A526':'#5B646E'}">${info.hasPallet?'● PALLET P'+info.palletId:'○ vacío'}</span>
+        <span style="font-size:10px;color:${info.hasPallet?'#E0A526':'#5B646E'}">${info.hasPallet?'PALLET P'+info.palletId:'vacío'}</span>
         <button class="btn btn-ghost btn-sm" style="font-size:8px;padding:2px 6px" onclick="stations[${id}].hasPallet=false;renderStations();renderTracking()">FREE</button>
       </div>
     </div>
@@ -244,7 +244,7 @@ function switchTab(name){
 
 function connectHub(){
   arcadeLog('Vinculando al Hub...');
-  setTimeout(()=>arcadeLog('✓ VALIDADO'), 800);
+  setTimeout(()=>arcadeLog('[OK] VALIDADO'), 800);
 }
 
 // init

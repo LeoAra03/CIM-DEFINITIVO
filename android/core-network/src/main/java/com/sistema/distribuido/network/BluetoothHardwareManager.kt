@@ -158,7 +158,7 @@ class BluetoothHardwareManager(
             }
 
             override fun onScanFailed(errorCode: Int) {
-                onLog("⚠ Escaneo BLE fallido: $errorCode")
+                onLog("Escaneo BLE fallido: $errorCode")
             }
         }
         activeBleScanCallback = cb
@@ -166,7 +166,7 @@ class BluetoothHardwareManager(
 
         mainHandler.postDelayed({
             stopScanInternal()
-            onLog("✓ ESCANEO COMPLETADO (${discoveredDevicesMap.size} dispositivos)")
+            onLog("ESCANEO COMPLETADO (${discoveredDevicesMap.size} dispositivos)")
         }, durationMs)
     }
 
@@ -201,7 +201,7 @@ class BluetoothHardwareManager(
             adapter.startDiscovery()
         } catch (e: Exception) {
             Log.e("CIM", "Error: ${e.message}", e)
-            onLog("⚠ Classic discovery: ${e.message}")
+            onLog("Classic discovery: ${e.message}")
         }
     }
 
@@ -218,7 +218,7 @@ class BluetoothHardwareManager(
         val device = DiscoveredBluetoothDevice(address, name)
         discoveredDevicesMap[address] = device
         discoveredHardware[address] = name
-        onLog("✓ ENCONTRADO: $name [$address]")
+        onLog("ENCONTRADO: $name [$address]")
     }
 
     @SuppressLint("MissingPermission")
@@ -231,7 +231,7 @@ class BluetoothHardwareManager(
         }
 
         cancelReconnect(address)
-        onLog("→ CONECTANDO A $address...")
+        onLog("CONECTANDO A $address...")
         val device = adapter.getRemoteDevice(address)
         val callback = createGattCallback(address, onConnectionChange)
         gattCallbacks[address] = callback
@@ -250,7 +250,7 @@ class BluetoothHardwareManager(
         val attempt = reconnectAttempts.getOrDefault(address, 0) + 1
         reconnectAttempts[address] = attempt
         val delayMs = min(1000L * (1 shl (attempt - 1)), 30_000L)
-        onLog("↻ Reconexión $address en ${delayMs}ms (intento $attempt)")
+        onLog("Reconexión $address en ${delayMs}ms (intento $attempt)")
 
         reconnectJobs[address]?.cancel()
         reconnectJobs[address] = scope.launch {
@@ -283,7 +283,7 @@ class BluetoothHardwareManager(
         }
         receivingBuffers.remove(address)
         setConnectionState(address, false)
-        onLog("✗ DESCONECTADO: $address")
+        onLog("DESCONECTADO: $address")
     }
 
     private fun cancelReconnect(address: String) {
@@ -310,7 +310,7 @@ class BluetoothHardwareManager(
             override fun onConnectionStateChange(g: BluetoothGatt, status: Int, newState: Int) {
                 when (newState) {
                     BluetoothProfile.STATE_CONNECTED -> {
-                        onLog("✓ CONECTADO: $address")
+                        onLog("CONECTADO: $address")
                         connectedDevices[address] = g
                         setConnectionState(address, true)
                         g.discoverServices()
@@ -332,7 +332,7 @@ class BluetoothHardwareManager(
             @SuppressLint("MissingPermission")
             override fun onServicesDiscovered(g: BluetoothGatt, status: Int) {
                 if (status != BluetoothGatt.GATT_SUCCESS) return
-                onLog("✓ SERVICIOS DESCUBIERTOS [$address]")
+                onLog("SERVICIOS DESCUBIERTOS [$address]")
                 try {
                     val txChar = g.getService(SERVICE_UUID)?.getCharacteristic(CHAR_UUID_TX) ?: return
                     g.setCharacteristicNotification(txChar, true)
@@ -350,7 +350,7 @@ class BluetoothHardwareManager(
                     }
                 } catch (e: Exception) {
             Log.e("CIM", "Error: ${e.message}", e)
-                    onLog("⚠ Error setup GATT [$address]: ${e.message}")
+                    onLog("Error setup GATT [$address]: ${e.message}")
                 }
             }
 
@@ -383,7 +383,7 @@ class BluetoothHardwareManager(
     private fun handleIncomingData(gatt: BluetoothGatt, data: String) {
         val mac = gatt.device.address
         val deviceName = gatt.device.name ?: "UNNAMED"
-        onLog("← RX [$mac] from [$deviceName]: ${data.take(60)}")
+        onLog("RX [$mac] from [$deviceName]: ${data.take(60)}")
 
         val buffer = receivingBuffers.getOrPut(mac) { StringBuilder() }
         buffer.append(data)
@@ -404,7 +404,7 @@ class BluetoothHardwareManager(
         if (payload.isBlank()) return
         val parts = payload.split("|")
         if (parts.size < 6) {
-            onLog("⚠ CIM_ID incompleto desde $mac")
+            onLog("CIM_ID incompleto desde $mac")
             return
         }
         val deviceName = parts[0].take(80)
@@ -428,7 +428,7 @@ class BluetoothHardwareManager(
             if (!verdict.accepted) {
                 GlobalPermissionManager.getInstance().ban(mac, "Identidad CIM inválida: ${verdict.reason}")
                 disconnect(mac)
-                onLog("🚫 CIM_ID bloqueado [$mac]: ${verdict.reason}")
+                onLog("CIM_ID bloqueado [$mac]: ${verdict.reason}")
                 return@launch
             }
             val info = DeviceInfo(
@@ -444,7 +444,7 @@ class BluetoothHardwareManager(
                 isConnected = true
             )
             GlobalDeviceRegistry.registry.register(mac, info)
-            onLog("✓ CIM_ID aceptado: $deviceName [$stationUuid] $model v$version")
+            onLog("CIM_ID aceptado: $deviceName [$stationUuid] $model v$version")
         }
     }
 
@@ -491,11 +491,11 @@ class BluetoothHardwareManager(
                     val rxChar = gatt.getService(SERVICE_UUID)?.getCharacteristic(CHAR_UUID_RX)
                     if (rxChar != null) {
                         sendLargeCommand(gatt, rxChar, response.toTransportString())
-                        onLog("→ SENT IDENTIFIED to $mac: $responsePayload")
+                        onLog("SENT IDENTIFIED to $mac: $responsePayload")
                     }
                 } catch (e: Exception) {
             Log.e("CIM", "Error: ${e.message}", e)
-                    onLog("⚠ Error IDENTIFY [$mac]: ${e.message}")
+                    onLog("Error IDENTIFY [$mac]: ${e.message}")
                 }
             }
         } catch (_: Exception) {
@@ -514,15 +514,15 @@ class BluetoothHardwareManager(
     @SuppressLint("MissingPermission")
     fun connectClassicSpp(address: String): Boolean {
         if (!hasRequiredPermissions()) {
-            onLog("⚠ Permisos Bluetooth no concedidos para SPP")
+            onLog("Permisos Bluetooth no concedidos para SPP")
             return false
         }
         if (adapter == null) {
-            onLog("⚠ Bluetooth no disponible para SPP")
+            onLog("Bluetooth no disponible para SPP")
             return false
         }
         if (!adapter.isEnabled) {
-            onLog("⚠ Bluetooth desactivado")
+            onLog("Bluetooth desactivado")
             return false
         }
         if (activeSppConnections.containsKey(address)) {
@@ -544,7 +544,7 @@ class BluetoothHardwareManager(
                 sppParsers[address] = BluetoothMessageParser()
                 _connectionState.value = BluetoothConnectionState.Connected(address)
                 connection.start()
-                onLog("✓ SPP conectado a $address")
+                onLog("SPP conectado a $address")
             } catch (e: SecurityException) {
                 handleSppError(address, e, "Permiso denegado")
             } catch (e: IOException) {
@@ -560,7 +560,7 @@ class BluetoothHardwareManager(
         if (cmd.isBlank()) return
         val targetAddress = activeSppConnections.keys.firstOrNull()
         if (targetAddress == null) {
-            onLog("✗ No hay conexión SPP activa para enviar: $cmd")
+            onLog("No hay conexión SPP activa para enviar: $cmd")
             return
         }
         val payload = if (cmd.endsWith("\n") || cmd.endsWith("\r")) cmd else "$cmd\n"
@@ -593,12 +593,12 @@ class BluetoothHardwareManager(
     @SuppressLint("MissingPermission")
     fun send(cmd: String, address: String? = null, requireAuthorization: Boolean = false, authorized: Boolean = true) {
         if (requireAuthorization && !authorized) {
-            onLog("✗ No autorizado para enviar: $cmd")
+            onLog("No autorizado para enviar: $cmd")
             return
         }
         val target = address ?: connectedDevices.keys.firstOrNull()
         if (target == null) {
-            onLog("✗ ERROR: NO CONEXIÓN BLE")
+            onLog("ERROR: NO CONEXIÓN BLE")
             return
         }
         sendToDevice(target, cmd)
@@ -607,12 +607,12 @@ class BluetoothHardwareManager(
     @SuppressLint("MissingPermission")
     fun sendToDevice(address: String, cmd: String) {
         val targetGatt = connectedDevices[address] ?: run {
-            onLog("✗ ERROR: No GATT para $address")
+            onLog("ERROR: No GATT para $address")
             return
         }
         val rxChar = targetGatt.getService(SERVICE_UUID)?.getCharacteristic(CHAR_UUID_RX)
         if (rxChar == null) {
-            onLog("✗ ERROR: CARACTERÍSTICA NO ENCONTRADA en $address")
+            onLog("ERROR: CARACTERÍSTICA NO ENCONTRADA en $address")
             return
         }
 
@@ -629,7 +629,7 @@ class BluetoothHardwareManager(
         val bytes = (cmd + "\n").toByteArray(Charsets.UTF_8)
         if (bytes.size <= MAX_BLE_PACKET) {
             writeChunk(gatt, characteristic, bytes)
-            onLog("→ TX: $cmd")
+            onLog("TX: $cmd")
             return
         }
 
@@ -640,7 +640,7 @@ class BluetoothHardwareManager(
             val chunk = bytes.sliceArray(offset until offset + chunkSize)
             offset += chunkSize
             writeChunk(gatt, characteristic, chunk)
-            onLog("→ TX FRAG[$fragmentNumber]: ${String(chunk, Charsets.UTF_8)}")
+            onLog("TX FRAG[$fragmentNumber]: ${String(chunk, Charsets.UTF_8)}")
             fragmentNumber++
             delay(25)
         }
@@ -668,10 +668,10 @@ class BluetoothHardwareManager(
                 version = appIdentifier.appVersion
             ).toTransportString()
             sendToDevice(mac, identifyMsg)
-            onLog("→ SENT IDENTIFY to $mac")
+            onLog("SENT IDENTIFY to $mac")
         } catch (e: Exception) {
             Log.e("CIM", "Error: ${e.message}", e)
-            onLog("⚠ Cannot send IDENTIFY to $mac: ${e.message}")
+            onLog("Cannot send IDENTIFY to $mac: ${e.message}")
         }
     }
 
@@ -682,7 +682,7 @@ class BluetoothHardwareManager(
                 scanner?.stopScan(cb)
             } catch (e: Exception) {
             Log.e("CIM", "Error: ${e.message}", e)
-                onLog("⚠ Error deteniendo escaneo BLE: ${e.message}")
+                onLog("Error deteniendo escaneo BLE: ${e.message}")
             }
         }
         activeBleScanCallback = null
@@ -706,7 +706,7 @@ class BluetoothHardwareManager(
     fun disconnectAll() = disconnect(null)
 
     private fun handleSppError(address: String, throwable: Throwable, fallbackMessage: String) {
-        onLog("⚠ $fallbackMessage [$address]: ${throwable.message ?: throwable::class.java.simpleName}")
+        onLog("$fallbackMessage [$address]: ${throwable.message ?: throwable::class.java.simpleName}")
         disconnectClassicSpp(address)
         _incomingMessages.tryEmit("ERROR:$address:${throwable.message ?: fallbackMessage}")
     }
@@ -734,7 +734,7 @@ class BluetoothHardwareManager(
                         val parser = sppParsers.getOrPut(remoteAddress) { BluetoothMessageParser() }
                         parser.consumeChunk(payload).forEach { message ->
                             _incomingMessages.tryEmit(message)
-                            onLog("← SPP [$remoteAddress]: $message")
+                            onLog("SPP [$remoteAddress]: $message")
                         }
                     } catch (e: IOException) {
                         handleSppError(remoteAddress, e, "Desconexión abrupta SPP")

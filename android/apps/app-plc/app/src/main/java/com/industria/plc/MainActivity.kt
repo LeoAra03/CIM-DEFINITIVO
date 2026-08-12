@@ -100,7 +100,7 @@ fun PLCApp(commCoordinator: CommunicationCoordinator) {
 
     fun sendPlcHardwareCommand(command: String, logText: String) {
         if (!isAuthorized && !independentMode) {
-            addLog("✗ No autorizado - activar modo autónomo o esperar VALIDADO por coordinador")
+            addLog("[ERR] No autorizado - activar modo autónomo o esperar VALIDADO por coordinador")
             return
         }
         bluetoothManager.send(command, requireAuthorization = !independentMode, authorized = isAuthorized)
@@ -316,7 +316,7 @@ fun PLCApp(commCoordinator: CommunicationCoordinator) {
                                 Column(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
                                     Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                                         Text("$pos · $name", color = IndustrialTheme.TextoPrincipal, fontWeight = FontWeight.Bold)
-                                        Text(if (present) "● PALLET" else "○ vacío", color = if (present) IndustrialTheme.Exito else IndustrialTheme.TextoSecundario, fontSize = 12.sp)
+                                        Text(if (present) "PALLET" else "vacío", color = if (present) IndustrialTheme.Exito else IndustrialTheme.TextoSecundario, fontSize = 12.sp)
                                     }
                                     Row(Modifier.fillMaxWidth(), Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                                         Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
@@ -338,7 +338,7 @@ fun PLCApp(commCoordinator: CommunicationCoordinator) {
                                 }
                             }
                             Spacer(Modifier.height(8.dp))
-                            IndustrialActionButton("▶ SIMULAR FLUJO ARCADE COMPLETO", Icons.Default.PlayArrow, colorFondo = IndustrialTheme.Secundario, onClick = {
+                            IndustrialActionButton("SIMULAR FLUJO ARCADE COMPLETO", Icons.Default.PlayArrow, colorFondo = IndustrialTheme.Secundario, onClick = {
                                 scope.launch {
                                     trackingStations.forEach { (_, pos) ->
                                         handlePlcEvent("SENSOR_ACTIVATED|POS:$pos")

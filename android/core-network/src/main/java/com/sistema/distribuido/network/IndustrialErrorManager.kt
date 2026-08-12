@@ -32,7 +32,7 @@ object IndustrialErrorManager {
 
             // Notificar al usuario sin crashear si es posible
             Handler(Looper.getMainLooper()).post {
-                Toast.makeText(context, "⚠️ Sistema Industrial: Reiniciando servicios por error crítico", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, "Sistema Industrial: Reiniciando servicios por error crítico", Toast.LENGTH_LONG).show()
                 onRecover()
             }
         }

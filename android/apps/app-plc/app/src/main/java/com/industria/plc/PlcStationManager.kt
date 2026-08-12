@@ -37,9 +37,9 @@ class PlcStationManager(private val context: Context) {
                     payload = "DELIVER|fromStation=$fromStation,toStation=$toStation"
                 )
                 commandBroker?.sendCommand(msg)
-                Log.d(TAG, "✓ DELIVER: $fromStation → $toStation")
+                Log.d(TAG, "[OK] DELIVER: $fromStation -> $toStation")
             } catch (e: Exception) {
-                Log.e(TAG, "✗ Error: ${e.message}")
+                Log.e(TAG, "[ERR] Error: ${e.message}")
             }
         }
     }

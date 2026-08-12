@@ -118,7 +118,7 @@ fun AlmacenApp(commCoordinator: CommunicationCoordinator) {
 
     fun sendAuthorizedHardwareCommand(command: String, logText: String) {
         if (!isAuthorized && !independentMode) {
-            addLog("✗ No autorizado - activar modo autónomo o esperar VALIDADO por coordinador")
+            addLog("[ERR] No autorizado - activar modo autónomo o esperar VALIDADO por coordinador")
             return
         }
         bt.send(command, requireAuthorization = !independentMode, authorized = isAuthorized)

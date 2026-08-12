@@ -329,10 +329,10 @@ fun AuthorizationDialogPreview() {
             mac = "AA:BB:CC:DD:EE:FF",
             appType = "SCORBOT",
             onApprove = { remembered ->
-                println("✓ Aprobado (Remember: $remembered)")
+                println("[OK] Aprobado (Remember: $remembered)")
             },
             onReject = { remembered ->
-                println("✗ Rechazado (Remember: $remembered)")
+                println("[ERR] Rechazado (Remember: $remembered)")
             },
             onDismiss = {
                 println("× Cancelado")

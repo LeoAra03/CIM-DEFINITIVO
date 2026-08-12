@@ -126,9 +126,9 @@ fun ArucoGeneratorTab(
 
         item {
             IndustrialCard("Diccionarios Disponibles", Icons.Default.List) {
-                Text("• DICT_4X4_50 (IDs 0-49, Optimizado)", color = IndustrialTheme.TextoPrincipal, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                Text("• DICT_5X5_100 (IDs 0-99, Alta Precisión)", color = IndustrialTheme.TextoSecundario, fontSize = 12.sp)
-                Text("• DICT_6X6_250 (IDs 0-249, Máximo Rango)", color = IndustrialTheme.TextoSecundario, fontSize = 12.sp)
+                Text("DICT_4X4_50 (IDs 0-49, Optimizado)", color = IndustrialTheme.TextoPrincipal, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Text("DICT_5X5_100 (IDs 0-99, Alta Precisión)", color = IndustrialTheme.TextoSecundario, fontSize = 12.sp)
+                Text("DICT_6X6_250 (IDs 0-249, Máximo Rango)", color = IndustrialTheme.TextoSecundario, fontSize = 12.sp)
                 Spacer(Modifier.height(8.dp))
                 Text("Usando actualmente: DICT_4X4_50", color = IndustrialTheme.Exito, fontSize = 11.sp, fontWeight = FontWeight.Bold)
             }

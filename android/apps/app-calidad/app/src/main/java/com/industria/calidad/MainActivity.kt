@@ -117,7 +117,7 @@ fun CalidadApp(commCoordinator: CommunicationCoordinator) {
 
     fun sendAuthorizedHardwareCommand(command: String, logText: String, routeToCoordinator: Boolean = true) {
         if (!isAuthorized && !independentMode) {
-            addLog("✗ No autorizado - activar modo autónomo o esperar VALIDADO por coordinador")
+            addLog("[ERR] No autorizado - activar modo autónomo o esperar VALIDADO por coordinador")
             return
         }
         bt.send(command, requireAuthorization = !independentMode, authorized = isAuthorized)
@@ -130,12 +130,12 @@ fun CalidadApp(commCoordinator: CommunicationCoordinator) {
     }
 
     fun handleIncomingCoordinatorCommand(command: String) {
-        addLog("← COORDINADOR: $command")
+        addLog("<- COORDINADOR: $command")
         when {
             command == "STATS:RESET" -> {
                 approvedCount = 0
                 rejectedCount = 0
-                addLog("✓ Contadores reiniciados desde coordinador")
+                addLog("[OK] Contadores reiniciados desde coordinador")
             }
             command == "CAM:YOLO" -> {
                 scope.launch {
@@ -150,7 +150,7 @@ fun CalidadApp(commCoordinator: CommunicationCoordinator) {
                 sendAuthorizedHardwareCommand(command, "CMD RECIBIDO: $command", routeToCoordinator = false)
             }
             else -> {
-                addLog("⚠ Comando desconocido: $command")
+                addLog("[WARN] Comando desconocido: $command")
             }
         }
     }
@@ -230,13 +230,13 @@ fun CalidadApp(commCoordinator: CommunicationCoordinator) {
                                                     val exp = expectedAruco.trim().toIntOrNull()
                                                     if (exp != null) {
                                                         if (exp == id) {
-                                                            addLog("✓ PATRÓN ArUco OK (#$id coincide)")
+                                                            addLog("[OK] PATRÓN ArUco OK (#$id coincide)")
                                                             if (independentMode) {
                                                                 approvedCount += 1
                                                                 sendAuthorizedHardwareCommand("VAL:PASS", "RESULT: APPROVED (ArUco $id)")
                                                             }
                                                         } else {
-                                                            addLog("✗ PATRÓN ArUco NO coincide (esperado #$exp, leído #$id)")
+                                                            addLog("[ERR] PATRÓN ArUco NO coincide (esperado #$exp, leído #$id)")
                                                             if (independentMode) {
                                                                 rejectedCount += 1
                                                                 sendAuthorizedHardwareCommand("VAL:FAIL", "RESULT: REJECTED (ArUco $id)")
@@ -253,7 +253,7 @@ fun CalidadApp(commCoordinator: CommunicationCoordinator) {
                                             if (results.isNotEmpty()) {
                                                 addLog("YOLO: ${results.size} objetos detectados")
                                                 results.forEach { result ->
-                                                    addLog("  • ${result.label} ${"%.0f".format(result.confidence * 100)}%")
+                                                    addLog("  - ${result.label} ${"%.0f".format(result.confidence * 100)}%")
                                                 }
                                             }
                                         }
@@ -313,10 +313,10 @@ fun CalidadApp(commCoordinator: CommunicationCoordinator) {
                                 val exp = expectedAruco.trim().toIntOrNull()
                                 if (exp != null) {
                                     if (exp == demoId) {
-                                        addLog("✓ PATRÓN ArUco OK (#$demoId coincide)")
+                                        addLog("[OK] PATRÓN ArUco OK (#$demoId coincide)")
                                         if (independentMode) { approvedCount += 1; sendAuthorizedHardwareCommand("VAL:PASS", "RESULT: APPROVED (ArUco $demoId)") }
                                     } else {
-                                        addLog("✗ PATRÓN ArUco NO coincide (esperado #$exp, leído #$demoId)")
+                                        addLog("[ERR] PATRÓN ArUco NO coincide (esperado #$exp, leído #$demoId)")
                                         if (independentMode) { rejectedCount += 1; sendAuthorizedHardwareCommand("VAL:FAIL", "RESULT: REJECTED (ArUco $demoId)") }
                                     }
                                 }

@@ -108,7 +108,7 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
 
     fun sendAuthorizedHardwareCommand(command: String, logText: String) {
         if (!isAuthorized && !independentMode) {
-            addLog("✗ No autorizado - activar modo autónomo o esperar VALIDADO por coordinador")
+            addLog("[ERR] No autorizado - activar modo autónomo o esperar VALIDADO por coordinador")
             return
         }
         bt.send(command, requireAuthorization = !independentMode, authorized = isAuthorized)
@@ -121,12 +121,12 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
     }
 
     fun handleIncomingCoordinatorCommand(command: String) {
-        addLog("← COORDINADOR: $command")
+        addLog("<- COORDINADOR: $command")
         when {
             command.startsWith("ARUCO_GENERATE:") -> {
                 val payload = command.removePrefix("ARUCO_GENERATE:")
                 pendingArucoGenerate.value = payload
-                addLog("✓ Solicitud ArUco recibida: $payload")
+                addLog("[OK] Solicitud ArUco recibida: $payload")
             }
             command.startsWith("LASER_LOAD:") -> {
                 val parts = command.split(":", limit = 3)
@@ -140,13 +140,13 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                         context.openFileOutput(safeName, Context.MODE_PRIVATE).use { output ->
                             output.write(bytes)
                         }
-                        addLog("✓ G-code recibido: $safeName (${bytes.size} bytes)")
+                        addLog("[OK] G-code recibido: $safeName (${bytes.size} bytes)")
                     } catch (e: Exception) {
             Log.e("CIM", "Error: ${e.message}", e)
-                        addLog("✗ Error guardando G-code: ${e.message ?: "desconocido"}")
+                        addLog("[ERR] Error guardando G-code: ${e.message ?: "desconocido"}")
                     }
                 } else {
-                    addLog("⚠ Formato LASER_LOAD inválido")
+                    addLog("[WARN] Formato LASER_LOAD inválido")
                 }
             }
             command.startsWith("GCODE_LOAD;") -> {
@@ -161,20 +161,20 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                         context.openFileOutput(safeName, Context.MODE_PRIVATE).use { output ->
                             output.write(bytes)
                         }
-                        addLog("✓ G-code recibido (legacy): $safeName (${bytes.size} bytes)")
+                        addLog("[OK] G-code recibido (legacy): $safeName (${bytes.size} bytes)")
                     } catch (e: Exception) {
             Log.e("CIM", "Error: ${e.message}", e)
-                        addLog("✗ Error guardando G-code legacy: ${e.message ?: "desconocido"}")
+                        addLog("[ERR] Error guardando G-code legacy: ${e.message ?: "desconocido"}")
                     }
                 } else {
-                    addLog("⚠ Formato GCODE_LOAD inválido")
+                    addLog("[WARN] Formato GCODE_LOAD inválido")
                 }
             }
             command.startsWith("L:") || command.startsWith("R:") || command.startsWith("M:") || command.startsWith("C:") -> {
                 sendAuthorizedHardwareCommand(command, "CMD RECIBIDO: $command")
             }
             else -> {
-                addLog("⚠ Comando desconocido: $command")
+                addLog("[WARN] Comando desconocido: $command")
             }
         }
     }
@@ -219,13 +219,13 @@ fun ManufacturaApp(commCoordinator: CommunicationCoordinator) {
                                 val b64 = Base64.encodeToString(gcode.toByteArray(), Base64.NO_WRAP)
                                 val payload = "LASER_LOAD:$safeName:$b64"
                                 stationClient.sendEventSafe(payload)
-                                addLog("✓ Imagen → G-code: $safeName (${gcode.length} chars, ${gcode.lines().size} líneas)")
+                                addLog("[OK] Imagen -> G-code: $safeName (${gcode.length} chars, ${gcode.lines().size} líneas)")
                             } else {
-                                addLog("✗ No se pudo decodificar imagen")
+                                addLog("[ERR] No se pudo decodificar imagen")
                             }
                         } catch (e: Exception) {
                             Log.e("CIM", "Error procesando imagen: ${e.message}", e)
-                            addLog("✗ Error imagen→G-code: ${e.message}")
+                            addLog("[ERR] Error imagen->G-code: ${e.message}")
                         }
                     } else {
                         // G-code directo

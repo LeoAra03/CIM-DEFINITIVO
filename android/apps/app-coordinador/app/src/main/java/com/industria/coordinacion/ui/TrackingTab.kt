@@ -174,7 +174,7 @@ private fun ArcadePalletMap(pallets: List<PaletaTracking>) {
         }
         if (pallets.isNotEmpty()) {
             Text(
-                pallets.take(3).joinToString("  •  ") { "${it.id}: ${arcadeTarget(it.estado).label}" },
+                pallets.take(3).joinToString("   ") { "${it.id}: ${arcadeTarget(it.estado).label}" },
                 color = IndustrialTheme.TextoSecundario,
                 fontSize = 10.sp
             )

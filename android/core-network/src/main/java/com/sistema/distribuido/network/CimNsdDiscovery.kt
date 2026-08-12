@@ -34,14 +34,14 @@ class CimNsdDiscovery(context: Context) {
                 if (service.serviceName.contains("CIM", ignoreCase = true)) {
                     nsdManager.resolveService(service, object : NsdManager.ResolveListener {
                         override fun onResolveFailed(info: NsdServiceInfo, errorCode: Int) {
-                            onLog("✗ NSD resolve fallido: $errorCode")
+                            onLog("NSD resolve fallido: $errorCode")
                         }
 
                         override fun onServiceResolved(info: NsdServiceInfo) {
                             val host = info.host?.hostAddress
                             if (!host.isNullOrBlank()) {
                                 _discoveredHost.value = host
-                                onLog("✓ Hub descubierto: $host:${info.port}")
+                                onLog("Hub descubierto: $host:${info.port}")
                                 Log.i(TAG, "Hub resolved: $host:${info.port}")
                             }
                         }
@@ -50,7 +50,7 @@ class CimNsdDiscovery(context: Context) {
             }
 
             override fun onServiceLost(service: NsdServiceInfo) {
-                onLog("⚠ Hub perdido: ${service.serviceName}")
+                onLog("Hub perdido: ${service.serviceName}")
             }
 
             override fun onDiscoveryStopped(serviceType: String) {
@@ -59,12 +59,12 @@ class CimNsdDiscovery(context: Context) {
 
             override fun onStartDiscoveryFailed(serviceType: String, errorCode: Int) {
                 isDiscovering = false
-                onLog("✗ NSD discovery fallido: $errorCode")
+                onLog("NSD discovery fallido: $errorCode")
                 nsdManager.stopServiceDiscovery(this)
             }
 
             override fun onStopDiscoveryFailed(serviceType: String, errorCode: Int) {
-                onLog("✗ NSD stop fallido: $errorCode")
+                onLog("NSD stop fallido: $errorCode")
             }
         }
         nsdManager.discoverServices(CimProtocol.NSD_SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, discoveryListener!!)

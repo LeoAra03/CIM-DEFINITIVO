@@ -5,7 +5,7 @@ import android.graphics.Color
 import android.util.Log
 
 /**
- * Procesador de imágenes → G-code para láser
+ * Procesador de imágenes G-code para láser
  * Port de integrated_panel.py laser panel + chev.me/arucogen style
  * Convierte Bitmap (ArUco o imagen subida) a G-code raster para Wemos D1 ESP32 R32
  */
@@ -108,7 +108,7 @@ object LaserImageProcessor {
         sb.appendLine("G0 X0 Y0 ; return home")
         sb.appendLine("; END")
 
-        Log.d("LaserImageProcessor", "✓ G-code generado: $totalSegments segmentos, ${sb.length} chars")
+        Log.d("LaserImageProcessor", "[OK] G-code generado: $totalSegments segmentos, ${sb.length} chars")
         return sb.toString()
     }
 

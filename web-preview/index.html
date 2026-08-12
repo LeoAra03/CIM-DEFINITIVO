@@ -9,7 +9,7 @@
 </head>
 <body>
 <div class="header">
-  <h1>CIM HUB v6.0 <span>SISTEMA DE COORDINACIÓN INDUSTRIAL • VISUAL PREVIEW</span></h1>
+  <h1>CIM HUB v6.0 <span>SISTEMA DE COORDINACIÓN INDUSTRIAL VISUAL PREVIEW</span></h1>
   <div id="headerStatus" style="display:flex;gap:8px"></div>
 </div>
 
@@ -18,27 +18,27 @@
     <!-- Coordinador Card -->
     <div class="card" style="border-color:var(--primary)">
       <div class="card-header" style="background:rgba(255,109,0,0.08)">
-        <h3>COORDINADOR • HUB CENTRAL</h3>
+        <h3>COORDINADOR HUB CENTRAL</h3>
         <span class="dot dot-green" id="hubDot"></span>
       </div>
       <div class="card-body">
         <div id="coordinatorServer"></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
-          <button class="btn btn-primary btn-sm" onclick="startServer()">▶ Iniciar Hub :8888</button>
-          <button class="btn btn-ghost btn-sm" onclick="stopServer()">■ Detener</button>
+          <button class="btn btn-primary btn-sm" onclick="startServer()">Iniciar Hub :8888</button>
+          <button class="btn btn-ghost btn-sm" onclick="stopServer()">Detener</button>
         </div>
         <button id="autoModeToggle" class="btn btn-ghost btn-block" onclick="toggleAuto()" style="margin-top:8px">AUTO: OFF</button>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
           <button class="btn btn-success btn-sm" onclick="connectAll()">CONECTAR TODO (1-CLICK)</button>
-          <button class="btn btn-error btn-sm" onclick="disconnectAll()">✖ Desconectar Todo</button>
+          <button class="btn btn-error btn-sm" onclick="disconnectAll()">Desconectar Todo</button>
         </div>
         <div style="margin-top:12px">
           <div style="font-size:11px;font-weight:800;letter-spacing:0.5px;margin-bottom:6px">ACCIONES GLOBALES</div>
           <div class="grid-2">
-            <button class="btn btn-error btn-sm" onclick="triggerEStop()">⚠ E-STOP</button>
-            <button class="btn btn-ghost btn-sm" onclick="calibrateGlobal()">⚙ Calibrar</button>
+            <button class="btn btn-error btn-sm" onclick="triggerEStop()">E-STOP</button>
+            <button class="btn btn-ghost btn-sm" onclick="calibrateGlobal()">Calibrar</button>
           </div>
-          <button class="btn btn-primary btn-block" style="margin-top:6px" onclick="simulateFullCycle()">▶ SIMULAR CICLO COMPLETO</button>
+          <button class="btn btn-primary btn-block" style="margin-top:6px" onclick="simulateFullCycle()">SIMULAR CICLO COMPLETO</button>
         </div>
       </div>
     </div>
@@ -50,7 +50,7 @@
         <span id="flowStatus" style="font-size:10px;color:var(--primary);font-weight:800">LISTO</span>
       </div>
       <div class="card-body">
-        <div style="font-size:10px;color:var(--text-sec);margin-bottom:8px">Estado en tiempo real • <span id="eStopStatus" style="font-weight:800;color:#4CAF50">Sistema OK</span></div>
+        <div style="font-size:10px;color:var(--text-sec);margin-bottom:8px">Estado en tiempo real <span id="eStopStatus" style="font-weight:800;color:#4CAF50">Sistema OK</span></div>
         <div id="execGrid" class="exec-grid"></div>
         <div id="palletViz" style="margin-top:12px;background:#0e0e0e;border:1px solid var(--border);border-radius:8px;padding:10px"></div>
       </div>
@@ -106,20 +106,20 @@
       </div>
       <div class="card-body">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-          <div><div style="font-weight:800;font-size:13px;color:var(--primary)">SISTEMA MULTICONECTADO INTUITIVO</div><div style="font-size:11px;color:var(--text-sec)">1-click para conectar 5 estaciones • Validación por token SHA-256 • Autorización visual</div></div>
+          <div><div style="font-weight:800;font-size:13px;color:var(--primary)">SISTEMA MULTICONECTADO INTUITIVO</div><div style="font-size:11px;color:var(--text-sec)">1-click para conectar 5 estaciones Validación por token SHA-256 Autorización visual</div></div>
           <div style="display:flex;gap:8px">
             <div style="font-size:10px;color:var(--text-sec);text-align:right">Token lab<br><span class="mono" style="color:var(--text)">CIM_LAB...</span></div>
           </div>
         </div>
         <div style="background:#0a0a0a;border:1px solid var(--border);border-radius:8px;padding:12px;display:flex;gap:12px;flex-wrap:wrap">
-          <div style="flex:1;min-width:200px"><div style="font-size:10px;font-weight:800;color:var(--text-sec);margin-bottom:6px">¿CÓMO CONECTARSE?</div><div style="font-size:11px;color:var(--text-sec);line-height:1.6">1️⃣ Inicia Hub → 2️⃣ Click "Conectar Todo" (o individual) → 3️⃣ Autoriza en diálogo (o activa AUTO) → 4️⃣ Ya puedes enviar comandos CINTA/ROBOT/LASER<br>✅ Todo validado con SHA-256 + auth requerida en ESP32 relay</div></div>
+          <div style="flex:1;min-width:200px"><div style="font-size:10px;font-weight:800;color:var(--text-sec);margin-bottom:6px">¿CÓMO CONECTARSE?</div><div style="font-size:11px;color:var(--text-sec);line-height:1.6">1⃣ Inicia Hub 2⃣ Click "Conectar Todo" (o individual) 3⃣ Autoriza en diálogo (o activa AUTO) 4⃣ Ya puedes enviar comandos CINTA/ROBOT/LASER<br>Todo validado con SHA-256 + auth requerida en ESP32 relay</div></div>
           <div style="flex:1;min-width:200px"><div style="font-size:10px;font-weight:800;color:var(--text-sec);margin-bottom:6px">NUEVO · Port Integrated Panel</div><div style="font-size:11px;color:#4CAF50;line-height:1.6">
-            ✓ Manufactura: ArUcoGen estilo <a href="https://chev.me/arucogen/" target="_blank" style="color:#4CAF50">chev.me/arucogen/</a> con 16 diccionarios reales<br>
-            ✓ Imagen → G-code Laser (upload PNG/JPG → raster)<br>
-            ✓ Cinta Arcade: animación tipo arcade con Omron @00WD... • Score, lives, pellets<br>
-            ✓ bestMH.pt YOLO 9 clases integrado
+            Manufactura: ArUcoGen estilo <a href="https://chev.me/arucogen/" target="_blank" style="color:#4CAF50">chev.me/arucogen/</a> con 16 diccionarios reales<br>
+            Imagen G-code Laser (upload PNG/JPG raster)<br>
+            Cinta Arcade: animación tipo arcade con Omron @00WD... Score, lives, pellets<br>
+            bestMH.pt YOLO 9 clases integrado
           </div></div>
-          <div style="flex:1;min-width:200px"><div style="font-size:10px;font-weight:800;color:var(--text-sec);margin-bottom:6px">SEGURIDAD CORREGIDA</div><div style="font-size:11px;color:#4CAF50;line-height:1.6">✓ TLS sin trust-all<br>✓ PLC con auth + watchdog 10s<br>✓ G-code sanitizado (no path traversal)<br>✓ Auto-approve solo DEBUG<br>✓ No more silent catch</div></div>
+          <div style="flex:1;min-width:200px"><div style="font-size:10px;font-weight:800;color:var(--text-sec);margin-bottom:6px">SEGURIDAD CORREGIDA</div><div style="font-size:11px;color:#4CAF50;line-height:1.6">TLS sin trust-all<br>PLC con auth + watchdog 10s<br>G-code sanitizado (no path traversal)<br>Auto-approve solo DEBUG<br>No more silent catch</div></div>
         </div>
       </div>
     </div>
@@ -128,7 +128,7 @@
     <div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
         <h3 style="font-size:13px;font-weight:900;letter-spacing:0.5px">ESTACIONES INDUSTRIALES (5 + WEAR)</h3>
-        <span style="font-size:11px;color:var(--text-sec)">Cada tarjeta = 1 APK Android • Estado en tiempo real</span>
+        <span style="font-size:11px;color:var(--text-sec)">Cada tarjeta = 1 APK Android Estado en tiempo real</span>
       </div>
       <div id="stationsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px"></div>
     </div>
@@ -138,8 +138,8 @@
       <div class="card-header"><h3>COMANDOS RÁPIDOS (FLUJO PALLET)</h3></div>
       <div class="card-body">
         <div class="grid-4">
-          <button class="btn btn-ghost btn-sm" onclick="sendCommand('PLC','PLC','C:DELIVER:1:2')">Cinta 1→2</button>
-          <button class="btn btn-ghost btn-sm" onclick="sendCommand('PLC','PLC','C:DELIVER:2:3')">Cinta 2→3</button>
+          <button class="btn btn-ghost btn-sm" onclick="sendCommand('PLC','PLC','C:DELIVER:1:2')">Cinta 1 a 2</button>
+          <button class="btn btn-ghost btn-sm" onclick="sendCommand('PLC','PLC','C:DELIVER:2:3')">Cinta 2 a 3</button>
           <button class="btn btn-ghost btn-sm" onclick="sendCommand('MANUFACTURA','MANUFACTURA','R:RUN ARU1')">Robot RUN ARU1</button>
           <button class="btn btn-ghost btn-sm" onclick="sendCommand('CALIDAD','CALIDAD','ARUCO:DETECT')">Visión SCAN</button>
           <button class="btn btn-success btn-sm" onclick="sendCommand('CALIDAD','MANUFACTURA','VAL:PASS')">Calidad PASS</button>

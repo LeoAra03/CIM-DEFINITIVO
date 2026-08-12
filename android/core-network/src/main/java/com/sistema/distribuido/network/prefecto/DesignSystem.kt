@@ -84,7 +84,7 @@ fun IndustrialScaffold(
     navigationIcon: @Composable (() -> Unit)? = null,
     actions: @Composable RowScope.() -> Unit = {},
     floatingActionButton: @Composable () -> Unit = {},
-    /** Chip de estado opcional a la derecha del título (● RUNNING, ● ONLINE…). */
+    /** Chip de estado opcional a la derecha del título (RUNNING, ONLINE…). */
     estado: (@Composable () -> Unit)? = null,
     /** Barra de navegación inferior opcional (bottom-nav del mockup HMI). */
     bottomBar: @Composable () -> Unit = {},
@@ -215,7 +215,7 @@ fun IndustrialCard(
 }
 
 /**
- * Chip de estado HMI: punto de color + etiqueta (● RUNNING, ● ONLINE, ● OFFLINE).
+ * Chip de estado HMI: punto de color + etiqueta (RUNNING, ONLINE, OFFLINE).
  * Es el indicador que aparece en la esquina superior derecha de las tarjetas
  * en las figuras de referencia.
  */

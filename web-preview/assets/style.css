@@ -251,6 +251,10 @@ body{
 .rack-viz{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
 .rack-slot{background:var(--card-3);border:1px solid var(--border);border-radius:6px;padding:6px 4px;text-align:center;font-size:9px;font-weight:700;color:var(--text-dim)}
 .rack-slot.occupied{background:rgba(76,175,80,0.18);border-color:var(--primary);color:var(--text)}
+.node-tag{font-size:9px;font-weight:800;letter-spacing:0.6px;color:inherit}
+.rack-slot i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;border:1px solid var(--text-dim);vertical-align:middle}
+.rack-slot.occupied i{border-color:var(--primary);background:var(--primary)}
+
 
 /* Wear */
 .wear-frame{
@@ -259,7 +263,7 @@ body{
 }
 .wear-screen{width:100%;height:100%;border-radius:50%;background:var(--bg);border:1px solid var(--border);padding:16px;display:flex;flex-direction:column;gap:8px;overflow:hidden}
 
-/* Chip de estado HMI: punto + texto (● RUNNING, ● ONLINE) */
+/* Chip de estado HMI: punto + texto (RUNNING, ONLINE) */
 .chip{
   display:inline-flex;align-items:center;gap:6px;
   padding:3px 10px;border-radius:20px;font-size:9px;font-weight:800;letter-spacing:0.8px;
@@ -287,7 +291,8 @@ body{
   flex:1;padding:8px 4px;display:flex;flex-direction:column;align-items:center;gap:3px;
   font-size:8px;font-weight:800;letter-spacing:0.5px;color:var(--text-dim);cursor:pointer;text-transform:uppercase;
 }
-.bottom-nav .item .ico{font-size:15px;line-height:1}
+.bottom-nav .item .ico{display:flex;align-items:center;justify-content:center;height:18px}
+.bottom-nav .item .ico svg{width:18px;height:18px;display:block}
 .bottom-nav .item.active{color:var(--primary)}
 
 /* Rack industrial: rejilla de posiciones con niveles y columnas */
@@ -300,7 +305,9 @@ body{
   cursor:pointer;transition:all 0.15s;
 }
 .rack-cell:hover{border-color:var(--border-active)}
+.rack-cell i{display:block;width:13px;height:13px;margin:0 auto 5px;border-radius:3px;border:1px solid var(--text-dim);background:transparent}
 .rack-cell.occupied{background:rgba(76,175,80,0.18);border-color:var(--primary);color:var(--text)}
+.rack-cell.occupied i{border-color:var(--primary);background:var(--primary)}
 .rack-legend{display:flex;justify-content:center;gap:14px;margin-top:10px;font-size:9px;font-weight:800;color:var(--text-sec)}
 .rack-legend span{display:inline-flex;align-items:center;gap:5px}
 .rack-legend i{width:9px;height:9px;border-radius:2px;display:inline-block;border:1px solid currentColor}

@@ -31,7 +31,7 @@ object CimProtocol {
     fun isPairingSecretValid(received: String): Boolean {
         // Bloquear si sigue usando token default en producción (advertencia)
         if (isDefaultTokenInUse()) {
-            android.util.Log.w("CIM_SECURITY", "⚠ Token default en uso - cambiar antes de producción")
+            android.util.Log.w("CIM_SECURITY", "[WARN] Token default en uso - cambiar antes de producción")
         }
         val receivedHash = if (received.startsWith(HASH_PREFIX)) {
             received.removePrefix(HASH_PREFIX)
@@ -119,9 +119,9 @@ object CimProtocol {
     fun formatLog(module: String, message: String, success: Boolean? = null): String {
         val time = java.text.SimpleDateFormat("HH:mm:ss").format(java.util.Date())
         val status = when (success) {
-            true -> "✓"
-            false -> "✗"
-            else -> "•"
+            true -> "OK"
+            false -> "ERR"
+            else -> "INFO"
         }
         return "[$time] [$status] [$module] $message"
     }

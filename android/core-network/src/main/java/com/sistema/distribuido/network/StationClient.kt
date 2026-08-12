@@ -125,10 +125,10 @@ class StationClient(
     private var handshakeAttempts = 0
 
     fun connect() {
-        onLog?.invoke("→ Iniciando conexión a $host:$port [${stationName}]")
+        onLog?.invoke("Iniciando conexión a $host:$port [${stationName}]")
         // Validar token strength
         if (CimProtocol.isDefaultTokenInUse()) {
-            onLog?.invoke("⚠ Token default en uso - cambiar en Coordinador para producción")
+            onLog?.invoke("Token default en uso - cambiar en Coordinador para producción")
         }
         tcpClient.connect()
     }
@@ -139,11 +139,11 @@ class StationClient(
     private fun sendSecure(msg: String) {
         scope.launch {
             if (!tcpClient.isSocketConnected()) {
-                onLog?.invoke("✗ No conectado - No se puede enviar: $msg")
+                onLog?.invoke("No conectado - No se puede enviar: $msg")
                 return@launch
             }
             if ((msg.startsWith("COMMAND;") || msg.startsWith("CMD;")) && !isAuthorized) {
-                onLog?.invoke("✗ Comando bloqueado: estación no autorizada")
+                onLog?.invoke("Comando bloqueado: estación no autorizada")
                 return@launch
             }
             val now = System.currentTimeMillis()
@@ -170,11 +170,11 @@ class StationClient(
         return@withContext try {
             sendMutex.withLock {
                 if (!tcpClient.isSocketConnected()) {
-                    onLog?.invoke("✗ sendSafe: Socket NO conectado")
+                    onLog?.invoke("sendSafe: Socket NO conectado")
                     return@withContext false
                 }
                 if ((msg.startsWith("COMMAND;") || msg.startsWith("CMD;")) && !isAuthorized) {
-                    onLog?.invoke("✗ sendSafe: comando bloqueado - estación no autorizada")
+                    onLog?.invoke("sendSafe: comando bloqueado - estación no autorizada")
                     return@withContext false
                 }
                 val now = System.currentTimeMillis()
@@ -186,14 +186,14 @@ class StationClient(
                 val cleanMsg = IndustrialErrorManager.sanitizeInput(msg)
                 val success = tcpClient.sendSafe(cleanMsg)
                 if (success) {
-                    onLog?.invoke("✓ Enviado: ${msg.take(80)}")
+                    onLog?.invoke("Enviado: ${msg.take(80)}")
                 } else {
-                    onLog?.invoke("✗ Fallo al enviar: ${msg.take(80)}")
+                    onLog?.invoke("Fallo al enviar: ${msg.take(80)}")
                 }
                 success
             }
         } catch (e: Exception) {
-            onLog?.invoke("✗ Excepción en sendSafe: ${e.message}")
+            onLog?.invoke("Excepción en sendSafe: ${e.message}")
             Log.e("StationClient", "Error en sendSafe", e)
             false
         }
@@ -302,7 +302,7 @@ class StationClient(
     }
 
     fun disconnect() {
-        onLog?.invoke("→ Desconectando...")
+        onLog?.invoke("Desconectando...")
         // Detener reconexión/heartbeat y desconectar el cliente, pero no cancelar scope interno
         reconnectJob?.cancel()
         reconnectJob = null

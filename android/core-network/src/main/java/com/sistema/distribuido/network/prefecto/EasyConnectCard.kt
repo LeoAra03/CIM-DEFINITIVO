@@ -113,7 +113,7 @@ fun EasyConnectCard(
         IndustrialTextField(
             valor = ipCoordinator,
             onValueChange = onIpChange,
-            label = if (discoveredIp != null) "IP Coordinador (✓ Auto-detectado: $discoveredIp)" else "IP Coordinador (NSD auto)"
+            label = if (discoveredIp != null) "IP Coordinador (Auto-detectado: $discoveredIp)" else "IP Coordinador (NSD auto)"
         )
 
         if (discoveredIp != null && discoveredIp != ipCoordinator) {

@@ -27,7 +27,7 @@ object CimAuditChain {
         val event = AuditEvent(timestamp, operator, command, hash, lastHash)
         chain.add(event)
         lastHash = hash
-        android.util.Log.d("CimAudit", "[$operator] $command → $hash")
+        android.util.Log.d("CimAudit", "[$operator] $command -> $hash")
         return event
     }
 

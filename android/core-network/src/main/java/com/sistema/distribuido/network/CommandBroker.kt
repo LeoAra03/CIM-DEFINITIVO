@@ -62,7 +62,7 @@ class CommandBroker(
 
     suspend fun sendCommand(message: CimMessage) {
         if (message.destMac.isBlank() && message.destApp == AppType.UNKNOWN) {
-            notifyError("✗ BROKER: Destino inválido")
+            notifyError("BROKER: Destino inválido")
             return
         }
 
@@ -135,7 +135,7 @@ class CommandBroker(
 
             if (!sent && !allowOfflineSend) {
                 transaction.status = TransactionStatus.ERROR
-                notifyError("✗ NO ROUTE: ${message.destApp} - ${lastError?.message}")
+                notifyError("NO ROUTE: ${message.destApp} - ${lastError?.message}")
             } else {
                 onCommandSent.forEach { it(message) }
             }
@@ -143,7 +143,7 @@ class CommandBroker(
         } catch (e: Exception) {
             Log.e("CIM", "Error: ${e.message}", e)
             transaction.status = TransactionStatus.ERROR
-            notifyError("✗ BROKER ERROR: ${e.message}")
+            notifyError("BROKER ERROR: ${e.message}")
         }
     }
 

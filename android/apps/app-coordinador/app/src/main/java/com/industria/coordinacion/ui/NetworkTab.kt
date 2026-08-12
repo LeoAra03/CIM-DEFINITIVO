@@ -123,7 +123,7 @@ fun NetworkTab(
                         }
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            "1-click: Inicia Hub → Activa AUTO → Las estaciones se conectan automáticamente por NSD",
+                            "1-click: inicia el Hub, activa AUTO y las estaciones se conectan por NSD",
                             color = IndustrialTheme.TextoSecundario,
                             fontSize = 10.sp,
                             lineHeight = 13.sp
@@ -132,20 +132,20 @@ fun NetworkTab(
                 }
                 Spacer(modifier = Modifier.height(10.dp))
                 IndustrialStatusRow("Estado Server", if(state.isServerRunning) "ESCUCHANDO :8888" else "OFFLINE", state.isServerRunning)
-                IndustrialStatusRow("NSD Descubrimiento", "_cim-hub._tcp. ${if(state.isServerRunning) "publicado ✓" else "detenido"}", state.isServerRunning)
+                IndustrialStatusRow("NSD Descubrimiento", "_cim-hub._tcp. ${if(state.isServerRunning) "publicado" else "detenido"}", state.isServerRunning)
                 IndustrialStatusRow("Conectados", "${state.totalConnected} / 5 estaciones", state.totalConnected>0)
                 IndustrialStatusRow("Pendientes Auth", "${state.pendingRequestCount}", state.pendingRequestCount==0)
                 Spacer(Modifier.height(10.dp))
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     IndustrialActionButton(
-                        texto = if(state.isServerRunning) "ON :8888" else "▶ Iniciar Hub",
+                        texto = if(state.isServerRunning) "ON :8888" else "Iniciar Hub",
                         icono = Icons.Default.PlayArrow,
                         modifier = Modifier.weight(1f),
                         enabled = enabled && !state.isServerRunning,
                         onClick = onStartServer
                     )
                     IndustrialActionButton(
-                        texto = "■ Detener",
+                        texto = "Detener",
                         icono = Icons.Default.Stop,
                         modifier = Modifier.weight(1f),
                         colorFondo = IndustrialTheme.Error,
@@ -157,7 +157,7 @@ fun NetworkTab(
                 // Quick actions
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     IndustrialActionButton(
-                        texto = "🔗 Autorizar Todo",
+                        texto = "Autorizar Todo",
                         icono = Icons.Default.DoneAll,
                         modifier = Modifier.weight(1f),
                         colorFondo = IndustrialTheme.Exito,
@@ -165,7 +165,7 @@ fun NetworkTab(
                         onClick = { state.connectedDevices.filter{!it.isAuthorized}.forEach{ onAuthorizeDevice(it.mac) } }
                     )
                     IndustrialActionButton(
-                        texto = "🔍 Refrescar",
+                        texto = "Refrescar",
                         icono = Icons.Default.Refresh,
                         modifier = Modifier.weight(1f),
                         enabled = enabled,

@@ -31,7 +31,7 @@ import java.util.concurrent.Executors
 import android.util.Log
 import org.opencv.core.Point
 
-// 🎯 Estructura para almacenar un marcador detectado
+// Estructura para almacenar un marcador detectado
 data class DetectedArUco(
     val id: Int,
     val confidence: Float,

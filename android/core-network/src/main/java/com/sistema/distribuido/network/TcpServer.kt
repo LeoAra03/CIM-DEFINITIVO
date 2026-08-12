@@ -79,13 +79,13 @@ class TcpServer(private val port: Int, private val collisionPolicy: CollisionPol
                 serverSocket = ServerSocket(port)
                 // Verificar que el puerto se vinculó correctamente
                 if (serverSocket == null || !serverSocket!!.isBound) {
-                    val errMsg = "❌ ERROR: Puerto $port no se pudo vincular - puede estar en uso"
+                    val errMsg = "ERROR: Puerto $port no se pudo vincular - puede estar en uso"
                     onError?.invoke(errMsg)
                     Log.e("TcpServer", errMsg)
                     isRunning = false
                     return@launch
                 }
-                Log.d("TcpServer", "✓ TCP Server escuchando en puerto ${serverSocket!!.localPort}")
+                Log.d("TcpServer", "[OK] TCP Server escuchando en puerto ${serverSocket!!.localPort}")
 
                 // Broadcaster de clientes solo cuando cambia (debounce 5s) y limpieza stale cada 5s
                 // CORREGIDO: evita spam cada 2s O(n²)

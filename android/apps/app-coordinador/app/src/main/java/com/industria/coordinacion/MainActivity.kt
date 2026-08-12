@@ -138,11 +138,11 @@ class MainActivity : ComponentActivity() {
                             vm.sendLaserLoadFile(filename, b64)
                         } catch (e: Exception) {
             Log.e("CIM", "Error: ${e.message}", e)
-                            vm.log("✗ Error leyendo archivo G-code: ${e.message}")
+                            vm.log("[ERR] Error leyendo archivo G-code: ${e.message}")
                         }
                     }
                 } else {
-                    vm.log("✗ Selección de G-code cancelada")
+                    vm.log("[ERR] Selección de G-code cancelada")
                 }
             }
 
@@ -167,7 +167,7 @@ class MainActivity : ComponentActivity() {
                     lifecycleScope.launch {
                         val csv = vm.buildTrackingCsv()
                         if (csv.isBlank()) {
-                            vm.log("⚠ No hay datos para exportar")
+                            vm.log("[WARN] No hay datos para exportar")
                             return@launch
                         }
                         val filename = "tracking_${System.currentTimeMillis()}.csv"
@@ -175,10 +175,10 @@ class MainActivity : ComponentActivity() {
                             this@MainActivity.openFileOutput(filename, MODE_PRIVATE).use { output ->
                                 output.write(csv.toByteArray())
                             }
-                            vm.log("✓ CSV guardado en archivos internos: $filename")
+                            vm.log("[OK] CSV guardado en archivos internos: $filename")
                         } catch (e: Exception) {
             Log.e("CIM", "Error: ${e.message}", e)
-                            vm.log("✗ Error guardando CSV: ${e.message}")
+                            vm.log("[ERR] Error guardando CSV: ${e.message}")
                         }
                     }
                 }
@@ -207,7 +207,7 @@ class MainActivity : ComponentActivity() {
                         lifecycleScope.launch {
                             val csv = vm.buildTrackingCsv()
                             if (csv.isBlank()) {
-                                vm.log("⚠ No hay datos para exportar")
+                                vm.log("[WARN] No hay datos para exportar")
                                 return@launch
                             }
                             val filename = "tracking_${System.currentTimeMillis()}.csv"
@@ -215,10 +215,10 @@ class MainActivity : ComponentActivity() {
                                 this@MainActivity.openFileOutput(filename, MODE_PRIVATE).use { output ->
                                     output.write(csv.toByteArray())
                                 }
-                                vm.log("✓ CSV guardado en archivos internos: $filename")
+                                vm.log("[OK] CSV guardado en archivos internos: $filename")
                             } catch (e: Exception) {
             Log.e("CIM", "Error: ${e.message}", e)
-                                vm.log("✗ Error guardando CSV: ${e.message}")
+                                vm.log("[ERR] Error guardando CSV: ${e.message}")
                             }
                         }
                     },

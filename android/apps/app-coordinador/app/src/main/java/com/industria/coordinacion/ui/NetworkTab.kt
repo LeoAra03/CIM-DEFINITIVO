@@ -11,12 +11,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sistema.distribuido.network.prefecto.IndustrialTheme
 import com.sistema.distribuido.network.prefecto.IndustrialCard
+import com.sistema.distribuido.network.prefecto.IndustrialStatusChip
 import com.sistema.distribuido.network.prefecto.IndustrialActionButton
 import com.sistema.distribuido.network.prefecto.IndustrialStatusRow
 import com.sistema.distribuido.network.prefecto.IndustrialTextButton
@@ -86,12 +86,22 @@ fun NetworkTab(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
-            IndustrialCard("🌐 Servidor Maestro TCP - Conexión Fácil", Icons.Default.Router, headerColor = if(state.isServerRunning) IndustrialTheme.Exito else IndustrialTheme.Primario) {
+            IndustrialCard(
+                titulo = "Servidor maestro TCP",
+                icono = Icons.Default.Router,
+                subtitulo = "Conexión fácil para las estaciones",
+                trailing = {
+                    IndustrialStatusChip(
+                        texto = if (state.isServerRunning) "ONLINE" else "OFFLINE",
+                        color = if (state.isServerRunning) IndustrialTheme.Primario else IndustrialTheme.TextoTenue
+                    )
+                }
+            ) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(
-                            if(state.isServerRunning) Color(0xFF0D2A12) else Color(0xFF1A1A1A),
+                            if(state.isServerRunning) IndustrialTheme.Exito.copy(alpha = 0.12f) else IndustrialTheme.TarjetaAlta,
                             androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
                         )
                         .border(
@@ -103,10 +113,10 @@ fun NetworkTab(
                 ) {
                     Column {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Box(modifier = Modifier.size(10.dp).background(if(state.isServerRunning) Color.Green else Color.Gray, androidx.compose.foundation.shape.CircleShape))
+                            Box(modifier = Modifier.size(10.dp).background(if(state.isServerRunning) IndustrialTheme.Primario else IndustrialTheme.TextoTenue, androidx.compose.foundation.shape.CircleShape))
                             Text(
-                                if(state.isServerRunning) "● HUB ACTIVO - Listo para recibir 5 estaciones" else "○ HUB DETENIDO - Inicia para multiconectarse",
-                                color = if(state.isServerRunning) IndustrialTheme.Exito else IndustrialTheme.TextoSecundario,
+                                if(state.isServerRunning) "HUB ACTIVO · listo para 5 estaciones" else "HUB DETENIDO · inicia para multiconectarse",
+                                color = if(state.isServerRunning) IndustrialTheme.Primario else IndustrialTheme.TextoSecundario,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 11.sp
                             )
@@ -165,7 +175,7 @@ fun NetworkTab(
                 Spacer(Modifier.height(12.dp))
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                     Column {
-                        Text("Modo AUTO (Laboratorio)", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text("Modo AUTO (Laboratorio)", color = IndustrialTheme.TextoPrincipal, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         Text("Aprueba automáticamente sin diálogo", color = IndustrialTheme.TextoSecundario, fontSize = 10.sp)
                     }
                     Switch(
@@ -174,7 +184,7 @@ fun NetworkTab(
                         colors = SwitchDefaults.colors(
                             checkedTrackColor = IndustrialTheme.Exito.copy(alpha = 0.4f),
                             checkedThumbColor = IndustrialTheme.Exito,
-                            uncheckedTrackColor = Color.DarkGray,
+                            uncheckedTrackColor = IndustrialTheme.TarjetaAlta,
                             uncheckedThumbColor = IndustrialTheme.TextoSecundario
                         )
                     )
@@ -186,10 +196,10 @@ fun NetworkTab(
             IndustrialCard("Gemelo Digital", Icons.Default.ViewInAr) {
                 DigitalTwinPanel(
                     stationStates = mapOf(
-                        "PLC" to StationTwinState("Cinta activa", Color(0xFF00E676)),
-                        "MAN" to StationTwinState("Robot HOME", Color(0xFF00E5FF)),
-                        "CAL" to StationTwinState("Inspección", Color(0xFFFFD600), isTarget = true),
-                        "ALM" to StationTwinState("Slot 12", Color(0xFF7C4DFF))
+                        "PLC" to StationTwinState("Cinta activa", IndustrialTheme.Primario),
+                        "MAN" to StationTwinState("Robot HOME", IndustrialTheme.Secundario),
+                        "CAL" to StationTwinState("Inspección", IndustrialTheme.Advertencia, isTarget = true),
+                        "ALM" to StationTwinState("Slot 12", IndustrialTheme.PrimarioBrillante)
                     )
                 )
             }
@@ -282,7 +292,7 @@ fun NetworkTab(
                         Spacer(Modifier.height(8.dp))
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Column(Modifier.weight(1f)) {
-                                Text(blocked.mac, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                Text(blocked.mac, color = IndustrialTheme.TextoPrincipal, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                 Text(blocked.reason, color = IndustrialTheme.TextoSecundario, fontSize = 10.sp)
                             }
                             IndustrialActionButton(
@@ -305,7 +315,7 @@ fun NetworkTab(
         if (state.connectedDevices.isEmpty()) {
             item {
                 Box(Modifier.fillMaxWidth().height(100.dp), contentAlignment = Alignment.Center) {
-                    Text("NO SE DETECTAN NODOS ACTIVOS", color = Color.DarkGray, fontSize = 12.sp)
+                    Text("NO SE DETECTAN NODOS ACTIVOS", color = IndustrialTheme.TextoTenue, fontSize = 12.sp)
                 }
             }
         } else {
@@ -322,8 +332,8 @@ fun NetworkTab(
                             Icon(Icons.Default.Devices, "Dispositivo conectado", tint = IndustrialTheme.Primario, modifier = Modifier.size(20.dp))
                             Spacer(Modifier.width(12.dp))
                             Column(Modifier.weight(1f)) {
-                                Text(device.name, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                                Text(device.mac, color = Color.Gray, fontSize = 10.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
+                                Text(device.name, color = IndustrialTheme.TextoPrincipal, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                Text(device.mac, color = IndustrialTheme.TextoSecundario, fontSize = 10.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
                                 val stationUuidText = device.stationUuid.ifBlank { "no informado" }
                                 val versionText = device.version.ifBlank { "?" }
                                 Text(

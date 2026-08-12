@@ -15,7 +15,11 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -26,8 +30,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sistema.distribuido.network.*
@@ -128,42 +133,135 @@ fun AlmacenApp(commCoordinator: CommunicationCoordinator) {
     IndustrialScaffold(
         titulo = "Logística Pro v6.0", 
         subtitulo = "GESTIÓN DE RACKS INDUSTRIAL",
+        estado = {
+            // Chip de estado en cabecera (punto + texto), como en los mockups HMI.
+            val enLinea = isConnectedBt || isConnectedNet
+            IndustrialStatusChip(
+                texto = when {
+                    independentMode -> "AUTONOMO"
+                    enLinea -> "READY"
+                    else -> "OFFLINE"
+                },
+                color = when {
+                    independentMode -> IndustrialTheme.Advertencia
+                    enLinea -> IndustrialTheme.Primario
+                    else -> IndustrialTheme.Error
+                },
+                parpadeo = !enLinea && !independentMode
+            )
+        },
+        bottomBar = {
+            // Bottom-nav de la figura de referencia (iconos + etiqueta, acento verde).
+            IndustrialBottomNav(
+                items = listOf(
+                    IndustrialNavItem("RACKS", Icons.Default.GridView),
+                    IndustrialNavItem("SINCRO", Icons.Default.Wifi),
+                    IndustrialNavItem("BRAZO", Icons.Default.PrecisionManufacturing)
+                ),
+                seleccion = selectedTab,
+                onSelect = { selectedTab = it }
+            )
+        },
         floatingActionButton = { BluetoothConnectionFAB() }
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
-            ScrollableTabRow(selectedTabIndex = selectedTab, containerColor = Color.Black, contentColor = IndustrialTheme.Primario, edgePadding = 16.dp, divider = {}) {
-                Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 }, text = { Text("POSICIONES", fontSize = 12.sp) })
-                Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 }, text = { Text("SINCRO", fontSize = 12.sp) })
-                Tab(selected = selectedTab == 2, onClick = { selectedTab = 2 }, text = { Text("BRAZO", fontSize = 12.sp) })
-            }
-
             Column(Modifier.weight(1f).padding(16.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 when (selectedTab) {
                     0 -> {
-                        IndustrialCard("Matriz de Almacén (18 POS)", Icons.Default.Inventory2) {
+                        // Vista de rack tipo mockup: cabecera con ocupación, columnas
+                        // numeradas, niveles a la izquierda y celdas con su código.
+                        IndustrialCard(
+                            titulo = "Rack A-01",
+                            icono = Icons.Default.Inventory2,
+                            subtitulo = "3 columnas x 6 niveles · 18 posiciones",
+                            trailing = {
+                                IndustrialStatusChip(
+                                    texto = "POS $selectedRackPosition",
+                                    color = IndustrialTheme.Primario
+                                )
+                            }
+                        ) {
                             IndustrialStatusRow("Conexión ESP32", if(isConnectedBt) "LINK OK" else "OFFLINE", isConnectedBt)
                             Text("Selecciona la posición del rack y pulsa ALMACENAR", color = IndustrialTheme.TextoSecundario, fontSize = 10.sp, modifier = Modifier.padding(top = 8.dp))
 
-                            repeat(3) { level ->
-                                Text("NIVEL ${level + 1}", color = IndustrialTheme.TextoSecundario, fontSize = 10.sp, modifier = Modifier.padding(top = 8.dp))
-                                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                    repeat(6) { col ->
-                                        val posId = level * 6 + col + 1
-                                        IndustrialActionButton(
-                                            texto = "$posId",
-                                            icono = Icons.Default.Inventory2,
-                                            modifier = Modifier.weight(1f).height(36.dp),
-                                            colorFondo = if (selectedRackPosition == posId) IndustrialTheme.Exito else IndustrialTheme.Tarjeta,
-                                            enabled = true,
-                                            buttonHeight = 36.dp,
-                                            fillMaxWidth = false,
-                                            onClick = {
-                                                selectedRackPosition = posId
-                                                addLog("POSICIÓN SELECCIONADA: $posId")
-                                            }
-                                        )
+                            Spacer(Modifier.height(10.dp))
+                            // Cabecera de columnas
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Spacer(Modifier.width(26.dp))
+                                repeat(3) { col ->
+                                    Text(
+                                        "0${col + 1}",
+                                        color = IndustrialTheme.TextoSecundario,
+                                        fontSize = 9.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                }
+                            }
+                            Spacer(Modifier.height(4.dp))
+
+                            // Niveles de arriba (06) hacia abajo (01), como en un rack real.
+                            for (level in 5 downTo 0) {
+                                Row(
+                                    Modifier.fillMaxWidth().padding(vertical = 3.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        "0${level + 1}",
+                                        color = IndustrialTheme.Advertencia,
+                                        fontSize = 9.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.width(26.dp)
+                                    )
+                                    repeat(3) { col ->
+                                        val posId = level * 3 + col + 1
+                                        val seleccionada = selectedRackPosition == posId
+                                        Column(
+                                            Modifier
+                                                .weight(1f)
+                                                .height(38.dp)
+                                                .clip(RoundedCornerShape(6.dp))
+                                                .background(
+                                                    if (seleccionada) IndustrialTheme.Primario.copy(alpha = 0.22f)
+                                                    else IndustrialTheme.TarjetaAlta
+                                                )
+                                                .border(
+                                                    1.dp,
+                                                    if (seleccionada) IndustrialTheme.Primario else IndustrialTheme.Borde,
+                                                    RoundedCornerShape(6.dp)
+                                                )
+                                                .clickable {
+                                                    selectedRackPosition = posId
+                                                    addLog("POSICIÓN SELECCIONADA: $posId")
+                                                },
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            verticalArrangement = Arrangement.Center
+                                        ) {
+                                            Icon(
+                                                Icons.Default.Inventory2,
+                                                null,
+                                                Modifier.size(12.dp),
+                                                tint = if (seleccionada) IndustrialTheme.Primario else IndustrialTheme.TextoTenue
+                                            )
+                                            Text(
+                                                if (posId < 10) "A-01-0$posId" else "A-01-$posId",
+                                                color = if (seleccionada) IndustrialTheme.TextoPrincipal else IndustrialTheme.TextoTenue,
+                                                fontSize = 8.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
                                     }
                                 }
+                            }
+
+                            Spacer(Modifier.height(10.dp))
+                            // Leyenda de la figura de referencia
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                                RackLegendItem(IndustrialTheme.Primario, "SELECCIONADA")
+                                Spacer(Modifier.width(14.dp))
+                                RackLegendItem(IndustrialTheme.TextoTenue, "LIBRE")
                             }
 
                             Spacer(Modifier.height(12.dp))
@@ -235,3 +333,19 @@ fun AlmacenApp(commCoordinator: CommunicationCoordinator) {
 
 // FIX: Límite de colección para prevenir memory leak
 private val MAX_COLLECTION_SIZE = 500
+
+/** Punto de color + etiqueta usado en la leyenda del rack (figura de referencia). */
+@Composable
+private fun RackLegendItem(color: androidx.compose.ui.graphics.Color, texto: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Box(
+            Modifier
+                .size(9.dp)
+                .clip(RoundedCornerShape(2.dp))
+                .background(color.copy(alpha = 0.30f))
+                .border(1.dp, color, RoundedCornerShape(2.dp))
+        )
+        Spacer(Modifier.width(5.dp))
+        Text(texto, color = IndustrialTheme.TextoSecundario, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+    }
+}

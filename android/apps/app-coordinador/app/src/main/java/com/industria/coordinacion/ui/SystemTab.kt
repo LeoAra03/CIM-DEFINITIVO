@@ -84,12 +84,12 @@ fun SystemTab(
                             modifier = Modifier
                                 .weight(1f)
                                 .height(36.dp)
-                                .background(if(state.isConnected) IndustrialTheme.Primario.copy(alpha = 0.1f) else Color.DarkGray.copy(alpha = 0.1f), androidx.compose.foundation.shape.RoundedCornerShape(4.dp))
+                                .background(if(state.isConnected) IndustrialTheme.Primario.copy(alpha = 0.1f) else IndustrialTheme.TarjetaAlta, androidx.compose.foundation.shape.RoundedCornerShape(4.dp))
                                 .border(1.dp, if(state.isConnected) IndustrialTheme.Primario.copy(alpha = 0.3f) else Color.Transparent, androidx.compose.foundation.shape.RoundedCornerShape(4.dp))
                                 .clickable(enabled = enabled && state.isConnected) { onDeliverCommand(from, to) },
                             contentAlignment = Alignment.Center
                         ) {
-                            Text("$from>$to", fontSize = 8.sp, color = if(state.isConnected) IndustrialTheme.Primario else Color.Gray, fontWeight = FontWeight.Bold)
+                            Text("$from>$to", fontSize = 8.sp, color = if(state.isConnected) IndustrialTheme.Primario else IndustrialTheme.TextoSecundario, fontWeight = FontWeight.Bold)
                         }
                     }
                 }

@@ -1,5 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.Test" parent="android:Theme.Material.Light.NoActionBar" />
+    <!--
+      Tema base oscuro alineado con la paleta HMI (IndustrialTheme).
+      Evita el destello blanco antes de que Compose pinte la UI y deja la
+      barra de estado/navegación del color del fondo de la app.
+    -->
+    <style name="Theme.Test" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/cim_fondo</item>
+        <item name="android:colorBackground">@color/cim_fondo</item>
+        <item name="android:statusBarColor">@color/cim_fondo</item>
+        <item name="android:navigationBarColor">@color/cim_fondo</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:textColorPrimary">@color/cim_texto</item>
+    </style>
 </resources>

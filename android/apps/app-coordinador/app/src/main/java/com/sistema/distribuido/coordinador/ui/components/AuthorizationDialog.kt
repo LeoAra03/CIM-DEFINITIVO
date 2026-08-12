@@ -10,13 +10,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.sistema.distribuido.network.prefecto.IndustrialTheme
 import kotlinx.coroutines.delay
 
 /**
@@ -88,11 +88,11 @@ fun AuthorizationDialog(
         Surface(
             modifier = modifier
                 .fillMaxWidth(0.9f)
-                .clip(RoundedCornerShape(16.dp))
-                .background(MaterialTheme.colorScheme.surface),
-            color = MaterialTheme.colorScheme.surface,
+                .clip(RoundedCornerShape(16.dp)),
+            color = IndustrialTheme.Tarjeta,
             shape = RoundedCornerShape(16.dp),
-            tonalElevation = 8.dp
+            border = androidx.compose.foundation.BorderStroke(1.dp, IndustrialTheme.Borde),
+            tonalElevation = 0.dp
         ) {
             Column(
                 modifier = Modifier
@@ -101,21 +101,30 @@ fun AuthorizationDialog(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Header Icon
-                Icon(
-                    painter = painterResource(id = android.R.drawable.ic_dialog_info),
-                    contentDescription = "Authorization Request",
+                Box(
                     modifier = Modifier
-                        .size(56.dp)
-                        .padding(bottom = 16.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
+                        .size(52.dp)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(IndustrialTheme.Secundario.copy(alpha = 0.14f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(id = android.R.drawable.ic_dialog_info),
+                        contentDescription = "Authorization Request",
+                        modifier = Modifier.size(26.dp),
+                        tint = IndustrialTheme.Secundario
+                    )
+                }
+                Spacer(Modifier.height(14.dp))
 
                 // Title
                 Text(
-                    text = "Nueva solicitud de autorización",
-                    fontSize = 20.sp,
+                    text = "NUEVA SOLICITUD DE AUTORIZACIÓN",
+                    fontSize = 13.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    letterSpacing = 0.8.sp,
+                    color = IndustrialTheme.TextoPrincipal,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
 
@@ -124,8 +133,8 @@ fun AuthorizationDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 16.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant,
-                    shape = RoundedCornerShape(12.dp)
+                    color = IndustrialTheme.TarjetaAlta,
+                    shape = RoundedCornerShape(IndustrialTheme.RadioControl)
                 ) {
                     Column(
                         modifier = Modifier.padding(12.dp),
@@ -141,8 +150,8 @@ fun AuthorizationDialog(
                 Text(
                     text = "Este dispositivo solicita permiso para enviar comandos a través de la red CIM. " +
                            "Si apruebas, podrá ejecutar acciones en el sistema.",
-                    fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontSize = 13.sp,
+                    color = IndustrialTheme.TextoSecundario,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 12.dp)
@@ -159,12 +168,17 @@ fun AuthorizationDialog(
                     Checkbox(
                         checked = rememberDecision,
                         onCheckedChange = { rememberDecision = it },
+                        colors = CheckboxDefaults.colors(
+                            checkedColor = IndustrialTheme.Primario,
+                            uncheckedColor = IndustrialTheme.TextoTenue,
+                            checkmarkColor = IndustrialTheme.Fondo
+                        ),
                         modifier = Modifier.padding(end = 8.dp)
                     )
                     Text(
                         text = "Recordar esta decisión",
                         fontSize = 13.sp,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = IndustrialTheme.TextoPrincipal
                     )
                 }
 
@@ -192,13 +206,14 @@ fun AuthorizationDialog(
                         modifier = Modifier
                             .weight(1f)
                             .height(48.dp),
+                        shape = RoundedCornerShape(IndustrialTheme.RadioControl),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.errorContainer,
-                            contentColor = MaterialTheme.colorScheme.error
+                            containerColor = IndustrialTheme.Error.copy(alpha = 0.16f),
+                            contentColor = IndustrialTheme.Error
                         ),
                         enabled = !hasResponded
                     ) {
-                        Text("Rechazar", fontWeight = FontWeight.SemiBold)
+                        Text("RECHAZAR", fontWeight = FontWeight.Bold, fontSize = 13.sp, letterSpacing = 0.5.sp)
                     }
 
                     Button(
@@ -209,13 +224,14 @@ fun AuthorizationDialog(
                         modifier = Modifier
                             .weight(1f)
                             .height(48.dp),
+                        shape = RoundedCornerShape(IndustrialTheme.RadioControl),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary
+                            containerColor = IndustrialTheme.Primario,
+                            contentColor = IndustrialTheme.Fondo
                         ),
                         enabled = !hasResponded
                     ) {
-                        Text("Aprobar", fontWeight = FontWeight.SemiBold)
+                        Text("APROBAR", fontWeight = FontWeight.Bold, fontSize = 13.sp, letterSpacing = 0.5.sp)
                     }
                 }
 
@@ -223,7 +239,7 @@ fun AuthorizationDialog(
                 Text(
                     text = "Responde en ${secondsRemaining}s o se rechazará automáticamente",
                     fontSize = 11.sp,
-                    color = MaterialTheme.colorScheme.outline,
+                    color = IndustrialTheme.TextoTenue,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 12.dp),
@@ -247,16 +263,17 @@ private fun DeviceInfoRow(label: String, value: String) {
             text = label,
             fontSize = 12.sp,
             fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = IndustrialTheme.TextoSecundario
         )
         Text(
             text = value,
             fontSize = 12.sp,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface,
+            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+            color = IndustrialTheme.TextoPrincipal,
             modifier = Modifier
                 .clip(RoundedCornerShape(4.dp))
-                .background(MaterialTheme.colorScheme.surface)
+                .background(IndustrialTheme.Fondo)
                 .padding(horizontal = 8.dp, vertical = 2.dp)
         )
     }
@@ -274,9 +291,9 @@ private fun TimeoutCountdown(
     val progress = (totalSeconds - secondsRemaining).toFloat() / totalSeconds
     val progressColor by animateColorAsState(
         targetValue = when {
-            secondsRemaining <= 1 -> Color(0xFFD32F2F) // Rojo: crítico
-            secondsRemaining <= 2 -> Color(0xFFF57C00) // Naranja: advertencia
-            else -> MaterialTheme.colorScheme.primary    // Azul: normal
+            secondsRemaining <= 1 -> IndustrialTheme.Error        // crítico
+            secondsRemaining <= 2 -> IndustrialTheme.Advertencia  // advertencia
+            else -> IndustrialTheme.Primario                      // normal
         }
     )
 
@@ -288,7 +305,7 @@ private fun TimeoutCountdown(
                 .height(6.dp)
                 .clip(RoundedCornerShape(3.dp)),
             color = progressColor,
-            trackColor = MaterialTheme.colorScheme.surfaceVariant
+            trackColor = IndustrialTheme.TarjetaAlta
         )
         Text(
             text = "Timeout en ${secondsRemaining}s",

@@ -22,6 +22,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sistema.distribuido.coordinador.ui.components.AuthorizationDialog
 import com.sistema.distribuido.coordinador.viewmodels.HubViewModel
+import com.sistema.distribuido.network.prefecto.IndustrialTheme
 import kotlinx.coroutines.delay
 import timber.log.Timber
 
@@ -43,7 +44,7 @@ fun HubScreen(viewModel: HubViewModel = hiltViewModel()) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(IndustrialTheme.Fondo)
     ) {
         Column(
             modifier = Modifier
@@ -53,10 +54,16 @@ fun HubScreen(viewModel: HubViewModel = hiltViewModel()) {
         ) {
             // Header
             Text(
-                text = "COORDINADOR — Hub Central",
-                fontSize = 28.sp,
+                text = "COORDINADOR",
+                fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
+                letterSpacing = 1.sp,
+                color = IndustrialTheme.TextoPrincipal
+            )
+            Text(
+                text = "Hub central de autorización",
+                fontSize = 12.sp,
+                color = IndustrialTheme.TextoSecundario,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
@@ -68,12 +75,12 @@ fun HubScreen(viewModel: HubViewModel = hiltViewModel()) {
             ) {
                 // Pendientes
                 DeviceSection(
-                    title = "⏳ Pendientes Autorización (${pendingDevices.size})",
-                    backgroundColor = Color(0xFFFFF3E0),
-                    borderColor = Color(0xFFFF9800)
+                    title = "PENDIENTES DE AUTORIZACIÓN (${pendingDevices.size})",
+                    backgroundColor = IndustrialTheme.Tarjeta,
+                    borderColor = IndustrialTheme.Advertencia
                 ) {
                     if (pendingDevices.isEmpty()) {
-                        Text("Sin dispositivos esperando", fontSize = 12.sp, color = Color.Gray)
+                        Text("Sin dispositivos esperando", fontSize = 12.sp, color = IndustrialTheme.TextoTenue)
                     } else {
                         LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             items(pendingDevices) { device ->
@@ -87,12 +94,12 @@ fun HubScreen(viewModel: HubViewModel = hiltViewModel()) {
 
                 // Autorizados
                 DeviceSection(
-                    title = "✓ Autorizados (${authorizedDevices.size})",
-                    backgroundColor = Color(0xFFF1F8E9),
-                    borderColor = Color(0xFF4CAF50)
+                    title = "AUTORIZADOS (${authorizedDevices.size})",
+                    backgroundColor = IndustrialTheme.Tarjeta,
+                    borderColor = IndustrialTheme.Primario
                 ) {
                     if (authorizedDevices.isEmpty()) {
-                        Text("Sin dispositivos autorizados", fontSize = 12.sp, color = Color.Gray)
+                        Text("Sin dispositivos autorizados", fontSize = 12.sp, color = IndustrialTheme.TextoTenue)
                     } else {
                         LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             items(authorizedDevices) { device ->
@@ -110,9 +117,9 @@ fun HubScreen(viewModel: HubViewModel = hiltViewModel()) {
                 // Rechazados
                 if (rejectedDevices.isNotEmpty()) {
                     DeviceSection(
-                        title = "✗ Rechazados (${rejectedDevices.size})",
-                        backgroundColor = Color(0xFFFFEBEE),
-                        borderColor = Color(0xFFF44336)
+                        title = "RECHAZADOS (${rejectedDevices.size})",
+                        backgroundColor = IndustrialTheme.Tarjeta,
+                        borderColor = IndustrialTheme.Error
                     ) {
                         LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             items(rejectedDevices) { mac ->
@@ -160,23 +167,34 @@ fun DeviceSection(
     content: @Composable () -> Unit
 ) {
     Surface(
-        modifier = Modifier
-            .fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        color = backgroundColor
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(IndustrialTheme.RadioTarjeta),
+        color = backgroundColor,
+        border = androidx.compose.foundation.BorderStroke(1.dp, IndustrialTheme.Borde)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp)
+                .padding(IndustrialTheme.PaddingTarjeta)
         ) {
-            Text(
-                text = title,
-                fontWeight = FontWeight.Bold,
-                fontSize = 14.sp,
-                color = borderColor,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(bottom = 10.dp)
+            ) {
+                Box(
+                    Modifier
+                        .size(8.dp)
+                        .background(borderColor, androidx.compose.foundation.shape.CircleShape)
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    text = title,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 11.sp,
+                    letterSpacing = 0.8.sp,
+                    color = borderColor
+                )
+            }
             content()
         }
     }
@@ -187,9 +205,8 @@ fun PendingDeviceCard(device: HubViewModel.PendingDeviceState) {
     Surface(
         modifier = Modifier
             .fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
-        color = Color.White,
-        shadowElevation = 2.dp
+        shape = RoundedCornerShape(IndustrialTheme.RadioControl),
+        color = IndustrialTheme.TarjetaAlta
     ) {
         Row(
             modifier = Modifier
@@ -199,10 +216,10 @@ fun PendingDeviceCard(device: HubViewModel.PendingDeviceState) {
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Column {
-                Text(device.name, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                Text("MAC: ${device.mac}", fontSize = 10.sp, color = Color.Gray)
+                Text(device.name, fontWeight = FontWeight.Bold, fontSize = 13.sp, color = IndustrialTheme.TextoPrincipal)
+                Text("MAC: ${device.mac}", fontSize = 10.sp, color = IndustrialTheme.TextoSecundario, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
             }
-            Text("Esperando...", fontSize = 10.sp, color = Color(0xFFFF9800))
+            Text("ESPERANDO", fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp, color = IndustrialTheme.Advertencia)
         }
     }
 }
@@ -215,9 +232,8 @@ fun AuthorizedDeviceCard(
     Surface(
         modifier = Modifier
             .fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
-        color = Color.White,
-        shadowElevation = 2.dp
+        shape = RoundedCornerShape(IndustrialTheme.RadioControl),
+        color = IndustrialTheme.TarjetaAlta
     ) {
         Row(
             modifier = Modifier
@@ -227,14 +243,14 @@ fun AuthorizedDeviceCard(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(device.name, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                Text("MAC: ${device.mac}", fontSize = 10.sp, color = Color.Gray)
+                Text(device.name, fontWeight = FontWeight.Bold, fontSize = 13.sp, color = IndustrialTheme.TextoPrincipal)
+                Text("MAC: ${device.mac}", fontSize = 10.sp, color = IndustrialTheme.TextoSecundario, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
             }
             IconButton(onClick = onRevoke, modifier = Modifier.size(32.dp)) {
                 Icon(
                     imageVector = Icons.Default.Delete,
                     contentDescription = "Revocar",
-                    tint = Color(0xFFF44336)
+                    tint = IndustrialTheme.Error
                 )
             }
         }
@@ -246,9 +262,8 @@ fun RejectedDeviceCard(mac: String) {
     Surface(
         modifier = Modifier
             .fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
-        color = Color.White,
-        shadowElevation = 2.dp
+        shape = RoundedCornerShape(IndustrialTheme.RadioControl),
+        color = IndustrialTheme.TarjetaAlta
     ) {
         Row(
             modifier = Modifier
@@ -258,10 +273,10 @@ fun RejectedDeviceCard(mac: String) {
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Column {
-                Text("Rechazado", fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                Text("MAC: $mac", fontSize = 10.sp, color = Color.Gray)
+                Text("Rechazado", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = IndustrialTheme.TextoPrincipal)
+                Text("MAC: $mac", fontSize = 10.sp, color = IndustrialTheme.TextoSecundario, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
             }
-            Text("✗ Bloqueado", fontSize = 10.sp, color = Color(0xFFF44336))
+            Text("BLOQUEADO", fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp, color = IndustrialTheme.Error)
         }
     }
 }

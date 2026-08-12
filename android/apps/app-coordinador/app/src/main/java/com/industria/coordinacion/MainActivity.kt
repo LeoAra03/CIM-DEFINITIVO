@@ -25,7 +25,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -439,58 +438,61 @@ fun CoordinatorMasterScreen(
     IndustrialScaffold(
         titulo = "CIM HUB v6.0",
         subtitulo = "SISTEMA DE COORDINACIÓN GLOBAL",
+        estado = {
+            IndustrialStatusChip(
+                texto = if (state.networkState.isServerRunning) "ONLINE" else "OFFLINE",
+                color = if (state.networkState.isServerRunning) IndustrialTheme.Primario else IndustrialTheme.Error,
+                parpadeo = !state.networkState.isServerRunning
+            )
+        },
         actions = {
             IconButton(onClick = { showAutomation = true }, enabled = isOperationalReady) {
                 Icon(Icons.Default.Terminal, "Consola de automatización", tint = IndustrialTheme.Primario)
             }
         },
+        bottomBar = {
+            IndustrialBottomNav(
+                items = tabs.map { IndustrialNavItem(it.name, it.icon) },
+                seleccion = selectedTabIndex,
+                onSelect = { index ->
+                    selectedTabIndex = index
+                    vm.selectTab(index)
+                },
+                scrollable = true
+            )
+        },
         floatingActionButton = { BluetoothConnectionFAB() }
     ) { paddingValues ->
         Column(Modifier.padding(paddingValues).fillMaxSize()) {
-            Box(
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(IndustrialTheme.Tarjeta)
-                    .border(1.dp, IndustrialTheme.Borde, androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
-                    .padding(12.dp)
+                    .padding(horizontal = 12.dp, vertical = 8.dp)
+                    .background(IndustrialTheme.Tarjeta, androidx.compose.foundation.shape.RoundedCornerShape(IndustrialTheme.RadioTarjeta))
+                    .border(1.dp, IndustrialTheme.Borde, androidx.compose.foundation.shape.RoundedCornerShape(IndustrialTheme.RadioTarjeta))
+                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
+                Column(Modifier.weight(1f)) {
                     Text(
-                        text = if (state.isAutoModeEnabled) "AUTO MODE: AUTORIZACIÓN AUTOMÁTICA ACTIVADA" else "AUTO MODE: AUTORIZACIÓN MANUAL",
-                        color = if (state.isAutoModeEnabled) IndustrialTheme.Exito else IndustrialTheme.TextoPrincipal,
+                        text = "AUTO MODE",
+                        color = IndustrialTheme.TextoPrincipal,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 12.sp
+                        fontSize = 12.sp,
+                        letterSpacing = 0.8.sp
                     )
-                    Spacer(Modifier.height(4.dp))
+                    Spacer(Modifier.height(2.dp))
                     Text(
-                        text = if (state.networkState.pendingRequestCount > 0) "Solicitudes pendientes: ${state.networkState.pendingRequestCount}" else "No hay solicitudes pendientes",
+                        text = if (state.networkState.pendingRequestCount > 0) "Solicitudes pendientes: ${state.networkState.pendingRequestCount}" else "Sin solicitudes pendientes",
                         color = IndustrialTheme.TextoSecundario,
-                        fontSize = 11.sp
+                        fontSize = 10.sp
                     )
                 }
-            }
-            Spacer(Modifier.height(12.dp))
-
-            // Navigation Bar custom
-            NavigationBar(containerColor = androidx.compose.ui.graphics.Color.Black, contentColor = IndustrialTheme.Primario) {
-                tabs.forEachIndexed { index, tab ->
-                            NavigationBarItem(
-                                selected = selectedTabIndex == index,
-                                onClick = {
-                                    selectedTabIndex = index
-                                    vm.selectTab(index)
-                                },
-                                icon = { Icon(tab.icon, tab.name) },
-                                label = { Text(tab.name, fontSize = 9.sp) },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = IndustrialTheme.Primario,
-                            selectedTextColor = IndustrialTheme.Primario,
-                            unselectedIconColor = androidx.compose.ui.graphics.Color.DarkGray,
-                            unselectedTextColor = androidx.compose.ui.graphics.Color.DarkGray,
-                            indicatorColor = androidx.compose.ui.graphics.Color.DarkGray.copy(alpha = 0.2f)
-                        )
-                    )
-                }
+                IndustrialStatusChip(
+                    texto = if (state.isAutoModeEnabled) "AUTOMÁTICO" else "MANUAL",
+                    color = if (state.isAutoModeEnabled) IndustrialTheme.Primario else IndustrialTheme.Advertencia
+                )
             }
 
             Box(Modifier.weight(1f).fillMaxWidth()) {
@@ -500,7 +502,7 @@ fun CoordinatorMasterScreen(
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 Button(
                                     onClick = { vm.triggerEmergencyStop() },
-                                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                                    colors = ButtonDefaults.buttonColors(containerColor = IndustrialTheme.Error),
                                     modifier = Modifier.weight(1f).height(52.dp),
                                     enabled = isOperationalReady
                                 ) {
@@ -538,25 +540,27 @@ fun CoordinatorMasterScreen(
                                 Text("SIMULAR ESTACIÓN (demo sin hardware)")
                             }
                             Spacer(Modifier.height(12.dp))
-                            Text("Dashboard ejecutivo", fontWeight = FontWeight.Bold, color = IndustrialTheme.Primario)
+                            Text("Dashboard ejecutivo", fontWeight = FontWeight.Bold, color = IndustrialTheme.TextoPrincipal)
                             Text("Estado en tiempo real de las estaciones", color = IndustrialTheme.TextoSecundario, fontSize = 12.sp)
                             Spacer(Modifier.height(12.dp))
                             LazyVerticalGrid(columns = GridCells.Fixed(2), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                                 items(executiveState.stations.values.toList()) { station ->
                                     val cardColor = when (station.status) {
-                                        ExecutiveStationStatus.STOPPED -> Color(0xFFB00020)
-                                        ExecutiveStationStatus.WARNING -> Color(0xFFFFC107)
-                                        ExecutiveStationStatus.BUSY -> Color(0xFF1565C0)
-                                        ExecutiveStationStatus.READY -> Color(0xFF2E7D32)
+                                        ExecutiveStationStatus.STOPPED -> IndustrialTheme.Error
+                                        ExecutiveStationStatus.WARNING -> IndustrialTheme.Advertencia
+                                        ExecutiveStationStatus.BUSY -> IndustrialTheme.Secundario
+                                        ExecutiveStationStatus.READY -> IndustrialTheme.Primario
                                         else -> IndustrialTheme.Tarjeta
                                     }
-                                    ElevatedCard(
+                                    Card(
                                         modifier = Modifier.fillMaxWidth(),
-                                        colors = CardDefaults.elevatedCardColors(containerColor = cardColor.copy(alpha = 0.18f))
+                                        shape = androidx.compose.foundation.shape.RoundedCornerShape(IndustrialTheme.RadioTarjeta),
+                                        colors = CardDefaults.cardColors(containerColor = IndustrialTheme.Tarjeta),
+                                        border = androidx.compose.foundation.BorderStroke(1.dp, cardColor.copy(alpha = 0.45f))
                                     ) {
                                         Column(Modifier.padding(12.dp)) {
                                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                                Box(Modifier.size(10.dp).background(color = when (station.status) { ExecutiveStationStatus.STOPPED -> Color.Red; ExecutiveStationStatus.WARNING -> Color.Yellow; ExecutiveStationStatus.BUSY -> Color.Blue; ExecutiveStationStatus.READY -> Color.Green; else -> Color.Gray }, shape = androidx.compose.foundation.shape.CircleShape))
+                                                Box(Modifier.size(10.dp).background(color = cardColor, shape = androidx.compose.foundation.shape.CircleShape))
                                                 Spacer(Modifier.width(8.dp))
                                                 Text(station.label, fontWeight = FontWeight.Bold, color = IndustrialTheme.TextoPrincipal)
                                             }
@@ -577,7 +581,7 @@ fun CoordinatorMasterScreen(
                             Spacer(Modifier.height(12.dp))
                             Text("Flujo activo: ${executiveState.currentFlow}", color = IndustrialTheme.Primario, fontWeight = FontWeight.SemiBold)
                             if (executiveState.isEmergencyStop) {
-                                Text("EMERGENCIA ACTIVA", color = Color.Red, fontWeight = FontWeight.Bold)
+                                Text("EMERGENCIA ACTIVA", color = IndustrialTheme.Error, fontWeight = FontWeight.Bold)
                             }
                         }
                     }

@@ -55,7 +55,10 @@ class BluetoothSppManager(
     @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     fun startServer() {
         if (isServerRunning) return
-        if (bluetoothAdapter == null) { onLog("Bluetooth no soportado"); return }
+        if (bluetoothAdapter == null) {
+            onLog("Bluetooth no soportado")
+            return
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
             ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
             onLog("Permiso BLUETOOTH_CONNECT no concedido, no se puede iniciar servidor SPP")
@@ -79,7 +82,10 @@ class BluetoothSppManager(
     @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     fun connectToDevice(device: BluetoothDevice) {
         val mac = device.address
-        if (activeConnections.containsKey(mac)) { onLog("Ya conectado a $mac"); return }
+        if (activeConnections.containsKey(mac)) {
+            onLog("Ya conectado a $mac")
+            return
+        }
 
         scope.launch {
             var socket: BluetoothSocket? = null

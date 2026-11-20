@@ -25,7 +25,7 @@ class BleDeviceManager(private val context: Context, private val onLog: (String)
     val discoveredDevices: SnapshotStateMap<String, ScanResult> = mutableStateMapOf()
     private var isScanning = false
     private val handler = Handler(Looper.getMainLooper())
-    private val SCAN_PERIOD: Long = 10000
+    private val scanPeriod: Long = 10000
 
     // UUIDs for mesh configuration (industrial standard)
     private val serviceUuid = UUID.fromString("6E400001-B5A3-F393-E0A9-E50E24DCCA9E")
@@ -42,7 +42,7 @@ class BleDeviceManager(private val context: Context, private val onLog: (String)
                 bleScanner.stopScan(scanCallback)
                 onLog("ESCANEADO FINALIZADO (O(1) Map listo)")
             }
-        }, SCAN_PERIOD)
+        }, scanPeriod)
 
         isScanning = true
         discoveredDevices.clear()

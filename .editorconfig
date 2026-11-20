@@ -18,6 +18,8 @@ ktlint_standard_function-signature = disabled
 ktlint_standard_function-naming = disabled
 # File-header KDoc intentionally precedes the package declaration.
 ktlint_standard_kdoc = disabled
+# Legacy section-divider comments sit next to KDoc blocks throughout the code.
+ktlint_standard_no-consecutive-comments = disabled
 # Legacy modules still use wildcard imports; new code should import explicitly.
 ktlint_standard_no-wildcard-imports = disabled
 

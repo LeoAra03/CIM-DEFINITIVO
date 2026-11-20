@@ -311,10 +311,16 @@ fun CalidadApp(commCoordinator: CommunicationCoordinator) {
                                 if (exp != null) {
                                     if (exp == demoId) {
                                         addLog("[OK] PATRÓN ArUco OK (#$demoId coincide)")
-                                        if (independentMode) { approvedCount += 1; sendAuthorizedHardwareCommand("VAL:PASS", "RESULT: APPROVED (ArUco $demoId)") }
+                                        if (independentMode) {
+                                            approvedCount += 1
+                                            sendAuthorizedHardwareCommand("VAL:PASS", "RESULT: APPROVED (ArUco $demoId)")
+                                        }
                                     } else {
                                         addLog("[ERR] PATRÓN ArUco NO coincide (esperado #$exp, leído #$demoId)")
-                                        if (independentMode) { rejectedCount += 1; sendAuthorizedHardwareCommand("VAL:FAIL", "RESULT: REJECTED (ArUco $demoId)") }
+                                        if (independentMode) {
+                                            rejectedCount += 1
+                                            sendAuthorizedHardwareCommand("VAL:FAIL", "RESULT: REJECTED (ArUco $demoId)")
+                                        }
                                     }
                                 }
                             })

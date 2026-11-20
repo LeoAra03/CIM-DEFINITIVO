@@ -1,7 +1,6 @@
 package com.industria.prefecto
 
 import java.util.concurrent.ConcurrentHashMap
-import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
@@ -11,7 +10,7 @@ import javax.inject.Singleton
  * the oldest entry.
  */
 @Singleton
-class StationRegistry @Inject constructor(
+class StationRegistry(
     private val capacity: Int = 64,
 ) {
     private val stations = ConcurrentHashMap<String, StationRecord>()

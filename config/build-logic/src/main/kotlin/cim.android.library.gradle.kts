@@ -1,3 +1,4 @@
+import io.gitlab.arturbosch.detekt.extensions.DetektExtension
 import com.android.build.gradle.LibraryExtension
 import org.gradle.api.JavaVersion
 import org.gradle.api.artifacts.VersionCatalogsExtension
@@ -9,8 +10,16 @@ plugins {
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
+    id("io.gitlab.arturbosch.detekt")
+    id("org.jlleitschuh.gradle.ktlint")
     kotlin("kapt")
     id("com.google.dagger.hilt.android")
+}
+
+extensions.configure<DetektExtension> {
+    config.setFrom(rootProject.file("../detekt.yml"))
+    buildUponDefaultConfig = false
+    parallel = true
 }
 
 val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")

@@ -4,7 +4,6 @@ import java.security.MessageDigest
 import java.time.Clock
 import java.time.Instant
 import java.util.concurrent.ConcurrentLinkedDeque
-import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
@@ -17,7 +16,7 @@ import javax.inject.Singleton
  * @param capacity maximum retained entries; the oldest entry is dropped.
  */
 @Singleton
-class CimAuditChain @Inject constructor(
+class CimAuditChain(
     private val clock: Clock = Clock.systemUTC(),
     private val capacity: Int = 10_000,
 ) {

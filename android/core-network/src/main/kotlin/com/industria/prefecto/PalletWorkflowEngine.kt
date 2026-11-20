@@ -43,16 +43,16 @@ class PalletWorkflowEngine(
         if (current == to) {
             return PalletTransition(palletId, current, to, reason, accepted = false, errorCode = "ALREADY_IN_STAGE")
         }
-        val allowed = current in terminalStages && to == Stage.REGISTERED ||
-            current == Stage.REGISTERED && to == Stage.STORAGE_RELEASED ||
-            current == Stage.STORAGE_RELEASED && to == Stage.CONVEYOR_TO_MANUFACTURING ||
-            current == Stage.CONVEYOR_TO_MANUFACTURING && to == Stage.MANUFACTURING ||
-            current == Stage.MANUFACTURING && to == Stage.CONVEYOR_TO_QUALITY ||
-            current == Stage.CONVEYOR_TO_QUALITY && to == Stage.QUALITY_INSPECTION ||
-            current == Stage.QUALITY_INSPECTION && to == Stage.APPROVED ||
-            current == Stage.QUALITY_INSPECTION && to == Stage.REJECTED ||
-            (current == Stage.APPROVED || current == Stage.REJECTED) && to == Stage.STORED ||
-            current == Stage.BLOCKED && to == Stage.REGISTERED ||
+        val allowed = (current in terminalStages && to == Stage.REGISTERED) ||
+            (current == Stage.REGISTERED && to == Stage.STORAGE_RELEASED) ||
+            (current == Stage.STORAGE_RELEASED && to == Stage.CONVEYOR_TO_MANUFACTURING) ||
+            (current == Stage.CONVEYOR_TO_MANUFACTURING && to == Stage.MANUFACTURING) ||
+            (current == Stage.MANUFACTURING && to == Stage.CONVEYOR_TO_QUALITY) ||
+            (current == Stage.CONVEYOR_TO_QUALITY && to == Stage.QUALITY_INSPECTION) ||
+            (current == Stage.QUALITY_INSPECTION && to == Stage.APPROVED) ||
+            (current == Stage.QUALITY_INSPECTION && to == Stage.REJECTED) ||
+            ((current == Stage.APPROVED || current == Stage.REJECTED) && to == Stage.STORED) ||
+            (current == Stage.BLOCKED && to == Stage.REGISTERED) ||
             to == Stage.BLOCKED
         if (!allowed) {
             return PalletTransition(palletId, current, to, reason, accepted = false, errorCode = "ILLEGAL_TRANSITION")

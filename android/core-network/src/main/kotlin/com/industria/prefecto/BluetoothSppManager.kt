@@ -27,7 +27,8 @@ import java.util.concurrent.ConcurrentHashMap
 class BluetoothSppManager(
     private val context: Context,
     private val onLog: (String) -> Unit,
-    private val onDataReceived: (String, String) -> Unit // MAC, Data
+    // Receives (mac, data) frames from a connected peer.
+    private val onDataReceived: (String, String) -> Unit,
 ) {
     private val bluetoothAdapter: BluetoothAdapter? by lazy {
         val manager = context.getSystemService(Context.BLUETOOTH_SERVICE) as android.bluetooth.BluetoothManager

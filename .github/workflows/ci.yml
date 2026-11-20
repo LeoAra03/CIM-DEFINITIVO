@@ -67,7 +67,7 @@ jobs:
               tail -n 120 "$LOG"
               echo '```'
             } >> "$GITHUB_STEP_SUMMARY"
-            MSG=$(grep -E 'What went wrong|^FAILURE:|^e: |error: |Caused by:|Could not|Unresolved|Lint error|\.kt:[0-9]+:[0-9]+:' "$LOG" | head -300 | sed -e 's/%/%25/g' -e 's/\r//' | sed -e ':a' -e '$!N' -e 's/\n/%0A/g' -e 'ta')
+            MSG=$(grep -E 'What went wrong|^FAILURE:|^e: |error: |Caused by:|Could not|Unresolved|Lint error|\.kt:[0-9]+:[0-9]+:' "$LOG" | awk '!seen[$0]++' | head -400 | sed -e 's/%/%25/g' -e 's/\r//' | sed -e ':a' -e '$!N' -e 's/\n/%0A/g' -e 'ta')
             if [ -n "$MSG" ]; then
               echo "::error::$MSG"
             fi

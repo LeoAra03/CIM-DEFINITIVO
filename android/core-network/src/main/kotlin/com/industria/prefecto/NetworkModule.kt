@@ -52,7 +52,7 @@ object NetworkModule {
     @Singleton
     fun provideBluetoothHardwareManager(
         @ApplicationContext context: Context,
-        permissionManager: PermissionManager
+        permissionManager: LocalPermissionManager
     ): BluetoothHardwareManager {
         return BluetoothHardwareManager(
             context = context,

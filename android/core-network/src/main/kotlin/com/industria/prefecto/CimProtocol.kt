@@ -27,6 +27,9 @@ object CimProtocol {
     )
 
     // --- Transport ---------------------------------------------------------
+    const val NSD_SERVICE_TYPE: String = "_cim-hub._tcp."
+
+    /** Default TCP port used by the hub's local socket server. */
     const val TCP_PORT: Int = 8888
     const val MAX_FRAME_BYTES: Int = 64 * 1024
     const val FRAME_SOH: Int = 0x02

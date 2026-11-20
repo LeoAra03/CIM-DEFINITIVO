@@ -270,14 +270,13 @@ class CommandBroker(
         writer: FrameWriter,
     ): Boolean {
         val lock = stationLocks.computeIfAbsent(stationKey) { ReentrantLock() }
-        return try {
-            if (!lock.tryLock(timeoutMs, java.util.concurrent.TimeUnit.MILLISECONDS)) {
-                return false
-            }
+        val locked = try {
+            lock.tryLock(timeoutMs, java.util.concurrent.TimeUnit.MILLISECONDS)
         } catch (interrupted: InterruptedException) {
             Thread.currentThread().interrupt()
-            return false
+            false
         }
+        if (!locked) return false
         return try {
             writer.write(CimBinaryCodec.encode(frame))
             true

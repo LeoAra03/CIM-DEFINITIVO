@@ -26,7 +26,7 @@ class CimNsdDiscovery(context: Context) {
         discoveryListener = object : NsdManager.DiscoveryListener {
             override fun onDiscoveryStarted(serviceType: String) {
                 isDiscovering = true
-                onLog("⟳ NSD: buscando ${CimProtocol.NSD_SERVICE_TYPE}...")
+                onLog("NSD: discovering ${CimProtocol.NSD_SERVICE_TYPE}...")
             }
 
             override fun onServiceFound(service: NsdServiceInfo) {

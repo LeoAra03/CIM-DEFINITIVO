@@ -102,9 +102,10 @@ jobs:
               tail -n 100 "$LOG"
               echo '```'
             } >> "$GITHUB_STEP_SUMMARY"
-            grep -E -A8 'What went wrong|^FAILURE:|^e: |error: |Caused by:|Could not|Unresolved|Lint error|\.kt:[0-9]+:[0-9]+:' "$LOG" | head -80 | while IFS= read -r line; do
-              echo "::error::$line"
-            done
+            MSG=$(grep -E 'What went wrong|^FAILURE:|^e: |error: |Error:|Caused by:|Could not|Unresolved|Lint error|\.kt:[0-9]+:[0-9]+:|<issue ' "$LOG" | awk '!seen[$0]++' | head -400 | sed -e 's/%/%25/g' -e 's/\r//' | sed -e ':a' -e '$!N' -e 's/\n/%0A/g' -e 'ta')
+            if [ -n "$MSG" ]; then
+              echo "::error::$MSG"
+            fi
             exit 1
           }
 
@@ -130,6 +131,8 @@ jobs:
           set -o pipefail
           ./gradlew buildAllApks 2>&1 | tee "$RUNNER_TEMP/build.log" || {
             LOG="$RUNNER_TEMP/build.log"
+            find .. -path '*build/reports*' -name 'lint-results*.xml' -exec sh -c 'echo "=== $1"; cat "$1"' _ {} \; >> "$LOG" 2>/dev/null || true
+            find .. -path '*build/reports*' -name 'lint-results*.txt' -exec sh -c 'echo "=== $1"; cat "$1"' _ {} \; >> "$LOG" 2>/dev/null || true
             {
               echo "### APK build failed"
               echo '```'

@@ -43,21 +43,31 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          ./gradlew detekt ktlintCheck 2>&1 | tee "$RUNNER_TEMP/static.log" || {
+          status=0
+          ./gradlew detekt 2>&1 | tee "$RUNNER_TEMP/static.log" || status=1
+          curl -sSL -o "$RUNNER_TEMP/ktlint" https://github.com/pinterest/ktlint/releases/download/1.8.0/ktlint
+          chmod +x "$RUNNER_TEMP/ktlint"
+          (
+            cd "$GITHUB_WORKSPACE"
+            "$RUNNER_TEMP/ktlint" \
+              "android/*/src/main/kotlin/**/*.kt" \
+              "android/*/src/test/kotlin/**/*.kt" \
+              "config/**/*.kts"
+          ) 2>&1 | tee -a "$RUNNER_TEMP/static.log" || status=1
+          if [ "$status" -ne 0 ]; then
             LOG="$RUNNER_TEMP/static.log"
-            find .. -path '*reports/ktlint*' -name '*.txt' -exec sh -c 'echo "=== $1"; cat "$1"' _ {} \; >> "$LOG" 2>/dev/null || true
-            find .. -path '*reports/detekt*' -name '*.xml' -exec sh -c 'echo "=== $1"; cat "$1"' _ {} \; >> "$LOG" 2>/dev/null || true
+            find .. -path '*reports/detekt*' -name '*.xml' -exec sh -c 'echo "=== $1"; grep -o "<error [^>]*>" "$1" || true' _ {} \; >> "$LOG" 2>/dev/null || true
             {
               echo "### Static analysis failed"
               echo '```'
-              tail -n 100 "$LOG"
+              tail -n 120 "$LOG"
               echo '```'
             } >> "$GITHUB_STEP_SUMMARY"
-            grep -E -A8 'What went wrong|^FAILURE:|^e: |error: |Caused by:|Could not|Unresolved|Lint error|\.kt:[0-9]+:[0-9]+:' "$LOG" | head -80 | while IFS= read -r line; do
+            grep -E -A8 'What went wrong|^FAILURE:|^e: |error: |Caused by:|Could not|Unresolved|Lint error|\.kt:[0-9]+:[0-9]+:' "$LOG" | head -100 | while IFS= read -r line; do
               echo "::error::$line"
             done
             exit 1
-          }
+          fi
 
   test:
     name: Unit tests

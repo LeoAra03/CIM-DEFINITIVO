@@ -44,7 +44,7 @@ class CalidadViewModel @Inject constructor(
             return
         }
         _arucoBitmap.value = bitmap
-        _gcodeCommands.value = bitmap.toGCode(originX = 0f, originY = 0f, scale = 1f)
+        _gcodeCommands.value = bitmap.toGCode(originX = 0f, originY = 0f, scale = 1f).lines().filter { it.isNotBlank() }
         _progress.value = 0f
         _status.value = "ArUco #$markerId generado (${dictionary.label})"
     }

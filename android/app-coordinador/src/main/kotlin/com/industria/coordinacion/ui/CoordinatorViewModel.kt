@@ -289,7 +289,7 @@ class CoordinatorViewModel : ViewModel() {
             }
             val activeBluetooth = connectedDevices.count { it.isConnected }
             val bestRssi = connectedDevices.maxOfOrNull { it.rssi }
-            val blockedDevices = GlobalPermissionManager.getInstance().getBlockedDevices().map { blocked ->
+            val blockedDevices = GlobalPermissionManager.getInstance().getBlockedDeviceDetails().map { blocked ->
                 BlockedDeviceState(blocked.mac, blocked.reason, blocked.blockedAt)
             }
 

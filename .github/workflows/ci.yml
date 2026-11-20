@@ -45,6 +45,8 @@ jobs:
           set -o pipefail
           ./gradlew detekt ktlintCheck 2>&1 | tee "$RUNNER_TEMP/static.log" || {
             LOG="$RUNNER_TEMP/static.log"
+            find .. -path '*reports/ktlint*' -name '*.txt' -exec sh -c 'echo "=== $1"; cat "$1"' _ {} \; >> "$LOG" 2>/dev/null || true
+            find .. -path '*reports/detekt*' -name '*.xml' -exec sh -c 'echo "=== $1"; cat "$1"' _ {} \; >> "$LOG" 2>/dev/null || true
             {
               echo "### Static analysis failed"
               echo '```'

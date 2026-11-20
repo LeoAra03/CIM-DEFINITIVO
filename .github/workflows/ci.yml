@@ -144,12 +144,15 @@ jobs:
             {
               echo "### APK build failed"
               echo '```'
-              tail -n 100 "$LOG"
+              tail -n 150 "$LOG"
               echo '```'
             } >> "$GITHUB_STEP_SUMMARY"
-            grep -E -A8 'What went wrong|^FAILURE:|^e: |error: |Caused by:|Could not|Unresolved|Lint error|\.kt:[0-9]+:[0-9]+:' "$LOG" | head -80 | while IFS= read -r line; do
-              echo "::error::$line"
-            done
+            MSG=$(grep -E 'What went wrong|^FAILURE:|^e: |error: |Error:|ERROR:|Caused by:|Could not|Unresolved|Missing class|was not found|Lint error|\.kt:[0-9]+:[0-9]+:' "$LOG" | awk '!seen[$0]++' | head -400 | sed -e 's/%/%25/g' -e 's/\r//' | sed -e ':a' -e '$!N' -e 's/\n/%0A/g' -e 'ta')
+            if [ -n "$MSG" ]; then
+              echo "::error::$MSG"
+            fi
+            RAWMSG=$(tail -n 150 "$LOG" | sed -e 's/%/%25/g' -e 's/\r//' | sed -e ':a' -e '$!N' -e 's/\n/%0A/g' -e 'ta')
+            echo "::error::BUILD_TAIL $RAWMSG"
             exit 1
           }
       - name: Stage APKs

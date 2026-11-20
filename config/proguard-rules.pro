@@ -16,3 +16,9 @@
 
 # Keep generic signature and runtime annotations.
 -keepattributes Signature,RuntimeVisibleAnnotations,AnnotationDefault
+
+# Conscrypt (used for TLS sockets) references hidden platform SSL classes that
+# are not present in the SDK; they exist only on real devices at runtime.
+-dontwarn com.android.org.conscrypt.**
+-dontwarn org.apache.harmony.xnet.provider.jsse.**
+-dontwarn org.conscrypt.internals.**

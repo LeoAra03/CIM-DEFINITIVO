@@ -1,5 +1,6 @@
 import com.android.build.gradle.LibraryExtension
 import org.gradle.api.JavaVersion
+import org.gradle.api.artifacts.VersionCatalogsExtension
 import org.gradle.api.tasks.testing.Test
 import org.gradle.kotlin.dsl.configure
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
@@ -12,11 +13,15 @@ plugins {
     id("com.google.dagger.hilt.android")
 }
 
+val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")
+fun version(name: String): String = libs.findVersion(name).get().requiredVersion
+fun library(name: String) = libs.findLibrary(name).get()
+
 extensions.configure<LibraryExtension> {
-    compileSdk = libs.versions.compileSdk.get().toInt()
+    compileSdkVersion(version("compileSdk").toInt())
 
     defaultConfig {
-        minSdk = libs.versions.minSdk.get().toInt()
+        minSdk = version("minSdk").toInt()
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles(rootProject.file("consumer-rules.pro"))
     }
@@ -27,7 +32,7 @@ extensions.configure<LibraryExtension> {
     }
 
     buildTypes {
-        release {
+        getByName("release").apply {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -58,18 +63,18 @@ tasks.withType<KotlinCompile>().configureEach {
 }
 
 dependencies {
-    add("implementation", platform(libs.androidx.compose.bom))
-    add("implementation", libs.androidx.core.ktx)
-    add("implementation", libs.androidx.compose.ui)
-    add("implementation", libs.androidx.compose.ui.graphics)
-    add("implementation", libs.androidx.compose.foundation)
-    add("implementation", libs.androidx.compose.material3)
-    add("implementation", libs.androidx.compose.material.icons.extended)
-    add("implementation", libs.kotlinx.coroutines.android)
-    add("implementation", libs.hilt.android)
-    add("kapt", libs.hilt.compiler)
-    add("testImplementation", libs.junit)
-    add("testImplementation", libs.kotlinx.coroutines.test)
-    add("androidTestImplementation", libs.androidx.junit)
-    add("androidTestImplementation", libs.androidx.espresso.core)
+    add("implementation", platform(library("androidx-compose-bom")))
+    add("implementation", library("androidx-core-ktx"))
+    add("implementation", library("androidx-compose-ui"))
+    add("implementation", library("androidx-compose-ui-graphics"))
+    add("implementation", library("androidx-compose-foundation"))
+    add("implementation", library("androidx-compose-material3"))
+    add("implementation", library("androidx-compose-material-icons-extended"))
+    add("implementation", library("kotlinx-coroutines-android"))
+    add("implementation", library("hilt-android"))
+    add("kapt", library("hilt-compiler"))
+    add("testImplementation", library("junit"))
+    add("testImplementation", library("kotlinx-coroutines-test"))
+    add("androidTestImplementation", library("androidx-junit"))
+    add("androidTestImplementation", library("androidx-espresso-core"))
 }

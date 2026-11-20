@@ -8,7 +8,7 @@
     <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="false">192.168.0.0</domain>
         <pin-set expiration="2027-01-01">
-            <pin digest="SHA-256">6+0bJ2YjB6qJcQJm5mY4oQvWlLhC1XkQn7pOe2R3tA=</pin>
+            <pin digest="SHA-256">Pen+pqjCMZNmsUAvq4vdM2dJTXPLHO65BMhph2BLJNU=</pin>
         </pin-set>
     </domain-config>
 </network-security-config>

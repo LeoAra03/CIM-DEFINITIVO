@@ -157,8 +157,8 @@ jobs:
           }
       - name: Stage APKs
         run: |
-          mkdir -p ../android/apks
-          find . -path '*/outputs/apk/*/*.apk' -exec cp {} ../android/apks/ \;
+          mkdir -p output-apks
+          find .. -path '*/outputs/apk/*/*.apk' -exec cp {} output-apks/ \;
       - name: Validate and checksum APKs
         shell: bash
         run: |
@@ -183,5 +183,5 @@ jobs:
         with:
           name: android-apks
           path: |
-            output-apks/*.apk
-            output-apks/APK_CHECKSUMS.txt
+            config/output-apks/*.apk
+            config/output-apks/APK_CHECKSUMS.txt

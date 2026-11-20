@@ -44,12 +44,16 @@ jobs:
         run: |
           set -o pipefail
           ./gradlew detekt ktlintCheck 2>&1 | tee "$RUNNER_TEMP/static.log" || {
+            LOG="$RUNNER_TEMP/static.log"
             {
               echo "### Static analysis failed"
               echo '```'
-              tail -n 100 "$RUNNER_TEMP/static.log"
+              tail -n 100 "$LOG"
               echo '```'
             } >> "$GITHUB_STEP_SUMMARY"
+            grep -E -A8 'What went wrong|^FAILURE:|^e: |error: |Caused by:|Could not|Unresolved' "$LOG" | head -60 | while IFS= read -r line; do
+              echo "::error::$line"
+            done
             exit 1
           }
 
@@ -74,12 +78,16 @@ jobs:
         run: |
           set -o pipefail
           ./gradlew testAllModules 2>&1 | tee "$RUNNER_TEMP/tests.log" || {
+            LOG="$RUNNER_TEMP/tests.log"
             {
               echo "### Unit tests failed"
               echo '```'
-              tail -n 150 "$RUNNER_TEMP/tests.log"
+              tail -n 100 "$LOG"
               echo '```'
             } >> "$GITHUB_STEP_SUMMARY"
+            grep -E -A8 'What went wrong|^FAILURE:|^e: |error: |Caused by:|Could not|Unresolved' "$LOG" | head -60 | while IFS= read -r line; do
+              echo "::error::$line"
+            done
             exit 1
           }
 
@@ -104,12 +112,16 @@ jobs:
         run: |
           set -o pipefail
           ./gradlew buildAllApks 2>&1 | tee "$RUNNER_TEMP/build.log" || {
+            LOG="$RUNNER_TEMP/build.log"
             {
               echo "### APK build failed"
               echo '```'
-              tail -n 150 "$RUNNER_TEMP/build.log"
+              tail -n 100 "$LOG"
               echo '```'
             } >> "$GITHUB_STEP_SUMMARY"
+            grep -E -A8 'What went wrong|^FAILURE:|^e: |error: |Caused by:|Could not|Unresolved' "$LOG" | head -60 | while IFS= read -r line; do
+              echo "::error::$line"
+            done
             exit 1
           }
       - name: Stage APKs
@@ -124,12 +136,16 @@ jobs:
             ./gradlew validateApks
             ./gradlew writeApkChecksums
           } 2>&1 | tee "$RUNNER_TEMP/verify.log" || {
+            LOG="$RUNNER_TEMP/verify.log"
             {
               echo "### APK validation failed"
               echo '```'
-              tail -n 80 "$RUNNER_TEMP/verify.log"
+              tail -n 100 "$LOG"
               echo '```'
             } >> "$GITHUB_STEP_SUMMARY"
+            grep -E -A8 'What went wrong|^FAILURE:|^e: |error: |Caused by:|Could not|Unresolved' "$LOG" | head -60 | while IFS= read -r line; do
+              echo "::error::$line"
+            done
             exit 1
           }
       - uses: actions/upload-artifact@v4

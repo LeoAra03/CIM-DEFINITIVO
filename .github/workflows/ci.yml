@@ -131,8 +131,9 @@ jobs:
           set -o pipefail
           ./gradlew buildAllApks 2>&1 | tee "$RUNNER_TEMP/build.log" || {
             LOG="$RUNNER_TEMP/build.log"
-            find .. -path '*build/reports*' -name 'lint-results*.xml' -exec sh -c 'echo "=== $1"; cat "$1"' _ {} \; >> "$LOG" 2>/dev/null || true
-            find .. -path '*build/reports*' -name 'lint-results*.txt' -exec sh -c 'echo "=== $1"; cat "$1"' _ {} \; >> "$LOG" 2>/dev/null || true
+            LINT_FOUND=$(find .. -name 'lint-results*' -not -name '*.html' 2>/dev/null | tr '\n' ' ')
+            echo "::error::LINT_REPORT_PATHS: ${LINT_FOUND:-NONE}"
+            find .. -name 'lint-results*' -not -name '*.html' -exec sh -c 'echo "=== $1"; cat "$1"' _ {} \; >> "$LOG" 2>/dev/null || true
             {
               echo "### APK build failed"
               echo '```'

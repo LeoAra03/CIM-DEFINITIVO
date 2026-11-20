@@ -1,62 +1,69 @@
-# CIM Visual Preview - Sistema Multiconectado Intuitivo
+# CIM visual preview
 
-Este directorio contiene un simulador visual web del sistema CIM que replica las 5 APKs Android + Wear + Hub Coordinador.
+This directory contains a web simulator of the CIM system that mirrors the
+five Android APKs plus the wear app and the coordinator hub.
 
-## 🚀 Cómo usar (1-click)
+## How to use (one click)
 
-1. Abre `index.html` en tu navegador o usa el servidor preview ya corriendo en `:8000`
-2. Click **▶ Iniciar Hub :8888**
-3. Click **🔗 Conectar Todo (1-click)** - conecta 5 estaciones simultáneamente
-4. Si AUTO MODE está OFF, autoriza cada estación en el diálogo que aparece
-5. Si AUTO MODE está ON, se autoriza automáticamente (solo laboratorio)
-6. Ya puedes enviar comandos: Cinta, Robot, Laser, Visión, Almacén
+1. Open `index.html` in your browser or use the preview server on port
+   `:8000`.
+2. Click **Start Hub :8888**.
+3. Click **Connect all (one click)** to connect five stations at once.
+4. If AUTO MODE is off, approve each station in the dialog that appears.
+5. If AUTO MODE is on, stations are approved automatically (lab only).
+6. Send commands: conveyor, robot, laser, vision, storage.
 
-## 📱 Vistas por APK
+## Views per APK
 
-Cada APK tiene su índice visual independiente que imita el diseño Compose original:
+Each APK has its own visual index that imitates the original Compose
+design:
 
-- **Coordinador**: `apps/coordinador.html` - Hub con tabs EXEC, CINTA, ROBOT, ARUCO, MAPA, NODOS, RACKS
-- **PLC Cinta**: `apps/plc.html` - Matriz 3x10 DELIVER, tracking pallet
-- **Manufactura**: `apps/manufactura.html` - Control Scorbot + Laser + SINCRO
-- **Calidad**: `apps/calidad.html` - Camera + ArUco + YOLO TFLite
-- **Almacén**: `apps/almacen.html` - Rack 3x3 + Scorbot storage
-- **Wear**: `apps/wear.html` - Supervisión compacta redonda
+- **Coordinator**: `apps/coordinador.html` - hub with EXEC, CONVEYOR,
+  ROBOT, ARUCO, MAP, NODES, RACKS tabs
+- **PLC conveyor**: `apps/plc.html` - 3x10 DELIVER matrix, pallet tracking
+- **Manufacturing**: `apps/manufactura.html` - Scorbot + laser + sync
+- **Quality**: `apps/calidad.html` - camera + ArUco + YOLO TFLite
+- **Storage**: `apps/almacen.html` - 3x3 rack + Scorbot storage
+- **Wear**: `apps/wear.html` - compact round supervision view
 
-## 🎨 Diseño Industrial
+## Industrial design
 
-Colores idénticos a las apps reales:
-- Fondo #080808, Cards #1E1E1E, Borde #2A2A2A
-- Primario #FF6D00 (naranja industrial), Success #4CAF50, Error #B00020
-- Terminal monoespaciada JetBrains Mono con logs en tiempo real
-- Visual wiring SVG con líneas animadas Hub ↔ Estaciones
+Colors match the real applications:
 
-## 🔧 Fixes de seguridad aplicados
+- Background `#080808`, cards `#1E1E1E`, border `#2A2A2A`
+- Primary `#FF6D00` (industrial orange), success `#4CAF50`,
+  error `#B00020`
+- JetBrains Mono monospace terminal with real-time logs
+- SVG wiring diagram with animated hub-to-station lines
 
-Este visual demuestra los fixes críticos ya aplicados en código real:
+## Security behavior demonstrated
 
-- ✓ TLS sin trust-all (usa system CAs)
-- ✓ PLC relay con auth requerida + watchdog 10s
-- ✓ G-code sanitizado (no path traversal)
-- ✓ Auto-approve solo DEBUG
-- ✓ Token validación SHA-256
+This visual demo reflects the protections implemented in the real code:
 
-## 📂 Servidor
+- TLS without trust-all (system CAs)
+- PLC relay requires authorization with a 10s watchdog
+- G-code sanitization (no path traversal)
+- Auto-approve only on debug builds
+- Pairing secret validation
+
+## Server
 
 ```bash
 cd web-preview
 python3 -m http.server 8000 --bind 0.0.0.0
-# Abre https://8000-XXXX.e2b.app
+# Open https://8000-XXXX.e2b.app
 ```
 
-## 🔗 Flujo visual
+## Visual flow
 
 ```
 [Hub :8888] -- NSD _cim-hub._tcp. -->
-   |-> PLC (Cinta) -- C:DELIVER:1:3 -->
-   |-> Manufactura (Robot) -- R:RUN ARU1 -->
-   |-> Calidad (Vision) -- ARUCO:DETECT -->
-   |-> Almacén (Rack) -- STO:STORE -->
-   └-> Wear (Monitor)
+   |-> PLC (conveyor) -- C:DELIVER:1:3 -->
+   |-> Manufacturing (robot) -- R:RUN ARU1 -->
+   |-> Quality (vision) -- ARUCO:DETECT -->
+   |-> Storage (rack) -- STO:STORE -->
+   └-> Wear (monitor)
 ```
 
-Todos los comandos pasan por validación de autorización y se loggean en terminal central.
+Every command passes authorization validation and is written to the
+central terminal.

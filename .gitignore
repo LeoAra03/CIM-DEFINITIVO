@@ -1,7 +1,3 @@
-# =============================================================================
-# Practica_2 — CIM v6.0 | Solo lo que NO debe subirse a GitHub
-# =============================================================================
-
 # --- Android / Gradle (regenerable) ---
 .gradle/
 build/
@@ -15,26 +11,21 @@ captures/
 # --- IDE local ---
 .idea/
 .fastRequest/
+.vscode/
 
-# --- Cursor / VS Code (rutas personales; sí se publica extensions.json) ---
-.vscode/*
-!.vscode/extensions.json
-
-# --- APKs y binarios compilados (generar con ./gradlew buildAllApks) ---
+# --- APKs and compiled artifacts ---
 *.apk
 *.aab
 *.dex
 output-apks/
 config/output-apks/
-android/apks/*.apk
 
 # --- Build logs ---
 BUILD_LOG.txt
 BUILD_LOG_*.txt
 build_*.log
-config/build_*.log
 
-# --- Python (TFLite test, hub simulator) ---
+# --- Python ---
 venv/
 env/
 __pycache__/
@@ -42,70 +33,19 @@ __pycache__/
 *$py.class
 *.so
 .Python
-pip-log.txt
-pip-delete-this-directory.txt
-.venv
+.venv/
 
-# --- Resultados de test YOLO offline ---
-tflite_inference_result.json
-tflite_output.json
-output_detection.json
-output_detection.jpg
-test_output/
-
-# --- PlatformIO (regenerable con pio run) ---
-.pio/
-
-# --- Secretos de firma ---
-release.keystore
+# --- Signing and release secrets (never commit) ---
+*.jks
 *.keystore
+release.properties
 
-# --- Dependencias npm del generador PDF (docs/npm install) ---
-docs/node_modules/
-docs/_preview_entrega.html
-docs/_pdf_build_temp.*
+# --- Models and generated weights ---
+*.pt
+*.onnx
+*.tflite
+!android/**/src/main/assets/*.tflite
 
-# --- Clones vendor muy pesados (opcional en local) ---
-espessif/
-
-# --- Paquete ZIP portable (regenerar: .\entrega\crear_paquete_zip.ps1) ---
-CIM_V6_PAQUETE_ENTREGA.zip
-entrega/CIM_V6_PAQUETE_ENTREGA/
-
-# --- Carpetas de entrega antiguas ---
-ENTREGA_FINAL_CIM_V6/
-DOCUMENTACION_FINAL/
-CIM_V6_*.zip
-
-# --- Sistema operativo ---
+# --- OS junk ---
 .DS_Store
 Thumbs.db
-desktop.ini
-
-# --- Carpeta personal para uso mañana ---
-.para-maniana/
-
-# --- Logs temporales ---
-*.log
-logcat_*.txt
-last*_logcat.txt
-
-# --- Scripts y carpetas obsoletos (mantener localmente pero no en Git) ---
-deploy_apks.ps1
-entorno_mobile/
-tools/organize_workspace.ps1
-
-# --- Archivos temporales del sistema ---
-*.tmp
-*.bak
-*.swp
-*~
-
-# --- Gradle wrapper logs ---
-gradle-app.setting
-
-
-
-# --- Modelos y artefactos locales de ML ---
-*.pt
-*.tflite

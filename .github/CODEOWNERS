@@ -1,0 +1,11 @@
+# Default owner for everything in the repository.
+* @LeoAra03
+
+# Protocol and shared communication core require the maintainer review.
+/core-network/ @LeoAra03
+
+# Firmware changes require the maintainer review.
+/firmware/ @LeoAra03
+
+# Architecture decisions are maintainer-owned.
+/docs/decisions/ @LeoAra03

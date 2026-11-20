@@ -44,7 +44,7 @@ extensions.configure<LibraryExtension> {
         unitTests.isReturnDefaultValues = true
     }
 
-    buildFeatures {
+    buildFeatures.apply {
         compose = true
     }
 }

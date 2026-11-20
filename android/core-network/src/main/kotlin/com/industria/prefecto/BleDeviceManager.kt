@@ -28,8 +28,8 @@ class BleDeviceManager(private val context: Context, private val onLog: (String)
     private val SCAN_PERIOD: Long = 10000
 
     // UUIDs for mesh configuration (industrial standard)
-    private val SERVICE_UUID = UUID.fromString("6E400001-B5A3-F393-E0A9-E50E24DCCA9E")
-    private val CHAR_UUID_RX = UUID.fromString("6E400002-B5A3-F393-E0A9-E50E24DCCA9E")
+    private val serviceUuid = UUID.fromString("6E400001-B5A3-F393-E0A9-E50E24DCCA9E")
+    private val charUuidRx = UUID.fromString("6E400002-B5A3-F393-E0A9-E50E24DCCA9E")
 
     @SuppressLint("MissingPermission")
     fun startScanning() {
@@ -87,8 +87,8 @@ class BleDeviceManager(private val context: Context, private val onLog: (String)
 
             override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
                 if (status == BluetoothGatt.GATT_SUCCESS) {
-                    val service = gatt.getService(SERVICE_UUID)
-                    val characteristic = service?.getCharacteristic(CHAR_UUID_RX)
+                    val service = gatt.getService(serviceUuid)
+                    val characteristic = service?.getCharacteristic(charUuidRx)
                     
                     if (characteristic != null) {
                         // Inject MAC and parameters for the ESP-NOW dynamic add_peer

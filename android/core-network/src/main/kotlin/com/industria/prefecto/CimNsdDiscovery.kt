@@ -86,12 +86,12 @@ class CimNsdDiscovery(context: Context) {
         private const val TAG = "CimNsdDiscovery"
 
         fun getInstance(context: Context): CimNsdDiscovery {
-            return INSTANCE ?: synchronized(this) {
-                INSTANCE ?: CimNsdDiscovery(context.applicationContext).also { INSTANCE = it }
+            return instance ?: synchronized(this) {
+                instance ?: CimNsdDiscovery(context.applicationContext).also { instance = it }
             }
         }
 
         @Volatile
-        private var INSTANCE: CimNsdDiscovery? = null
+        private var instance: CimNsdDiscovery? = null
     }
 }

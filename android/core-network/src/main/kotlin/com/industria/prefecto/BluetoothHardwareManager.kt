@@ -123,13 +123,13 @@ class BluetoothHardwareManager(
     val discoveredDevicesMap: SnapshotStateMap<String, DiscoveredBluetoothDevice> = mutableStateMapOf()
     val discoveredHardware: SnapshotStateMap<String, String> = mutableStateMapOf()
 
-    private val SERVICE_UUID = UUID.fromString("6E400001-B5A3-F393-E0A9-E50E24DCCA9E")
+    private val serviceUuid = UUID.fromString("6E400001-B5A3-F393-E0A9-E50E24DCCA9E")
     private val writeLocks = ConcurrentHashMap<String, Mutex>()
-    private val CHAR_UUID_RX = UUID.fromString("6E400002-B5A3-F393-E0A9-E50E24DCCA9E")
-    private val CHAR_UUID_TX = UUID.fromString("6E400003-B5A3-F393-E0A9-E50E24DCCA9E")
-    private val CCCD_UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
+    private val charUuidRx = UUID.fromString("6E400002-B5A3-F393-E0A9-E50E24DCCA9E")
+    private val charUuidTx = UUID.fromString("6E400003-B5A3-F393-E0A9-E50E24DCCA9E")
+    private val cccdUuid = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
 
-    private val MAX_BLE_PACKET = 20
+    private val maxBlePacket = 20
     private val receivingBuffers = ConcurrentHashMap<String, StringBuilder>()
     private var activeBleScanCallback: ScanCallback? = null
     private var discoveryReceiver: BroadcastReceiver? = null
@@ -336,9 +336,9 @@ class BluetoothHardwareManager(
                 if (status != BluetoothGatt.GATT_SUCCESS) return
                 onLog("SERVICIOS DESCUBIERTOS [$address]")
                 try {
-                    val txChar = g.getService(SERVICE_UUID)?.getCharacteristic(CHAR_UUID_TX) ?: return
+                    val txChar = g.getService(serviceUuid)?.getCharacteristic(charUuidTx) ?: return
                     g.setCharacteristicNotification(txChar, true)
-                    val desc = txChar.getDescriptor(CCCD_UUID) ?: return
+                    val desc = txChar.getDescriptor(cccdUuid) ?: return
                     desc.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
                     if (Build.VERSION.SDK_INT >= 33) {
                         g.writeDescriptor(desc)
@@ -498,7 +498,7 @@ class BluetoothHardwareManager(
                         payload = responsePayload
                     )
 
-                    val rxChar = gatt.getService(SERVICE_UUID)?.getCharacteristic(CHAR_UUID_RX)
+                    val rxChar = gatt.getService(serviceUuid)?.getCharacteristic(charUuidRx)
                     if (rxChar != null) {
                         sendLargeCommand(gatt, rxChar, response.toTransportString())
                         onLog("SENT IDENTIFIED to $mac: $responsePayload")
@@ -620,7 +620,7 @@ class BluetoothHardwareManager(
             onLog("ERROR: No GATT para $address")
             return
         }
-        val rxChar = targetGatt.getService(SERVICE_UUID)?.getCharacteristic(CHAR_UUID_RX)
+        val rxChar = targetGatt.getService(serviceUuid)?.getCharacteristic(charUuidRx)
         if (rxChar == null) {
             onLog("ERROR: CARACTERÍSTICA NO ENCONTRADA en $address")
             return
@@ -637,7 +637,7 @@ class BluetoothHardwareManager(
     @SuppressLint("MissingPermission")
     private suspend fun sendLargeCommand(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, cmd: String) {
         val bytes = (cmd + "\n").toByteArray(Charsets.UTF_8)
-        if (bytes.size <= MAX_BLE_PACKET) {
+        if (bytes.size <= maxBlePacket) {
             writeChunk(gatt, characteristic, bytes)
             onLog("TX: $cmd")
             return
@@ -646,7 +646,7 @@ class BluetoothHardwareManager(
         var offset = 0
         var fragmentNumber = 0
         while (offset < bytes.size) {
-            val chunkSize = min(MAX_BLE_PACKET, bytes.size - offset)
+            val chunkSize = min(maxBlePacket, bytes.size - offset)
             val chunk = bytes.sliceArray(offset until offset + chunkSize)
             offset += chunkSize
             writeChunk(gatt, characteristic, chunk)

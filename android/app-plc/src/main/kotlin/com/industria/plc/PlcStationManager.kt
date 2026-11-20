@@ -17,7 +17,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class PlcStationManager(private val context: Context) {
-    private val TAG = "PlcStationManager"
+    private val tag = "PlcStationManager"
     private val scope = CoroutineScope(Dispatchers.IO)
     private var commandBroker: CommandBroker? = null
 
@@ -35,23 +35,23 @@ class PlcStationManager(private val context: Context) {
                     payload = "DELIVER|fromStation=$fromStation,toStation=$toStation"
                 )
                 commandBroker?.sendCommand(msg)
-                Log.d(TAG, "[OK] DELIVER: $fromStation -> $toStation")
+                Log.d(tag, "[OK] DELIVER: $fromStation -> $toStation")
             } catch (e: Exception) {
-                Log.e(TAG, "[ERR] Error: ${e.message}")
+                Log.e(tag, "[ERR] Error: ${e.message}")
             }
         }
     }
 
     fun close() {
-        Log.d(TAG, "Cerrando PLC...")
+        Log.d(tag, "Cerrando PLC...")
     }
 }
 
-private val MAX_LOG_SIZE = 500
+private val maxLogSize = 500
 
 private fun addLogWithLimit(logs: MutableList<String>, message: String) {
     logs.add(message)
-    while (logs.size > MAX_LOG_SIZE) {
+    while (logs.size > maxLogSize) {
         logs.removeAt(0)
     }
 }

@@ -18,7 +18,7 @@ extensions.configure<LibraryExtension> {
     defaultConfig {
         minSdk = libs.versions.minSdk.get().toInt()
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        consumerProguardFiles("../config/consumer-rules.pro")
+        consumerProguardFiles(rootProject.file("consumer-rules.pro"))
     }
 
     compileOptions {

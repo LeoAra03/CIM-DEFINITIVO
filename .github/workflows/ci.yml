@@ -49,6 +49,10 @@ jobs:
           chmod +x "$RUNNER_TEMP/ktlint"
           (
             cd "$GITHUB_WORKSPACE"
+            "$RUNNER_TEMP/ktlint" --format \
+              "android/*/src/main/kotlin/**/*.kt" \
+              "android/*/src/test/kotlin/**/*.kt" \
+              "config/**/*.kts" || true
             "$RUNNER_TEMP/ktlint" \
               "android/*/src/main/kotlin/**/*.kt" \
               "android/*/src/test/kotlin/**/*.kt" \

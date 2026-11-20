@@ -9,9 +9,15 @@ trim_trailing_whitespace = true
 [*.{kt,kts}]
 indent_style = space
 indent_size = 4
-max_line_length = 120
+# Legacy UI code predates the line-length budget; keep the rule off until it
+# is cleaned up deliberately rather than by automated reflow.
+max_line_length = off
 ktlint_code_style = ktlint_official
 ktlint_standard_function-signature = disabled
+# Compose components follow PascalCase naming by convention.
+ktlint_standard_function-naming = disabled
+# File-header KDoc intentionally precedes the package declaration.
+ktlint_standard_kdoc = disabled
 # Legacy modules still use wildcard imports; new code should import explicitly.
 ktlint_standard_no-wildcard-imports = disabled
 

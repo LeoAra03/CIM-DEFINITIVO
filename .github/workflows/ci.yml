@@ -131,11 +131,13 @@ jobs:
           set -o pipefail
           ./gradlew buildAllApks 2>&1 | tee "$RUNNER_TEMP/build.log" || {
             LOG="$RUNNER_TEMP/build.log"
-            LINT_TXT=$(find .. -name 'lint-results*.txt' 2>/dev/null | head -1)
-            if [ -n "$LINT_TXT" ]; then
-              LINT_MSG=$(head -120 "$LINT_TXT" | sed -e 's/%/%25/g' -e 's/\r//' | sed -e ':a' -e '$!N' -e 's/\n/%0A/g' -e 'ta')
+            LINT_COUNT=0
+            while IFS= read -r LINT_TXT; do
+              LINT_COUNT=$((LINT_COUNT + 1))
+              LINT_MSG=$(head -150 "$LINT_TXT" | sed -e 's/%/%25/g' -e 's/\r//' | sed -e ':a' -e '$!N' -e 's/\n/%0A/g' -e 'ta')
               echo "::error::LINT_REPORT $LINT_MSG"
-            else
+            done < <(find .. -name 'lint-results*.txt' 2>/dev/null)
+            if [ "$LINT_COUNT" -eq 0 ]; then
               echo "::error::LINT_REPORT not found"
             fi
             find .. -name 'lint-results*' -not -name '*.html' -exec sh -c 'echo "=== $1"; cat "$1"' _ {} \; >> "$LOG" 2>/dev/null || true

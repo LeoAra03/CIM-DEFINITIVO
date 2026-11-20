@@ -72,12 +72,6 @@ extensions.configure<AppExtension> {
         }
     }
 
-    lintOptions {
-        // Print fatal lint findings to the console so CI can surface them.
-        textReport = true
-        textOutput = "stdout"
-    }
-
     buildFeatures.apply {
         compose = true
         buildConfig = true

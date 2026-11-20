@@ -52,12 +52,6 @@ extensions.configure<LibraryExtension> {
         unitTests.isReturnDefaultValues = true
     }
 
-    lintOptions {
-        // Print fatal lint findings to the console so CI can surface them.
-        textReport = true
-        textOutput = "stdout"
-    }
-
     buildFeatures.apply {
         compose = true
     }

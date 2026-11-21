@@ -1,17 +1,35 @@
-# Seguridad y reporte responsable
+# Security Policy
 
-Este repositorio controla software que puede integrarse con sensores y actuadores. Una vulnerabilidad, defecto de seguridad o comportamiento potencialmente peligroso no debe publicarse como una instrucción de operación.
+## Reporting a vulnerability
 
-## Reportar un hallazgo
+Report suspected vulnerabilities privately. Open a GitHub security advisory at
+`LeoAra03/CIM-DEFINITIVO` when possible, or email the address registered on
+the owner's GitHub profile. Do not open a public issue for exploitable
+vulnerabilities.
 
-Abra un issue privado o contacte al responsable académico del proyecto con:
+Include:
 
-- descripción del problema y componente afectado;
-- versión/commit reproducible;
-- impacto esperado;
-- pasos de reproducción seguros;
-- evidencia disponible, sin incluir credenciales, datos personales o llaves.
+- A description of the issue and its impact.
+- Reproduction steps or a proof of concept.
+- Affected components, commits, or versions.
 
-## Límites operacionales
+You should receive an acknowledgement within seven days. Valid reports will be
+coordinated with you on disclosure timing.
 
-No se debe depender de software como único E-stop. Las pruebas de relé, robot, cinta o láser requieren E-stop independiente, interlocks, supervisión competente y el protocolo de laboratorio. Consulte `docs/deliverables/MANUAL_OPERATIVO_LABORATORIO.md`.
+## Scope
+
+The coordinator application, the station applications, the ESP32 firmware
+sources under `firmware/`, and the protocol documentation under `docs/` are in
+scope.
+
+## Security baseline
+
+- BLE pairing rejects the default pairing secret when a custom secret is set.
+- TCP station authorization is enforced before any actuator command is
+  forwarded.
+- Releases are signed with a local keystore that is never committed;
+  `release.properties` and `*.jks` / `*.keystore` files are git-ignored.
+- The release manifest enables cleartext traffic only through the lab network
+  security configuration.
+- The firmware rejects actuator commands coming from an unauthorized peer
+  inside the `handleCommand` dispatch.

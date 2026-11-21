@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Coordinador CIM</string>
+    <string name="dashboard_title">Coordinador de celda CIM</string>
+    <string name="station_status">Estado de estaciones</string>
+    <string name="network_status">Estado de red</string>
+    <string name="authorization">Autorización de estación</string>
+    <string name="approve_command">Autorizar comando</string>
+    <string name="revoke_command">Revocar acceso</string>
+    <string name="e_stop">Parada de emergencia</string>
+    <string name="pallet_events">Eventos de pallets</string>
+    <string name="audit_log">Registro de auditoría</string>
+</resources>

@@ -1,33 +1,74 @@
-# Contribuir al Sistema CIM
+# Contributing
 
-## Principios
+This repository accepts contributions that improve the Android applications,
+the ESP32 firmware, the shared protocol, or the documentation set.
 
-- Mantener separadas las rutas activas de `archive/`.
-- No versionar APKs, claves, keystores, contraseñas, logs personales ni artefactos de build.
-- No declarar una prueba de hardware sin fecha, operador, versión/commit y evidencia en `docs/deliverables/BITACORA_VALIDACION.md`.
-- No habilitar actuadores como consecuencia de una validación puramente automática.
+## Ground rules
 
-## Antes de solicitar integración
+- Keep production code, comments, KDoc, and documentation in English.
+- Keep UI-facing text in `strings.xml` resources; string literals in Kotlin
+  are reserved for protocol and machine-readable values.
+- Do not add emoji, dead code, commented-out blocks, or debugging markers.
+- Prefer explicit imports over wildcard imports.
+- Keep the Gradle version catalog in `config/libs.versions.toml` as the
+  single source of truth for dependency versions.
 
-Ejecute desde la raíz:
+## Development environment
+
+Prerequisites:
+
+- Android Studio
+- JDK 17
+- Android SDK 35
+- Gradle 8.13 through the wrapper in `config/`
+- Python 3.10+
+
+Install Python tooling before running the simulation utilities:
 
 ```bash
-python3 tools/validate_firmware_contract.py --quiet
-python3 tools/validate_system_100.py --quiet
-python3 tools/prehardware_readiness.py --quiet
-python3 -m compileall -q tools
-git diff --check
+python -m pip install -r tools/requirements.txt
 ```
 
-Para cambios Android, ejecute además en un entorno con JDK 17 y Android SDK:
+## Workflow
+
+1. Create a feature branch from `CIM-DEFINITIVO`.
+2. Make the change with focused commits.
+3. Run the local gates:
+
+```bash
+python3 tools/validate_system.py
+python3 tools/validate_firmware_contract.py
+python3 tools/validate_security.py
+python3 tools/prehardware_readiness.py
+```
+
+4. Run the Android checks:
 
 ```bash
 cd config
-./gradlew testAllModules
-./gradlew lintAll
-./gradlew buildAllApks validateApks writeApkChecksums
+./gradlew testAllModules detekt ktlintCheck
+./gradlew validateApks
 ```
 
-## Cambios de firmware y documentación
+5. Open a pull request using `.github/pull_request_template.md`.
 
-Todo cambio de identidad BLE, UUID, capacidades, pines o protocolo exige actualizar el contrato, los documentos afectados y la evidencia de validación. Los cambios que afecten a seguridad deben revisar primero `docs/deliverables/PROTOCOLO_PRUEBAS_HARDWARE.md` y `docs/safety/`.
+## Firmware changes
+
+- ESP32 sources live under `firmware/<target>/src`.
+- Add or change dispatch commands in `firmware/shared/cim_ble_firmware.h`.
+- Document every command in `docs/PROTOCOL.md`; the contract gate fails when
+  documentation and firmware disagree.
+
+## Documentation changes
+
+- Update `docs/ARCHITECTURE.md`, `docs/PROTOCOL.md`, or `docs/TESTING.md`
+  when behavior changes.
+- Record accepted architectural choices in `docs/decisions/`.
+
+## Commit expectations
+
+- One logical change per commit.
+- Reference the affected module, for example `core-network:` or
+  `firmware/plc-master:`.
+- Never commit keystores, `release.properties`, generated APKs, model
+  weights, or build outputs.

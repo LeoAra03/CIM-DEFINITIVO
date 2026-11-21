@@ -1,19 +1,23 @@
-## Resumen
+# Pull request
 
-<!-- Explique qué cambia y por qué. -->
+## Summary
 
-## Validación
+<!-- What changed and why. One or two sentences. -->
 
-- [ ] `python3 tools/validate_firmware_contract.py --quiet`
-- [ ] `python3 tools/validate_system_100.py --quiet`
-- [ ] `python3 tools/prehardware_readiness.py --quiet`
-- [ ] `python3 -m compileall -q tools`
-- [ ] `git diff --check`
-- [ ] Si cambia Android: CI, tests y build de APK revisados.
+## Type of change
 
-## Impacto y evidencia
+- [ ] Bug fix
+- [ ] New feature
+- [ ] Documentation
+- [ ] Refactor / repository structure
+- [ ] Firmware
 
-- [ ] No incorpora secretos, APKs ni artefactos generados.
-- [ ] Actualicé documentación/bitácora si cambió un contrato, protocolo o comportamiento.
-- [ ] No afirma ensayos físicos que no tengan evidencia trazable.
-- [ ] Si afecta hardware/seguridad, adjunté plan de laboratorio y revisión de E-stop/interlocks.
+## Checklist
+
+- [ ] `python3 tools/validate_system.py` passes.
+- [ ] `python3 tools/validate_firmware_contract.py` passes (firmware or
+      `docs/PROTOCOL.md` changes).
+- [ ] `python3 tools/validate_security.py` passes.
+- [ ] `cd config && ./gradlew testAllModules detekt ktlintCheck` passes.
+- [ ] New code, comments, and documentation are in English.
+- [ ] No emoji, dead code, or migration markers were introduced.

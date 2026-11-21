@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 
+  Network security configuration for CIM applications.
+  cleartext is allowed only for the laboratory controller endpoints.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false" />
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">192.168.0.0</domain>
+        <pin-set expiration="2027-01-01">
+            <pin digest="SHA-256">Pen+pqjCMZNmsUAvq4vdM2dJTXPLHO65BMhph2BLJNU=</pin>
+        </pin-set>
+    </domain-config>
+</network-security-config>

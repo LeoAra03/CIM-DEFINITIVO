@@ -1,31 +1,36 @@
-# Centro de documentación CIM
+# CIM documentation
 
-<p align="center">
-  <img src="assets/ubb_logo.png" alt="Universidad del Bío-Bío" width="300">
-</p>
+This folder is the documentation source of truth for the CIM industrial cell
+platform. All documents are written in English.
 
-Este directorio contiene la documentación activa, académica y operativa del Sistema CIM. Para evitar confusión entre evidencia vigente e historial, use el siguiente orden de consulta.
+## Document set
 
-## Punto de partida
+| Document | Purpose |
+| --- | --- |
+| [ARCHITECTURE](ARCHITECTURE.md) | System components and runtime topology |
+| [PROTOCOL](PROTOCOL.md) | Wire protocol, framing, and command contract |
+| [TESTING](TESTING.md) | Test strategy, simulation, and performance gates |
+| [HARDWARE](HARDWARE.md) | ESP32 targets, wiring, and bench setup |
+| [SAFETY](SAFETY.md) | Safety boundaries and non-certification statement |
+| [RISK](RISK.md) | Risk register and mitigations |
+| [AUDIT](AUDIT.md) | Audit evidence and traceability |
+| [REPORT](REPORT.md) | Current status report |
+| [PRESENTATION](PRESENTATION.md) | Stakeholder presentation overview |
+| [ROADMAP](ROADMAP.md) | Delivery plan and milestones |
 
-1. **[Índice del repositorio](INDEX_REPOSITORIO.md):** mapa de código, documentación, comandos y rutas activas.
-2. **[Entrega pre-hardware](deliverables/ENTREGA_PRE_HARDWARE_LEONARDO_ARAYA.md):** alcance de la entrega y límites de validación.
-3. **[Instructivo de uso](INSTRUCTIVO_USO_PROYECTO.md):** preparación, compilación, instalación y paso a laboratorio.
-4. **[Manual del sistema](project/DOCUMENTACION_SISTEMA_CIM.md):** arquitectura, despliegue y operación (también disponible en [PDF](project/MANUAL_IMPLEMENTACION_CIM.pdf)).
-5. **[Guía rápida](quickstart/README.md):** preparación inicial del entorno.
+## Decision records
 
-## Documentación por propósito
+Accepted architectural choices live in [decisions/](decisions/README.md).
+Each decision is immutable once accepted; superseding work creates a new
+record.
 
-| Necesidad | Documento / ubicación |
-|---|---|
-| Estado, evidencias y dedicación | `deliverables/BITACORA_VALIDACION.md` |
-| Seguridad y operación de laboratorio | `deliverables/MANUAL_OPERATIVO_LABORATORIO.md` |
-| Casos de prueba físicos | `deliverables/PROTOCOLO_PRUEBAS_HARDWARE.md` |
-| Riesgos y bloqueadores | `deliverables/FALENCIAS_RIESGOS_Y_PLAN.md` |
-| Arquitectura de seguridad | `safety/SAFETY_ASSURANCE_ARCHITECTURE.md` |
-| Visión, dataset y etiquetado | `vision/DATASET_CAPTURE_AND_LABELING.md` |
-| Auditoría técnica | `audits/AUDITORIA_TECNICA_2026-07-28.md` |
+## Assets
 
-## Regla de vigencia
+`assets/imagenes/` holds the application screenshots referenced by the root
+README.
 
-`docs/`, `android/`, `esp32/firmware/`, `tools/` y `config/` son fuentes activas. `archive/` preserva antecedentes: no debe utilizarse para compilar, flashear o declarar resultados actuales sin una revisión explícita.
+## Related material
+
+The pre-hardware readiness gate (`tools/prehardware_readiness.py`) checks the
+presence and key content of this document set before any physical station is
+connected.

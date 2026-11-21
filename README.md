@@ -1,16 +1,53 @@
-# CIM — Industrial Cell Integration Platform
+<p align="center">
+  <img src="docs/assets/ubb-logo.svg" alt="Universidad del Bío-Bío" width="380">
+</p>
 
-CIM is a multi-station industrial automation platform: one Android
-coordinator, up to five Android station applications, four ESP32 firmware
-targets, and a shared JVM communication core. The lab simulates PLC control,
-robotic manufacturing, vision inspection, and pallet storage inside a single
-coordinated cell.
+<h1 align="center">CIM — Plataforma de Integración de Celda Industrial</h1>
 
-The repository also documents the simulated test plan, the ESP32
-manufacturing workflow, risk controls, audit evidence, and the implementation
-roadmap.
+<p align="center">
+  <a href="https://github.com/LeoAra03/CIM-DEFINITIVO/actions/workflows/ci.yml"><img src="https://github.com/LeoAra03/CIM-DEFINITIVO/actions/workflows/ci.yml/badge.svg?branch=CIM-DEFINITIVO" alt="CIM CI"></a>
+  <img src="https://img.shields.io/badge/Android-API%2034-3ddc84" alt="Android API 34">
+  <img src="https://img.shields.io/badge/ESP32-Arduino%20framework-000000" alt="ESP32">
+  <img src="https://img.shields.io/badge/Kotlin-2.x-7f52ff" alt="Kotlin">
+  <img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT">
+</p>
 
-## Repository layout
+<p align="center">
+  Proyecto de titulación · Ingeniería Civil en Informática
+
+  Universidad del Bío-Bío · <strong>Leonardo Araya</strong>
+</p>
+
+---
+
+CIM es una plataforma de automatización industrial multiestación: un
+coordinador Android, hasta cinco aplicaciones Android de estación, cuatro
+firmware ESP32 y un núcleo de comunicación JVM compartido. El laboratorio
+simula control PLC, manufactura robótica, inspección por visión y
+almacenamiento en racks dentro de una celda coordinada.
+
+El repositorio también documenta el plan de pruebas simulado, el flujo de
+manufactura sobre ESP32, los controles de riesgo, la evidencia de auditoría y
+la hoja de ruta de implementación.
+
+> **Alcance.** Todo el hardware es simulado salvo los ESP32. La celda no se
+> energiza con actuadores reales; las compuertas de seguridad están descritas en
+> [docs/SAFETY.md](docs/SAFETY.md) y todavía no validadas en planta.
+
+## Índice
+
+- [Arquitectura](docs/ARCHITECTURE.md)
+- [Protocolo CIM](docs/PROTOCOL.md)
+- [Pruebas y simulación](docs/TESTING.md)
+- [Hardware](docs/HARDWARE.md)
+- [Seguridad](docs/SAFETY.md)
+- [Gestión de riesgos](docs/RISK.md)
+- [Auditoría](docs/AUDIT.md)
+- [Estado](docs/REPORT.md)
+- [Hoja de ruta](docs/ROADMAP.md)
+- [Registro de decisiones](docs/decisions/README.md)
+
+## Estructura del repositorio
 
 - `android/` — Android applications and the `core-network` communication
   library.
@@ -27,29 +64,29 @@ roadmap.
 
 ## Android modules
 
-| Module | Package | Purpose |
+| Módulo | Paquete | Propósito |
 | --- | --- | --- |
-| `app-coordinador` | `com.industria.coordinacion` | Hub, dashboard, authorization, BLE/TCP orchestration |
-| `app-plc` | `com.industria.plc` | PLC relay station, local event log, E-stop |
-| `app-manufactura` | `com.industria.manufactura` | Robot lifecycle, manufacturing sequence, operator handoff |
-| `app-calidad` | `com.industria.calidad` | Vision, pallet validation, ARUCO inspection, G-code |
-| `app-almacen` | `com.industria.almacenamiento` | Pallet intake, storage, rack position verification |
-| `wear-coordinador` | `com.industria.wear` | Wear OS emergency interface |
-| `core-network` | `com.industria.prefecto` | Shared communication and domain logic |
+| `app-coordinador` | `com.industria.coordinacion` | Concentrador, panel de control, autorización y orquestación BLE/TCP |
+| `app-plc` | `com.industria.plc` | Estación de retransmisión PLC, registro local de eventos y parada de emergencia |
+| `app-manufactura` | `com.industria.manufactura` | Ciclo de vida del robot, secuencia de manufactura y traspaso al operador |
+| `app-calidad` | `com.industria.calidad` | Visión, validación de pallets, inspección ARUCO y código G |
+| `app-almacen` | `com.industria.almacenamiento` | Ingreso de pallets, almacenamiento y verificación de posición en racks |
+| `wear-coordinador` | `com.industria.wear` | Interfaz de emergencia para Wear OS |
+| `core-network` | `com.industria.prefecto` | Comunicación compartida y lógica de dominio |
 
 All applications depend on `core-network`. The coordinator is the TCP hub on
 port `8888`; every station connects as a client and identifies itself with a
 stable CIM UUID.
 
-## UI screenshots
+## Capturas de interfaz
 
 ### Coordinator
 
-![Coordinator dashboard](docs/assets/imagenes/coordinador_dashboard.png)
+![Coordinator dashboard](docs/assets/imagenes/ui_app_coordinador.png)
 
 ### PLC station
 
-![PLC station](docs/assets/imagenes/plc_station.png)
+![PLC station](docs/assets/imagenes/ui_app_plc.png)
 
 ### Manufacturing station
 
@@ -108,6 +145,12 @@ The full continuous integration workflow is defined in
 - `web-preview/` is a static reference and does not replace the Android
   applications.
 
-## License
+## Autoría
 
-Released under the MIT License. See [LICENSE](LICENSE).
+Trabajo desarrollado por Leonardo Araya para optar al título de Ingeniería Civil
+en Informática de la Universidad del Bío-Bío. La asistencia de herramientas de IA
+en la implementación está documentada en [docs/AUDIT.md](docs/AUDIT.md).
+
+## Licencia
+
+Distribuido bajo la Licencia MIT. Consulta [LICENSE](LICENSE).

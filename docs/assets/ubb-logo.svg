@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 120" role="img" aria-label="Universidad del Bío-Bío">
+  <path d="M20 16h74v54c0 21-19 31-37 37C39 101 20 91 20 70z" fill="#0b2e59"/>
+  <path d="M20 16h74v54c0 21-19 31-37 37C39 101 20 91 20 70z" fill="none" stroke="#c9a227" stroke-width="3"/>
+  <text x="57" y="66" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="25" font-weight="700" fill="#ffffff">UBB</text>
+  <text x="112" y="50" font-family="Helvetica, Arial, sans-serif" font-size="18" font-weight="700" fill="#0b2e59">UNIVERSIDAD DEL BÍO-BÍO</text>
+  <text x="112" y="74" font-family="Helvetica, Arial, sans-serif" font-size="12" letter-spacing="1.4" fill="#5b6b80">PROYECTO DE TITULACIÓN · INGENIERÍA CIVIL EN INFORMÁTICA</text>
+</svg>

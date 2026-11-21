@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "Si usas este trabajo, cítalo así."
+title: "CIM: plataforma de integración de celda industrial"
+abstract: "Plataforma de automatización industrial multiestación con coordinador Android, estaciones Android, firmware ESP32 y núcleo de comunicación JVM compartido. Proyecto de titulación."
+type: software
+authors:
+  - family-names: "Araya"
+    given-names: "Leonardo"
+    affiliation: "Universidad del Bío-Bío"
+license: MIT
+repository-code: "https://github.com/LeoAra03/CIM-DEFINITIVO"
+version: 6.0.0
+date-released: "2026-11-21"
+keywords:
+  - industrial automation
+  - android
+  - esp32
+  - plc
+  - kotlin
